@@ -130,14 +130,17 @@ ChachiJenga/
 3. ✅ Comprobar que **todos los tests pasan**: `npm test`
 4. ✅ Verificar que no hay `console.log` de debug olvidados
 
-### Commits
-- **Hacer commit a `main` cada vez que se complete una task del TODO**
+### Commits — UNA TASK = UN COMMIT
+- **Cada checkbox individual `- [ ]` del TODO es un commit separado a `main`**
+- **NUNCA agrupar varias tasks en un solo commit** — aunque parezcan relacionadas
+- Hacer commit **inmediatamente después** de completar cada task, no al final de una sección o fase
+- Ejemplo: si el TODO tiene 3 checkboxes en "Setup del Proyecto", son 3 commits separados, no 1
 - Formato del mensaje de commit: `tipo(scope): descripción breve`
   - Tipos: `feat`, `fix`, `test`, `refactor`, `style`, `docs`, `chore`
   - Scope: área del proyecto (`auth`, `tower`, `drawing`, `matchmaking`, `scoring`, `ui`, `i18n`, etc.)
-  - Ejemplo: `feat(drawing): add $P shape recognizer with 13 templates`
+  - Ejemplo: `feat(setup): initialize Vite + React client project`
+  - Ejemplo: `feat(i18n): add Spanish and English translation files`
   - Ejemplo: `test(scoring): add PointCalculator unit tests`
-  - Ejemplo: `feat(i18n): add Spanish and English translations`
 
 ### Al actualizar CONTEXT.md
 Actualizar este archivo cuando:
