@@ -1,0 +1,81 @@
+{
+  "login": {
+    "title": "ChachiJenga",
+    "subtitle": "Dibuja para ganar",
+    "signInWithGoogle": "Acceder con Google",
+    "language": "Idioma"
+  },
+  "home": {
+    "findMatch": "Buscar Partida",
+    "ranking": "Ranking",
+    "profile": "Perfil",
+    "settings": "Ajustes",
+    "wins": "Victorias",
+    "losses": "Derrotas",
+    "draws": "Empates",
+    "searching": "Buscando partida...",
+    "cancel": "Cancelar"
+  },
+  "game": {
+    "yourTurn": "Tu turno · Elige una pieza",
+    "opponentTurn": "Turno del rival",
+    "piecesExtracted": "Piezas extraídas",
+    "points": "puntos"
+  },
+  "drawing": {
+    "phase": "Fase",
+    "completed": "Completadas",
+    "timeUp": "¡Se acabó el tiempo!",
+    "towerCollapsed": "¡La torre ha caído!"
+  },
+  "watch": {
+    "opponentDrawing": "Tu rival está dibujando",
+    "watching": "Observando..."
+  },
+  "summary": {
+    "victory": "¡Victoria!",
+    "defeat": "Derrota",
+    "draw": "Empate",
+    "pointsEarned": "Puntos ganados",
+    "pointsLost": "Puntos perdidos",
+    "eloChange": "Cambio de ELO",
+    "piecesExtracted": "Piezas sacadas",
+    "shapesDrawn": "Formas dibujadas",
+    "errors": "Errores",
+    "avgTime": "Tiempo medio/pieza",
+    "easy": "Fácil",
+    "medium": "Media",
+    "hard": "Difícil",
+    "newMatch": "Nueva Partida",
+    "goHome": "Ir a Home"
+  },
+  "settings": {
+    "title": "Ajustes",
+    "volume": "Volumen",
+    "vibration": "Vibración",
+    "language": "Idioma",
+    "logout": "Cerrar sesión"
+  },
+  "ranking": {
+    "title": "Ranking Global",
+    "position": "Pos",
+    "player": "Jugador",
+    "elo": "ELO",
+    "pieces": "Piezas"
+  },
+  "profile": {
+    "title": "Mi Perfil",
+    "gamesPlayed": "Partidas jugadas",
+    "winRate": "% Victorias",
+    "totalPieces": "Piezas totales",
+    "shapesDrawn": "Formas dibujadas"
+  },
+  "common": {
+    "loading": "Cargando...",
+    "error": "Error",
+    "retry": "Reintentar",
+    "close": "Cerrar",
+    "confirm": "Confirmar",
+    "back": "Volver"
+  }
+}

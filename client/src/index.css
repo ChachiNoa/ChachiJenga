@@ -1,0 +1,92 @@
+@import "tailwindcss";
+
+@custom-variant dark (&:is(.dark *));
+
+@theme {
+  /* Pastel color palette for ChachiJenga */
+  --color-pastel-pink: #F8BBD0;
+  --color-pastel-pink-light: #FCE4EC;
+  --color-pastel-blue: #BBDEFB;
+  --color-pastel-blue-light: #E3F2FD;
+  --color-pastel-green: #C8E6C9;
+  --color-pastel-green-light: #E8F5E9;
+  --color-pastel-yellow: #FFF9C4;
+  --color-pastel-yellow-light: #FFFDE7;
+  --color-pastel-purple: #E1BEE7;
+  --color-pastel-purple-light: #F3E5F5;
+  --color-pastel-orange: #FFE0B2;
+  --color-pastel-orange-light: #FFF3E0;
+  --color-pastel-coral: #FFAB91;
+  --color-pastel-lavender: #D1C4E9;
+  --color-pastel-mint: #B2DFDB;
+  --color-pastel-peach: #FFCCBC;
+
+  /* shadcn/ui compatible CSS variables */
+  --color-background: #FDFBFE;
+  --color-foreground: #1a1625;
+  --color-card: #FFFFFF;
+  --color-card-foreground: #1a1625;
+  --color-popover: #FFFFFF;
+  --color-popover-foreground: #1a1625;
+  --color-primary: #B39DDB;
+  --color-primary-foreground: #FFFFFF;
+  --color-secondary: #F3E5F5;
+  --color-secondary-foreground: #4A148C;
+  --color-muted: #F5F0FA;
+  --color-muted-foreground: #7E6B8F;
+  --color-accent: #E8DEF8;
+  --color-accent-foreground: #1a1625;
+  --color-destructive: #EF9A9A;
+  --color-destructive-foreground: #FFFFFF;
+  --color-border: #E8E0F0;
+  --color-input: #E8E0F0;
+  --color-ring: #B39DDB;
+
+  --color-success: #A5D6A7;
+  --color-warning: #FFE082;
+  --color-error: #EF9A9A;
+
+  --radius-sm: 0.25rem;
+  --radius-md: 0.5rem;
+  --radius-lg: 0.75rem;
+  --radius-xl: 1rem;
+
+  --font-sans: 'Inter', system-ui, -apple-system, sans-serif;
+}
+
+/* Dark mode overrides */
+.dark {
+  --color-background: #1a1625;
+  --color-foreground: #F5F0FA;
+  --color-card: #231E2E;
+  --color-card-foreground: #F5F0FA;
+  --color-popover: #231E2E;
+  --color-popover-foreground: #F5F0FA;
+  --color-primary: #CE93D8;
+  --color-primary-foreground: #1a1625;
+  --color-secondary: #2D2440;
+  --color-secondary-foreground: #E1BEE7;
+  --color-muted: #2D2440;
+  --color-muted-foreground: #B0A0C0;
+  --color-accent: #3D3060;
+  --color-accent-foreground: #F5F0FA;
+  --color-destructive: #EF5350;
+  --color-destructive-foreground: #FFFFFF;
+  --color-border: #3D3060;
+  --color-input: #3D3060;
+  --color-ring: #CE93D8;
+}
+
+/* Base styles */
+body {
+  margin: 0;
+  font-family: var(--font-sans);
+  background-color: var(--color-background);
+  color: var(--color-foreground);
+  -webkit-font-smoothing: antialiased;
+  -moz-osx-font-smoothing: grayscale;
+}
+
+#root {
+  min-height: 100svh;
+}

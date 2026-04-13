@@ -1,0 +1,81 @@
+{
+  "login": {
+    "title": "ChachiJenga",
+    "subtitle": "Draw to win",
+    "signInWithGoogle": "Sign in with Google",
+    "language": "Language"
+  },
+  "home": {
+    "findMatch": "Find Match",
+    "ranking": "Ranking",
+    "profile": "Profile",
+    "settings": "Settings",
+    "wins": "Wins",
+    "losses": "Losses",
+    "draws": "Draws",
+    "searching": "Searching for match...",
+    "cancel": "Cancel"
+  },
+  "game": {
+    "yourTurn": "Your turn · Pick a piece",
+    "opponentTurn": "Opponent's turn",
+    "piecesExtracted": "Pieces extracted",
+    "points": "points"
+  },
+  "drawing": {
+    "phase": "Phase",
+    "completed": "Completed",
+    "timeUp": "Time's up!",
+    "towerCollapsed": "The tower has fallen!"
+  },
+  "watch": {
+    "opponentDrawing": "Your opponent is drawing",
+    "watching": "Watching..."
+  },
+  "summary": {
+    "victory": "Victory!",
+    "defeat": "Defeat",
+    "draw": "Draw",
+    "pointsEarned": "Points earned",
+    "pointsLost": "Points lost",
+    "eloChange": "ELO change",
+    "piecesExtracted": "Pieces extracted",
+    "shapesDrawn": "Shapes drawn",
+    "errors": "Errors",
+    "avgTime": "Avg time/piece",
+    "easy": "Easy",
+    "medium": "Medium",
+    "hard": "Hard",
+    "newMatch": "New Match",
+    "goHome": "Go Home"
+  },
+  "settings": {
+    "title": "Settings",
+    "volume": "Volume",
+    "vibration": "Vibration",
+    "language": "Language",
+    "logout": "Log out"
+  },
+  "ranking": {
+    "title": "Global Ranking",
+    "position": "Pos",
+    "player": "Player",
+    "elo": "ELO",
+    "pieces": "Pieces"
+  },
+  "profile": {
+    "title": "My Profile",
+    "gamesPlayed": "Games played",
+    "winRate": "Win rate",
+    "totalPieces": "Total pieces",
+    "shapesDrawn": "Shapes drawn"
+  },
+  "common": {
+    "loading": "Loading...",
+    "error": "Error",
+    "retry": "Retry",
+    "close": "Close",
+    "confirm": "Confirm",
+    "back": "Back"
+  }
+}
