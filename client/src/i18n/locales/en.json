@@ -20,7 +20,9 @@
     "yourTurn": "Your turn · Pick a piece",
     "opponentTurn": "Opponent's turn",
     "piecesExtracted": "Pieces extracted",
-    "points": "points"
+    "points": "points",
+    "confirmExtraction": "Extract this piece?",
+    "confirmExtractionDesc": "Once confirmed, you will have to pass a 3-phase drawing minigame to successfully remove it."
   },
   "drawing": {
     "phase": "Phase",
@@ -76,6 +78,7 @@
     "retry": "Retry",
     "close": "Close",
     "confirm": "Confirm",
-    "back": "Back"
+    "back": "Back",
+    "cancel": "Cancel"
   }
 }

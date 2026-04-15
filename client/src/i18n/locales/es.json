@@ -20,7 +20,9 @@
     "yourTurn": "Tu turno · Elige una pieza",
     "opponentTurn": "Turno del rival",
     "piecesExtracted": "Piezas extraídas",
-    "points": "puntos"
+    "points": "puntos",
+    "confirmExtraction": "¿Extraer esta pieza?",
+    "confirmExtractionDesc": "Una vez lo confirmes, tendrás que superar un minijuego de dibujo de 3 fases para sacarla con éxito."
   },
   "drawing": {
     "phase": "Fase",
@@ -76,6 +78,7 @@
     "retry": "Reintentar",
     "close": "Cerrar",
     "confirm": "Confirmar",
-    "back": "Volver"
+    "back": "Volver",
+    "cancel": "Cancelar"
   }
 }
