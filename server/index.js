@@ -4,6 +4,7 @@ const http = require('http')
 const { Server } = require('socket.io')
 const cors = require('cors')
 const { setupDatabase } = require('./db/setup')
+const { createAuthRouter } = require('./auth/authRouter')
 
 const app = express()
 const server = http.createServer(app)
@@ -21,10 +22,11 @@ app.use(express.json())
 // Initialize database
 const db = setupDatabase()
 
-// Health check
+// Routes
 app.get('/api/health', (req, res) => {
   res.json({ status: 'ok', timestamp: new Date().toISOString() })
 })
+app.use('/auth', createAuthRouter(db))
 
 // Socket.io connection
 io.on('connection', (socket) => {
