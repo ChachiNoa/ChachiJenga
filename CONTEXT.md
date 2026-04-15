@@ -142,6 +142,12 @@ ChachiJenga/
   - Ejemplo: `feat(i18n): add Spanish and English translation files`
   - Ejemplo: `test(scoring): add PointCalculator unit tests`
 
+### Cambio de Fase — PARAR Y PREGUNTAR
+- Al completar **todas** las tasks de una fase del TODO → **hacer commit de lo pendiente**
+- **PARAR** y avisar al usuario antes de empezar la siguiente fase
+- **NUNCA** saltar automáticamente a la siguiente fase sin confirmación del usuario
+- El usuario decide cuándo empezar la siguiente fase
+
 ### Al actualizar CONTEXT.md
 Actualizar este archivo cuando:
 - Se añadan nuevas convenciones o patrones
