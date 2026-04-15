@@ -158,21 +158,18 @@ export default function DrawingScreen() {
       {/* SVG Container (Layer below canvas) */}
       <div className="absolute inset-0 z-10 pointer-events-none">
         {shapesInfo.map(shape => (
-          <div
+          <img
+            src={`/assets/shapes/${shape.type}.svg`}
+            alt={shape.type}
             key={shape.id}
-            className={`absolute flex items-center justify-center font-bold text-lg text-primary transition-all duration-500 ${shape.completed ? 'scale-150 opacity-0' : 'scale-100 opacity-20'}`}
+            className={`absolute transition-all duration-500 ${shape.completed ? 'scale-150 opacity-0' : 'scale-100 opacity-20'}`}
             style={{ 
               left: shape.x, 
               top: shape.y,
               width: 80,
-              height: 80,
-              border: '2px dashed currentcolor',
-              borderRadius: '50%'
+              height: 80
             }}
-          >
-            {/* Real SVGs will be used here. For now, text fallback */}
-            {shape.type}
-          </div>
+          />
         ))}
       </div>
 
