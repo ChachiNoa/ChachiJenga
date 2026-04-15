@@ -1,23 +1,83 @@
 import { useTranslation } from 'react-i18next'
+import { useNavigate } from 'react-router-dom'
 import { Globe } from 'lucide-react'
+import { useEffect, useCallback } from 'react'
+import { loginWithGoogle, saveAuth, loadAuth } from '@/network/authApi'
 
 const LANGUAGES = [
   { code: 'es', label: 'Español' },
   { code: 'en', label: 'English' },
 ]
 
+const GOOGLE_CLIENT_ID = import.meta.env.VITE_GOOGLE_CLIENT_ID || ''
+
 function LoginScreen() {
   const { t, i18n } = useTranslation()
+  const navigate = useNavigate()
 
   const currentLang = LANGUAGES.find((l) => l.code === i18n.language) || LANGUAGES[0]
+
+  // Redirect if already authenticated
+  useEffect(() => {
+    const auth = loadAuth()
+    if (auth?.token) {
+      navigate('/home', { replace: true })
+    }
+  }, [navigate])
+
+  // Initialize Google Sign-In
+  useEffect(() => {
+    if (!GOOGLE_CLIENT_ID) return
+
+    const script = document.createElement('script')
+    script.src = 'https://accounts.google.com/gsi/client'
+    script.async = true
+    script.defer = true
+    document.head.appendChild(script)
+
+    script.onload = () => {
+      window.google?.accounts.id.initialize({
+        client_id: GOOGLE_CLIENT_ID,
+        callback: handleGoogleResponse,
+      })
+    }
+
+    return () => {
+      document.head.removeChild(script)
+    }
+  }, [])
+
+  const handleGoogleResponse = useCallback(async (response) => {
+    try {
+      const { token, user } = await loginWithGoogle(response.credential)
+      saveAuth(token, user)
+      navigate('/home', { replace: true })
+    } catch (error) {
+      // TODO: Show error toast to user
+    }
+  }, [navigate])
+
+  const handleGoogleLogin = () => {
+    if (GOOGLE_CLIENT_ID && window.google) {
+      window.google.accounts.id.prompt()
+    } else {
+      // DEV mode: simulate login when no Google client ID is configured
+      const mockUser = {
+        id: 1,
+        displayName: 'Dev Player',
+        email: 'dev@chachijenga.local',
+        avatarUrl: null,
+        elo: 1000,
+        gamesPlayed: 0,
+      }
+      saveAuth('dev-token', mockUser)
+      navigate('/home', { replace: true })
+    }
+  }
 
   const handleLanguageToggle = () => {
     const nextIndex = (LANGUAGES.findIndex((l) => l.code === i18n.language) + 1) % LANGUAGES.length
     i18n.changeLanguage(LANGUAGES[nextIndex].code)
-  }
-
-  const handleGoogleLogin = () => {
-    // TODO: Implement Google OAuth login flow
   }
 
   return (
@@ -69,16 +129,20 @@ function LoginScreen() {
         {t('login.signInWithGoogle')}
       </button>
 
+      {/* Dev mode indicator */}
+      {!GOOGLE_CLIENT_ID && (
+        <p className="mt-4 text-xs text-muted-foreground/60">
+          Dev mode — click to skip login
+        </p>
+      )}
+
       {/* Decorative bottom */}
       <div className="mt-16 flex gap-2">
-        {['pastel-pink', 'pastel-blue', 'pastel-green', 'pastel-yellow', 'pastel-purple'].map(
-          (color) => (
-            <div
-              key={color}
-              className={`h-2 w-8 rounded-full bg-${color} opacity-60`}
-            />
-          )
-        )}
+        <div className="h-2 w-8 rounded-full bg-pastel-pink opacity-60" />
+        <div className="h-2 w-8 rounded-full bg-pastel-blue opacity-60" />
+        <div className="h-2 w-8 rounded-full bg-pastel-green opacity-60" />
+        <div className="h-2 w-8 rounded-full bg-pastel-yellow opacity-60" />
+        <div className="h-2 w-8 rounded-full bg-pastel-purple opacity-60" />
       </div>
     </div>
   )
