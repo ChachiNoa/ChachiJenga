@@ -81,7 +81,7 @@ function LoginScreen() {
   }
 
   return (
-    <div className="flex min-h-svh flex-col items-center justify-center bg-gradient-to-b from-pastel-purple-light to-pastel-pink-light px-6">
+    <div className="flex min-h-svh flex-col items-center justify-center bg-gradient-to-b from-pastel-purple-light to-pastel-pink-light px-6 animate-page-enter">
       {/* Language selector */}
       <button
         onClick={handleLanguageToggle}

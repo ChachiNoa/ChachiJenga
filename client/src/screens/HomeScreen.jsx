@@ -9,6 +9,7 @@ import SettingsDialog from '@/components/SettingsDialog'
 import RankingList from '@/components/RankingList'
 import ProfileCard from '@/components/ProfileCard'
 import { useSocket } from '@/hooks/useSocket'
+import { audio } from '@/lib/audio'
 
 function HomeScreen() {
   const { t } = useTranslation()
@@ -45,6 +46,8 @@ function HomeScreen() {
 
     const onGameStarted = (data) => {
       setSearching(false)
+      audio.play('match_found')
+      audio.vibrate([100, 50, 100])
       navigate('/tower', { state: { gameData: data } })
     }
 

@@ -6,6 +6,7 @@ import { ShapeRecognizer } from '../drawing/ShapeRecognizer'
 import DrawingCanvas from '../components/DrawingCanvas'
 import { useSocket } from '../hooks/useSocket'
 import { GAME } from '../../../shared/constants'
+import { audio } from '../lib/audio'
 
 // Pseudo-random bounding box generator for SVGs
 function generateShapePositions(shapes, screenWidth, screenHeight) {
@@ -133,6 +134,8 @@ export default function DrawingScreen() {
 
         // Mark visually
         setShapesInfo(prev => prev.map(s => s.id === shapeToComplete.id ? { ...s, completed: true } : s))
+        audio.play('correct')
+        audio.vibrate([50, 30, 50])
         
         // Mark in logic
         const { phaseCompleted, pieceExtracted } = pmRef.current.completeShape(shapeToComplete.id)
@@ -154,6 +157,8 @@ export default function DrawingScreen() {
         socket.emit('drawing_result', { valid: false })
       }
       pmRef.current.applyErrorPenalty()
+      audio.play('error')
+      audio.vibrate([100])
       setFlashError(true)
       setTimeout(() => setFlashError(false), 300)
     }
@@ -181,7 +186,7 @@ export default function DrawingScreen() {
         </div>
 
         {/* Timer */}
-        <div className={`text-4xl font-black ${isDangerTime ? 'text-red-500 animate-pulse' : 'text-foreground'}`}>
+        <div className={`text-4xl font-black ${isDangerTime ? 'text-red-500 animate-timer-danger' : 'text-foreground'}`}>
           {seconds}s
         </div>
 

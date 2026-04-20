@@ -5,6 +5,7 @@ import { Button } from '@/components/ui/button'
 import { Card, CardContent } from '@/components/ui/card'
 import { Trophy, TrendingUp, TrendingDown, Target, Loader2, Home, RotateCcw } from 'lucide-react'
 import { useSocket } from '../hooks/useSocket'
+import { audio } from '../lib/audio'
 
 export default function SummaryScreen() {
   const { t } = useTranslation()
@@ -19,6 +20,14 @@ export default function SummaryScreen() {
     // If user refreshes or visits directly
     if (!data) {
       navigate('/home', { replace: true })
+      return
+    }
+    // Play result sound
+    if (data.result === 'VICTORY') {
+      audio.play('victory')
+      audio.vibrate([100, 50, 100, 50, 200])
+    } else if (data.result === 'DEFEAT' || data.result === 'FORFEIT') {
+      audio.play('defeat')
     }
   }, [data, navigate])
 
@@ -33,11 +42,11 @@ export default function SummaryScreen() {
   const resultTitle = isVictory ? t('summary.victory', '¡Victoria!') : isDraw ? t('summary.draw', 'Empate') : t('summary.defeat', 'Derrota')
 
   return (
-    <div className={`flex min-h-svh flex-col items-center justify-center p-6 bg-gradient-to-br ${bgColor}`}>
-      <div className="w-full max-w-sm flex flex-col gap-6 animate-in slide-in-from-bottom flex-1 justify-center">
+    <div className={`flex min-h-svh flex-col items-center justify-center p-6 bg-gradient-to-br ${bgColor} animate-page-enter`}>
+      <div className="w-full max-w-sm flex flex-col gap-6 flex-1 justify-center">
         
         <div className="text-center">
-          <div className="mx-auto mb-4 flex h-24 w-24 items-center justify-center rounded-full bg-white shadow-xl">
+          <div className="mx-auto mb-4 flex h-24 w-24 items-center justify-center rounded-full bg-white shadow-xl animate-bounce-in">
             {isVictory && <Trophy className="h-12 w-12 text-yellow-500 animate-bounce" />}
             {isDraw && <Target className="h-12 w-12 text-amber-500" />}
             {isDefeat && <Trophy className="h-12 w-12 text-zinc-300 opacity-50 rotate-180" />}

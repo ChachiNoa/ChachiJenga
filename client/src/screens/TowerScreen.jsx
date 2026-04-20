@@ -6,6 +6,7 @@ import { Button } from '@/components/ui/button'
 import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar'
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription, DialogFooter } from '@/components/ui/dialog'
 import { useSocket } from '../hooks/useSocket'
+import { audio } from '../lib/audio'
 
 // Mock initial layers since we don't have socket connection yet
 const createMockLayers = () => {
@@ -109,7 +110,8 @@ function TowerScreen() {
   
   const handleSelectPiece = (layer, position) => {
     if (!isMyTurn) return
-    
+    audio.play('select')
+    audio.vibrate([30])
     setSelectedPiece({ layer, position })
     setConfirmOpen(true)
   }
@@ -124,7 +126,7 @@ function TowerScreen() {
   }
 
   return (
-    <div className="flex h-svh w-full flex-col bg-gradient-to-b from-sky-100 to-amber-50 overflow-hidden">
+    <div className="flex h-svh w-full flex-col bg-gradient-to-b from-sky-100 to-amber-50 overflow-hidden animate-page-enter">
       
       {/* Top HUD */}
       <div className="absolute left-0 right-0 top-0 z-10 flex items-start justify-between p-4">
