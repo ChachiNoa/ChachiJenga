@@ -28,9 +28,13 @@ app.get('/api/health', (req, res) => {
 })
 app.use('/auth', createAuthRouter(db))
 
+const { setupMatchmaking } = require('./matchmaking/matchmakingService')
+
 // Socket.io connection
 io.on('connection', (socket) => {
   console.log(`Player connected: ${socket.id}`)
+
+  setupMatchmaking(io, socket)
 
   socket.on('disconnect', () => {
     console.log(`Player disconnected: ${socket.id}`)
