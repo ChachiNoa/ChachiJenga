@@ -59,6 +59,15 @@ export default function DrawingScreen() {
   const containerRef = useRef(null)
 
   useEffect(() => {
+    if (!socket) return
+    const onGameOver = (data) => {
+      navigate('/summary', { state: { summary: data?.summary, reason: data?.reason } })
+    }
+    socket.on('game_over', onGameOver)
+    return () => socket.off('game_over', onGameOver)
+  }, [socket, navigate])
+
+  useEffect(() => {
     // Initialize Game Logic
     // In a real app we'd get difficulty from DifficultyManager based on pieceInfo
     const difficulty = GAME.DIFFICULTY.EASY 
@@ -69,8 +78,8 @@ export default function DrawingScreen() {
     const onTick = (time) => setTimeRemaining(time)
     const onTimeout = () => {
       // Time is up -> tower collapses
+      // Wait for game_over from server since the server is the single source of truth for time!
       setShowCollapse(true)
-      setTimeout(() => navigate('/summary'), 3000)
     }
 
     pmRef.current.startTimer(onTick, onTimeout)
@@ -132,8 +141,9 @@ export default function DrawingScreen() {
           if (socket) {
             socket.emit('piece_extracted', { layer: pieceInfo.layer, pos: pieceInfo.position })
           }
-          // You won the draw minigame!
-          navigate('/summary')
+          // The server will emit 'piece_extracted' or 'turn_changed' to both
+          // Navigate back to tower
+          navigate('/tower', { replace: true })
         } else if (phaseCompleted) {
           setCurrentPhase(pmRef.current.getCurrentPhase())
         }

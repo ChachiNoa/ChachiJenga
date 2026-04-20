@@ -1,19 +1,35 @@
 import { useTranslation } from 'react-i18next'
-import { useNavigate } from 'react-router-dom'
+import { useLocation, useNavigate } from 'react-router-dom'
 import { useState, useEffect } from 'react'
 import { Trophy, User, Settings, Gamepad2, Loader2, X } from 'lucide-react'
 import { Button } from '@/components/ui/button'
+import { Dialog, DialogContent } from '@/components/ui/dialog'
 import { loadAuth, clearAuth } from '@/network/authApi'
 import SettingsDialog from '@/components/SettingsDialog'
+import RankingList from '@/components/RankingList'
+import ProfileCard from '@/components/ProfileCard'
 import { useSocket } from '@/hooks/useSocket'
 
 function HomeScreen() {
   const { t } = useTranslation()
   const navigate = useNavigate()
+  const location = useLocation()
   const [searching, setSearching] = useState(false)
   const [settingsOpen, setSettingsOpen] = useState(false)
+  const [rankingOpen, setRankingOpen] = useState(false)
+  const [profileOpen, setProfileOpen] = useState(false)
   const [user, setUser] = useState(null)
+  const [fullProfile, setFullProfile] = useState(null)
   const { socket, isConnected } = useSocket()
+
+  useEffect(() => {
+    if (user && profileOpen && !fullProfile) {
+      fetch(`${import.meta.env.VITE_API_URL || 'http://localhost:3001'}/api/profile/${user.id}`)
+        .then(r => r.json())
+        .then(data => data.user && setFullProfile(data.user))
+        .catch(console.error)
+    }
+  }, [user, profileOpen, fullProfile])
 
   useEffect(() => {
     const auth = loadAuth()
@@ -41,6 +57,10 @@ function HomeScreen() {
 
   const handleFindMatch = () => {
     setSearching(true)
+    // Clear autoJoin state to prevent re-runs
+    if (location.state?.autoJoin) {
+      navigate('/home', { replace: true, state: {} })
+    }
     if (socket && user) {
       socket.emit('join_queue', {
         id: user.id || 'anonymous',
@@ -49,6 +69,12 @@ function HomeScreen() {
       })
     }
   }
+
+  useEffect(() => {
+    if (user && socket && location.state?.autoJoin && !searching) {
+      handleFindMatch()
+    }
+  }, [user, socket, location.state, searching])
 
   const handleCancelSearch = () => {
     setSearching(false)
@@ -101,15 +127,17 @@ function HomeScreen() {
         </div>
       )}
 
-      {/* Ranking & Profile cards */}
+        {/* Ranking & Profile cards */}
       <div className="mb-8 grid w-full max-w-xs grid-cols-2 gap-4">
         <button
+          onClick={() => setRankingOpen(true)}
           className="flex flex-col items-center gap-2 rounded-2xl bg-card p-6 shadow-md transition-all hover:-translate-y-0.5 hover:shadow-lg"
         >
           <Trophy className="h-8 w-8 text-pastel-orange" />
           <span className="font-semibold text-card-foreground">{t('home.ranking')}</span>
         </button>
         <button
+          onClick={() => setProfileOpen(true)}
           className="flex flex-col items-center gap-2 rounded-2xl bg-card p-6 shadow-md transition-all hover:-translate-y-0.5 hover:shadow-lg"
         >
           <User className="h-8 w-8 text-pastel-blue" />
@@ -138,6 +166,20 @@ function HomeScreen() {
         onOpenChange={setSettingsOpen}
         onLogout={handleLogout}
       />
+
+      {/* Ranking Dialog */}
+      <Dialog open={rankingOpen} onOpenChange={setRankingOpen}>
+        <DialogContent className="sm:max-w-md max-h-[80vh] overflow-hidden flex flex-col p-6">
+          <RankingList />
+        </DialogContent>
+      </Dialog>
+
+      {/* Profile Dialog */}
+      <Dialog open={profileOpen} onOpenChange={setProfileOpen}>
+        <DialogContent className="sm:max-w-md max-h-[80vh] overflow-y-auto">
+          <ProfileCard user={fullProfile || user} />
+        </DialogContent>
+      </Dialog>
     </div>
   )
 }

@@ -88,14 +88,20 @@ function TowerScreen() {
       onTurnChanged({ turn: data.turn })
     }
 
+    const onGameOver = (data) => {
+      navigate('/summary', { state: { summary: data?.summary, reason: data?.reason } })
+    }
+
     socket.on('turn_changed', onTurnChanged)
     socket.on('challenge_started', onChallengeStarted)
     socket.on('game_started', onGameStartedResync)
+    socket.on('game_over', onGameOver)
 
     return () => {
       socket.off('turn_changed', onTurnChanged)
       socket.off('challenge_started', onChallengeStarted)
       socket.off('game_started', onGameStartedResync)
+      socket.off('game_over', onGameOver)
     }
   }, [socket, navigate])
 

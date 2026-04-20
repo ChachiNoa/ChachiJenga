@@ -59,8 +59,8 @@ export default function WatchScreen() {
       navigate('/tower', { replace: true }) // Navigate back to tower, the Tower component should re-fetch state or use updated state
     }
     
-    const onGameOver = () => {
-      navigate('/summary')
+    const onGameOver = (data) => {
+      navigate('/summary', { state: { summary: data?.summary, reason: data?.reason } })
     }
 
     socket.on('opponent_phase_update', onPhaseUpdate)

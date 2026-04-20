@@ -5,9 +5,9 @@ const activeRooms = new Map(); // roomId -> GameRoom
 const playerToRoom = new Map(); // socketId -> roomId
 const disconnectTimeouts = new Map(); // socketId -> timeoutId
 
-function createRoom(io, player1, player2) {
+function createRoom(io, player1, player2, db) {
   const roomId = crypto.randomUUID();
-  const room = new GameRoom(roomId, player1, player2, io);
+  const room = new GameRoom(roomId, player1, player2, io, db);
   activeRooms.set(roomId, room);
   playerToRoom.set(player1.socketId, roomId);
   playerToRoom.set(player2.socketId, roomId);

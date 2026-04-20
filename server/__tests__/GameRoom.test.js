@@ -42,10 +42,13 @@ describe('GameRoom', () => {
     room.startGame();
     room.handleForfeit('s1');
     expect(room.status).toBe('ENDED');
-    expect(mockIo.emit).toHaveBeenCalledWith('game_over', {
+    // endGame now emits individually to each player socket
+    expect(mockIo.to).toHaveBeenCalledWith('s1');
+    expect(mockIo.to).toHaveBeenCalledWith('s2');
+    expect(mockIo.emit).toHaveBeenCalledWith('game_over', expect.objectContaining({
       reason: 'FORFEIT',
-      loser: 's1'
-    });
+      summary: expect.any(Object)
+    }));
   });
 
   it('should prevent acting out of turn', () => {

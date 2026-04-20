@@ -2,18 +2,20 @@ const { MatchmakingQueue } = require('./MatchmakingQueue');
 const { createRoom, handleGameEvents } = require('../game/gameEvents');
 
 let ioInstance = null;
+let dbInstance = null;
 
 const queue = new MatchmakingQueue((player1, player2) => {
-  if (ioInstance) {
-    createRoom(ioInstance, player1, player2);
+  if (ioInstance && dbInstance) {
+    createRoom(ioInstance, player1, player2, dbInstance);
   }
 });
 
-function setupMatchmaking(io, socket) {
+function setupMatchmaking(io, socket, db) {
   if (!ioInstance) ioInstance = io;
+  if (!dbInstance && db) dbInstance = db;
 
   // Set up game events handlers as well
-  handleGameEvents(io, socket);
+  handleGameEvents(io, socket, db);
 
   socket.on('join_queue', (user) => {
     if (!user || !user.id) {

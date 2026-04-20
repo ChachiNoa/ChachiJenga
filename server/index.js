@@ -26,7 +26,13 @@ const db = setupDatabase()
 app.get('/api/health', (req, res) => {
   res.json({ status: 'ok', timestamp: new Date().toISOString() })
 })
+
+const { createRankingRouter } = require('./api/rankingRouter')
+const { createProfileRouter } = require('./api/profileRouter')
+
 app.use('/auth', createAuthRouter(db))
+app.use('/api/ranking', createRankingRouter(db))
+app.use('/api/profile', createProfileRouter(db))
 
 const { setupMatchmaking } = require('./matchmaking/matchmakingService')
 
@@ -34,7 +40,7 @@ const { setupMatchmaking } = require('./matchmaking/matchmakingService')
 io.on('connection', (socket) => {
   console.log(`Player connected: ${socket.id}`)
 
-  setupMatchmaking(io, socket)
+  setupMatchmaking(io, socket, db)
 
   socket.on('disconnect', () => {
     console.log(`Player disconnected: ${socket.id}`)
