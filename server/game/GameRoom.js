@@ -47,12 +47,25 @@ class GameRoom {
       player: socketId
     });
 
+    // Server-side timing truth (45s + edge grace period of 2s)
+    if (this.challengeTimer) clearTimeout(this.challengeTimer);
+    this.challengeTimer = setTimeout(() => {
+      // Time is up on server
+      this.io.to(this.roomId).emit('tower_collapsed', { player: socketId });
+      this.endGame('COLLAPSE', socketId);
+    }, 47000); 
+
     return { success: true };
   }
 
   handlePieceExtracted(socketId, layer, pos) {
      if (this.getCurrentPlayer().socketId !== socketId || this.status !== 'IN_PROGRESS') {
       return { success: false, reason: 'Not your turn' };
+    }
+
+    if (this.challengeTimer) {
+      clearTimeout(this.challengeTimer);
+      this.challengeTimer = null;
     }
 
     const result = this.tower.extractPiece(layer, pos);

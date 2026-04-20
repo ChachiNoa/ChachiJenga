@@ -6,6 +6,8 @@ import DrawingScreen from './screens/DrawingScreen.jsx'
 import WatchScreen from './screens/WatchScreen.jsx'
 import SummaryScreen from './screens/SummaryScreen.jsx'
 
+import DisconnectDialog from './components/DisconnectDialog.jsx'
+
 function App() {
   return (
     <BrowserRouter>
@@ -18,6 +20,7 @@ function App() {
         <Route path="/summary" element={<SummaryScreen />} />
         <Route path="*" element={<Navigate to="/login" replace />} />
       </Routes>
+      <DisconnectDialog />
     </BrowserRouter>
   )
 }
