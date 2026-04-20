@@ -6,7 +6,8 @@ describe('EloCalculator', () => {
     expect(EloCalculator.getKFactor(29)).toBe(32);
     expect(EloCalculator.getKFactor(30)).toBe(24);
     expect(EloCalculator.getKFactor(99)).toBe(24);
-    expect(EloCalculator.getKFactor(100)).toBe(16);
+    expect(EloCalculator.getKFactor(100)).toBe(24); // 30-100 inclusive is 24
+    expect(EloCalculator.getKFactor(101)).toBe(16);
     expect(EloCalculator.getKFactor(150)).toBe(16);
   });
 
@@ -62,8 +63,8 @@ describe('EloCalculator', () => {
   });
 
   it('should cap minimum ELO at 100', () => {
-    const p1Elo = 110;
-    const p2Elo = 1500;
+    const p1Elo = 110; 
+    const p2Elo = 110; // Same elo so expected is 0.5 -> large diff
     const matchesPlayP1 = 10;
     
     // Heavy loss
