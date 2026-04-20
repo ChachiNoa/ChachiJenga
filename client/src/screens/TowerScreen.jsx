@@ -1,10 +1,11 @@
 import React, { useState, useEffect } from 'react'
 import { useTranslation } from 'react-i18next'
-import { useNavigate } from 'react-router-dom'
+import { useNavigate, useLocation } from 'react-router-dom'
 import Tower from '../components/Tower'
 import { Button } from '@/components/ui/button'
 import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar'
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription, DialogFooter } from '@/components/ui/dialog'
+import { useSocket } from '../hooks/useSocket'
 
 // Mock initial layers since we don't have socket connection yet
 const createMockLayers = () => {
@@ -43,21 +44,65 @@ function PlayerAvatar({ name, isMyTurn, points, avatarUrl }) {
 function TowerScreen() {
   const { t } = useTranslation()
   const navigate = useNavigate()
+  const location = useLocation()
+  const { socket } = useSocket()
   
-  const [layers, setLayers] = useState(createMockLayers())
+  // Try to use real data from router if available
+  const initialData = location.state?.gameData;
+  const isMyTurnInitially = socket && initialData ? initialData.turn === socket.id : true;
+
+  const [layers, setLayers] = useState(initialData && initialData.tower ? initialData.tower.layers : createMockLayers())
   const [selectedPiece, setSelectedPiece] = useState(null)
   const [confirmOpen, setConfirmOpen] = useState(false)
+  const [isMyTurn, setIsMyTurn] = useState(isMyTurnInitially)
   
-  // Mock game state for UI demonstration
+  // Real or Mock game state for UI demonstration
   const [gameState, setGameState] = useState({
-    me: { name: 'Player 1', points: 0, isTurn: true },
-    opponent: { name: 'Player 2', points: 0, isTurn: false }
+    me: { name: 'Me', points: 0, isTurn: isMyTurnInitially },
+    opponent: { name: 'Opponent', points: 0, isTurn: !isMyTurnInitially }
   })
+
+  useEffect(() => {
+    if (!socket) return
+
+    const onTurnChanged = ({ turn }) => {
+      const myTurn = turn === socket.id
+      setIsMyTurn(myTurn)
+      setGameState(prev => ({
+        me: { ...prev.me, isTurn: myTurn },
+        opponent: { ...prev.opponent, isTurn: !myTurn }
+      }))
+    }
+
+    const onChallengeStarted = ({ layer, pos, player }) => {
+      if (player !== socket.id) {
+        // Opponent started the challenge, go to watch
+        navigate('/watch', { replace: true })
+      }
+    }
+    
+    // Server emits piece_extracted, we reload tower visually from a resync event,
+    // but for now we didn't add game_resync. Just a basic setup.
+    const onGameStartedResync = (data) => {
+      setLayers(data.tower.layers)
+      onTurnChanged({ turn: data.turn })
+    }
+
+    socket.on('turn_changed', onTurnChanged)
+    socket.on('challenge_started', onChallengeStarted)
+    socket.on('game_started', onGameStartedResync)
+
+    return () => {
+      socket.off('turn_changed', onTurnChanged)
+      socket.off('challenge_started', onChallengeStarted)
+      socket.off('game_started', onGameStartedResync)
+    }
+  }, [socket, navigate])
 
   // Start with player at bottom of canvas
   
   const handleSelectPiece = (layer, position) => {
-    if (!gameState.me.isTurn) return
+    if (!isMyTurn) return
     
     setSelectedPiece({ layer, position })
     setConfirmOpen(true)
@@ -65,6 +110,9 @@ function TowerScreen() {
 
   const handleConfirmExtraction = () => {
     setConfirmOpen(false)
+    if (socket) {
+      socket.emit('select_piece', { layer: selectedPiece.layer, pos: selectedPiece.position })
+    }
     // Navigate to drawing screen, passing the selected piece
     navigate('/drawing', { state: { layer: selectedPiece.layer, position: selectedPiece.position } })
   }
@@ -98,7 +146,7 @@ function TowerScreen() {
         <Tower 
           layers={layers} 
           onSelectPiece={handleSelectPiece} 
-          interactive={gameState.me.isTurn && !confirmOpen}
+          interactive={isMyTurn && !confirmOpen}
         />
       </div>
 

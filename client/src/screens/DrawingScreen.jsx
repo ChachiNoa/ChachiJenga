@@ -4,6 +4,7 @@ import { useTranslation } from 'react-i18next'
 import { PhaseManager } from '../game/PhaseManager'
 import { ShapeRecognizer } from '../drawing/ShapeRecognizer'
 import DrawingCanvas from '../components/DrawingCanvas'
+import { useSocket } from '../hooks/useSocket'
 import { GAME } from '../../../shared/constants'
 
 // Pseudo-random bounding box generator for SVGs
@@ -41,6 +42,7 @@ export default function DrawingScreen() {
   const { t } = useTranslation()
   const navigate = useNavigate()
   const location = useLocation()
+  const { socket } = useSocket()
   
   // Extract info passed from TowerScreen
   const pieceInfo = location.state || { layer: 0, position: 1 } // Fallback
@@ -87,10 +89,24 @@ export default function DrawingScreen() {
     
     const layout = generateShapePositions(phaseShapes, rect.width || window.innerWidth, rect.height || window.innerHeight)
     setShapesInfo(layout)
-  }, [currentPhase])
+
+    if (socket) {
+      socket.emit('phase_update', { phase: currentPhase, totalPhases: 3, shapes: layout })
+    }
+  }, [currentPhase, socket])
+
+  const handleStrokePoint = (pt) => {
+    if (socket) {
+      socket.emit('stroke_point', pt)
+    }
+  }
 
   const handleStrokeComplete = (strokes) => {
     if (!pmRef.current || !recognizerRef.current) return
+
+    if (socket) {
+      socket.emit('stroke_complete', { strokes })
+    }
 
     // Which shapes are we looking for?
     const pendingNames = shapesInfo.filter(s => !s.completed).map(s => s.type)
@@ -102,6 +118,10 @@ export default function DrawingScreen() {
       const shapeToComplete = shapesInfo.find(s => s.type === match.name && !s.completed)
       
       if (shapeToComplete) {
+        if (socket) {
+          socket.emit('drawing_result', { valid: true, shapeId: shapeToComplete.id })
+        }
+
         // Mark visually
         setShapesInfo(prev => prev.map(s => s.id === shapeToComplete.id ? { ...s, completed: true } : s))
         
@@ -109,6 +129,9 @@ export default function DrawingScreen() {
         const { phaseCompleted, pieceExtracted } = pmRef.current.completeShape(shapeToComplete.id)
         
         if (pieceExtracted) {
+          if (socket) {
+            socket.emit('piece_extracted', { layer: pieceInfo.layer, pos: pieceInfo.position })
+          }
           // You won the draw minigame!
           navigate('/summary')
         } else if (phaseCompleted) {
@@ -117,6 +140,9 @@ export default function DrawingScreen() {
       }
     } else {
       // Error
+      if (socket) {
+        socket.emit('drawing_result', { valid: false })
+      }
       pmRef.current.applyErrorPenalty()
       setFlashError(true)
       setTimeout(() => setFlashError(false), 300)
@@ -175,7 +201,7 @@ export default function DrawingScreen() {
 
       {/* Canvas */}
       {!showCollapse && (
-        <DrawingCanvas onStrokeComplete={handleStrokeComplete} disabled={showCollapse} />
+        <DrawingCanvas onStrokeComplete={handleStrokeComplete} onStrokePoint={handleStrokePoint} disabled={showCollapse} />
       )}
 
       {/* Collapse Overlay */}

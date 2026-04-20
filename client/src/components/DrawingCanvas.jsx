@@ -1,6 +1,6 @@
 import React, { useRef, useEffect, useState } from 'react'
 
-export default function DrawingCanvas({ onStrokeComplete, disabled = false }) {
+export default function DrawingCanvas({ onStrokeComplete, onStrokePoint, disabled = false }) {
   const canvasRef = useRef(null)
   
   // A stroke is an array of points: {x, y}
@@ -81,6 +81,7 @@ export default function DrawingCanvas({ onStrokeComplete, disabled = false }) {
     setIsDrawing(true)
     const pt = getCoordinates(e)
     setCurrentLine([pt])
+    if (onStrokePoint) onStrokePoint({ ...pt, isStart: true })
   }
 
   const handleMove = (e) => {
@@ -89,6 +90,7 @@ export default function DrawingCanvas({ onStrokeComplete, disabled = false }) {
     
     const pt = getCoordinates(e)
     setCurrentLine(prev => [...prev, pt])
+    if (onStrokePoint) onStrokePoint(pt)
   }
 
   const handleEnd = (e) => {
