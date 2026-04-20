@@ -1,11 +1,11 @@
 import { useTranslation } from 'react-i18next'
 import { useNavigate } from 'react-router-dom'
-import { useState } from 'react'
+import { useState, useEffect } from 'react'
 import { Trophy, User, Settings, Gamepad2, Loader2, X } from 'lucide-react'
 import { Button } from '@/components/ui/button'
 import { loadAuth, clearAuth } from '@/network/authApi'
 import SettingsDialog from '@/components/SettingsDialog'
-import { useEffect } from 'react'
+import { useSocket } from '@/hooks/useSocket'
 
 function HomeScreen() {
   const { t } = useTranslation()
@@ -13,6 +13,7 @@ function HomeScreen() {
   const [searching, setSearching] = useState(false)
   const [settingsOpen, setSettingsOpen] = useState(false)
   const [user, setUser] = useState(null)
+  const { socket, isConnected } = useSocket()
 
   useEffect(() => {
     const auth = loadAuth()
@@ -23,14 +24,37 @@ function HomeScreen() {
     setUser(auth.user)
   }, [navigate])
 
+  useEffect(() => {
+    if (!socket) return
+
+    const onGameStarted = (data) => {
+      setSearching(false)
+      navigate('/tower', { state: { gameData: data } })
+    }
+
+    socket.on('game_started', onGameStarted)
+
+    return () => {
+      socket.off('game_started', onGameStarted)
+    }
+  }, [socket, navigate])
+
   const handleFindMatch = () => {
     setSearching(true)
-    // TODO: Connect to Socket.io matchmaking
+    if (socket && user) {
+      socket.emit('join_queue', {
+        id: user.id || 'anonymous',
+        name: user.displayName || 'Player',
+        elo: user.elo || 1000
+      })
+    }
   }
 
   const handleCancelSearch = () => {
     setSearching(false)
-    // TODO: Cancel Socket.io matchmaking
+    if (socket) {
+      socket.emit('leave_queue')
+    }
   }
 
   const handleLogout = () => {
