@@ -3,6 +3,7 @@ import LoginScreen from './screens/LoginScreen.jsx'
 import HomeScreen from './screens/HomeScreen.jsx'
 import TowerScreen from './screens/TowerScreen.jsx'
 import DrawingScreen from './screens/DrawingScreen.jsx'
+import WatchScreen from './screens/WatchScreen.jsx'
 import SummaryScreen from './screens/SummaryScreen.jsx'
 
 function App() {
@@ -13,6 +14,7 @@ function App() {
         <Route path="/home" element={<HomeScreen />} />
         <Route path="/tower" element={<TowerScreen />} />
         <Route path="/drawing" element={<DrawingScreen />} />
+        <Route path="/watch" element={<WatchScreen />} />
         <Route path="/summary" element={<SummaryScreen />} />
         <Route path="*" element={<Navigate to="/login" replace />} />
       </Routes>
