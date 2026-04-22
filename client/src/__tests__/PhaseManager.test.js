@@ -1,6 +1,6 @@
 import { describe, it, expect, vi, beforeEach, afterEach } from 'vitest'
 import { PhaseManager } from '../game/PhaseManager'
-import { GAME } from '../../../shared/constants'
+import { GAME } from '@/shared/constants'
 
 describe('PhaseManager', () => {
   beforeEach(() => {

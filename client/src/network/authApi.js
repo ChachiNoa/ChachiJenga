@@ -60,3 +60,25 @@ export function clearAuth() {
 export function getToken() {
   return localStorage.getItem('chachijenga-token')
 }
+
+/**
+ * DEV ONLY: Login as a test user without Google OAuth.
+ * Creates a real user in the server DB so all game features work.
+ * @param {string} name - Display name for the dev user
+ * @returns {Promise<{token: string, user: object}>}
+ */
+export async function devLogin(name = 'Dev Player') {
+  const response = await fetch(`${API_URL}/auth/dev-login`, {
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json' },
+    body: JSON.stringify({ name }),
+  })
+
+  if (!response.ok) {
+    const error = await response.json().catch(() => ({}))
+    throw new Error(error.error || 'Dev login failed')
+  }
+
+  return response.json()
+}
+

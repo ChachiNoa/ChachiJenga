@@ -3,7 +3,7 @@ import { useNavigate, useLocation } from 'react-router-dom'
 import { useTranslation } from 'react-i18next'
 import StrokeViewer from '../components/StrokeViewer'
 import { useSocket } from '../hooks/useSocket'
-import { GAME } from '../../../shared/constants'
+import { GAME } from '@/shared/constants'
 
 export default function WatchScreen() {
   const { t } = useTranslation()

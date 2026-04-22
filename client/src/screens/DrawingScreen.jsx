@@ -5,7 +5,7 @@ import { PhaseManager } from '../game/PhaseManager'
 import { ShapeRecognizer } from '../drawing/ShapeRecognizer'
 import DrawingCanvas from '../components/DrawingCanvas'
 import { useSocket } from '../hooks/useSocket'
-import { GAME } from '../../../shared/constants'
+import { GAME } from '@/shared/constants'
 import { audio } from '../lib/audio'
 
 // Pseudo-random bounding box generator for SVGs

@@ -1,4 +1,4 @@
-import { GAME } from '../../../shared/constants'
+import { GAME } from '@/shared/constants'
 
 export class DifficultyManager {
   /**

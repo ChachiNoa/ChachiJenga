@@ -1,4 +1,4 @@
-import { GAME } from '../../../shared/constants'
+import { GAME } from '@/shared/constants'
 
 // Note: Shapes will be defined fully later. For now we use placeholder types for logic.
 const SHAPE_CATEGORIES = {

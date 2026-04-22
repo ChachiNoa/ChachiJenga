@@ -9,6 +9,14 @@ export default defineConfig({
   resolve: {
     alias: {
       '@': path.resolve(__dirname, './src'),
+      // Map the shared constants (CJS) to our ESM wrapper
+      '@shared': path.resolve(__dirname, '../shared'),
+    },
+  },
+  server: {
+    fs: {
+      // Allow access to the shared folder outside the client root
+      allow: ['.', '../shared'],
     },
   },
 })

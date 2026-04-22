@@ -1,6 +1,6 @@
 import { describe, it, expect } from 'vitest'
 import { DifficultyManager } from '../game/DifficultyManager'
-import { GAME } from '../../../shared/constants'
+import { GAME } from '@/shared/constants'
 
 describe('DifficultyManager', () => {
   it('should return EASY for center piece', () => {

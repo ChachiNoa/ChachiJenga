@@ -1,6 +1,13 @@
-// Socket.io event type constants shared between client and server
+/**
+ * ESM re-export of the shared constants for Vite/browser usage.
+ * The original file uses CJS (module.exports) for Node.js compatibility.
+ * 
+ * We duplicate the constants here to avoid CJS/ESM interop issues with Vite.
+ * Keep in sync with: ../../shared/constants.js
+ */
 
-const EVENTS = {
+// Socket.io event type constants shared between client and server
+export const EVENTS = {
   // Matchmaking
   FIND_MATCH: 'find_match',
   CANCEL_FIND: 'cancel_find',
@@ -26,7 +33,7 @@ const EVENTS = {
 }
 
 // Game constants
-const GAME = {
+export const GAME = {
   TOWER_LAYERS: 18,
   PIECES_PER_LAYER: 3,
   TOTAL_PIECES: 54,
@@ -72,6 +79,3 @@ const GAME = {
   },
   FORFEIT_ELO_MULTIPLIER: 1.2,
 }
-
-module.exports = { EVENTS, GAME }
-
