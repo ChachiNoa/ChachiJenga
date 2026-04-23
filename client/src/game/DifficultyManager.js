@@ -7,7 +7,28 @@ export class DifficultyManager {
    * @param {Array<{present: boolean}>} layerPieces - State of the 3 pieces in the layer
    * @returns {number} Difficulty level (1 = EASY, 2 = MEDIUM, 3 = HARD)
    */
-  static getDifficulty(position, layerPieces) {
+  static getDifficulty(position, layerIndex, allLayers) {
+    if (!allLayers) {
+      // Fallback for tests if layers not provided
+      return GAME.DIFFICULTY.EASY
+    }
+
+    // Determine the topmost layer that has at least one piece
+    let topmostActiveLayer = -1
+    for (let i = allLayers.length - 1; i >= 0; i--) {
+      if (allLayers[i].pieces.some(p => p.present)) {
+        topmostActiveLayer = i
+        break
+      }
+    }
+
+    // If this is the topmost active layer, all pieces are EASY
+    if (layerIndex === topmostActiveLayer) {
+      return GAME.DIFFICULTY.EASY
+    }
+
+    const layerPieces = allLayers[layerIndex].pieces
+
     if (position === 1) {
       return GAME.DIFFICULTY.EASY
     }

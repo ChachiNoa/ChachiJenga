@@ -104,7 +104,7 @@ export default function DrawingCanvas({ onStrokeComplete, onStrokePoint, disable
       setCurrentStrokes(newStrokes)
       setCurrentLine([])
 
-      // Wait 500ms for potentially more strokes (e.g. crossing a t, second part of X)
+      // Wait 300ms for potentially more strokes (e.g. crossing a t, second part of X)
       // before sending for recognition
       recognitionTimeoutRef.current = setTimeout(() => {
         if (onStrokeComplete) {
@@ -112,7 +112,7 @@ export default function DrawingCanvas({ onStrokeComplete, onStrokePoint, disable
         }
         // Auto clear after recognition attempt
         setCurrentStrokes([])
-      }, 500)
+      }, 300)
     }
   }
 

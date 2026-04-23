@@ -1,12 +1,14 @@
 import { PDollarRecognizer, Point } from './pdollar'
 import { templates } from './shapes'
 
-const THRESHOLD = 0.70
+const THRESHOLD = 0.10
 
 export class ShapeRecognizer {
   constructor() {
     this.recognizer = new PDollarRecognizer()
-    this.templates = templates
+    for (let t of templates) {
+      this.recognizer.AddGesture(t.Name, t.Points)
+    }
   }
 
   /**
@@ -33,12 +35,16 @@ export class ShapeRecognizer {
     if (points.length === 0) return null
 
     // Filter templates to only include pending shapes
-    const activeTemplates = this.templates.filter(t => pendingShapeNames.includes(t.Name))
+    const activeTemplates = this.recognizer.PointClouds.filter(t => pendingShapeNames.includes(t.Name))
     
     if (activeTemplates.length === 0) return null
 
     // Recognize against active templates
     const result = this.recognizer.Recognize(points, activeTemplates)
+    
+    if (result) {
+      console.log(`[ShapeRecognizer] Detected: ${result.Name} with Score: ${result.Score.toFixed(3)}`)
+    }
     
     if (result && result.Score >= THRESHOLD) {
       // Final check to make absolutely sure it's in the pending list

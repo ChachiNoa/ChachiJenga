@@ -48,14 +48,37 @@ class GameRoom {
     });
 
     // Server-side timing truth (45s + edge grace period of 2s)
-    if (this.challengeTimer) clearTimeout(this.challengeTimer);
-    this.challengeTimer = setTimeout(() => {
-      // Time is up on server
-      this.io.to(this.roomId).emit('tower_collapsed', { player: socketId });
-      this.endGame('COLLAPSE', socketId);
-    }, 47000); 
+    this.challengeEndTime = Date.now() + 47000;
+    this._startChallengeTimer();
 
     return { success: true };
+  }
+
+  _startChallengeTimer() {
+    if (this.challengeTimer) clearTimeout(this.challengeTimer);
+    const msLeft = this.challengeEndTime - Date.now();
+    
+    if (msLeft <= 0) {
+      this.io.to(this.roomId).emit('tower_collapsed', { player: this.getCurrentPlayer().socketId });
+      this.endGame('COLLAPSE', this.getCurrentPlayer().socketId);
+    } else {
+      this.challengeTimer = setTimeout(() => {
+        this._startChallengeTimer();
+      }, msLeft);
+    }
+  }
+
+  handleDrawingResult(socketId, data) {
+    if (this.getCurrentPlayer().socketId !== socketId || this.status !== 'IN_PROGRESS') return;
+    
+    // Forward to opponent
+    this.io.to(this.players.find(p => p.socketId !== socketId).socketId).emit('opponent_drawing_result', data);
+
+    if (!data.valid) {
+      // Apply error penalty on the server (-4s)
+      this.challengeEndTime -= 4000;
+      this._startChallengeTimer();
+    }
   }
 
   handlePieceExtracted(socketId, layer, pos) {

@@ -67,8 +67,10 @@ function handleGameEvents(io, socket) {
   socket.on('drawing_result', (data) => {
     const roomId = playerToRoom.get(socket.id);
     if (!roomId) return;
-    // data can include { match: boolean, shape: string }
-    socket.to(roomId).emit('opponent_drawing_result', data);
+    const room = activeRooms.get(roomId);
+    if (room) {
+      room.handleDrawingResult(socket.id, data);
+    }
   });
 
   socket.on('phase_update', (data) => {
@@ -77,6 +79,18 @@ function handleGameEvents(io, socket) {
     socket.to(roomId).emit('opponent_phase_update', data);
   });
   
+  socket.on('request_sync', () => {
+    const roomId = playerToRoom.get(socket.id);
+    if (!roomId) return;
+    const room = activeRooms.get(roomId);
+    if (room && room.status === 'IN_PROGRESS') {
+      socket.emit('game_started', {
+        tower: room.tower.toJSON(),
+        turn: room.players[room.currentTurnIndex].socketId
+      });
+    }
+  });
+
   socket.on('disconnect', () => {
     const roomId = playerToRoom.get(socket.id);
     if (roomId) {

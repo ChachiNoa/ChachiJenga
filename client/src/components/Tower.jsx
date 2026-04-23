@@ -122,23 +122,23 @@ export default function Tower({ layers, onSelectPiece, interactive = true }) {
       ctx.lineWidth = 1
       ctx.lineJoin = 'round'
 
-      // Left face
+      // Left visible face (Left -> Front -> BottomFront -> BottomLeft)
       ctx.beginPath()
       ctx.moveTo(pTopLeftBottom.x, pTopLeftBottom.y)
-      ctx.lineTo(pTopLeft.x, pTopLeft.y)
-      ctx.lineTo(pBottomLeft.x, pBottomLeft.y)
+      ctx.lineTo(pTopBottom.x, pTopBottom.y)
+      ctx.lineTo(pBottomBottom.x, pBottomBottom.y)
       ctx.lineTo(pBottomLeftBottom.x, pBottomLeftBottom.y)
       ctx.closePath()
       ctx.fillStyle = leftColor
       ctx.fill()
       ctx.stroke()
 
-      // Right face
+      // Right visible face (Front -> Right -> BottomRight -> BottomFront)
       ctx.beginPath()
-      ctx.moveTo(pTopLeftBottom.x, pTopLeftBottom.y)
-      ctx.lineTo(pTopBottom.x, pTopBottom.y)
+      ctx.moveTo(pTopBottom.x, pTopBottom.y)
+      ctx.lineTo(pTopRight.x, pTopRight.y)
+      ctx.lineTo(pBottomRight.x, pBottomRight.y)
       ctx.lineTo(pBottomBottom.x, pBottomBottom.y)
-      ctx.lineTo(pBottomLeftBottom.x, pBottomLeftBottom.y)
       ctx.closePath()
       ctx.fillStyle = rightColor
       ctx.fill()

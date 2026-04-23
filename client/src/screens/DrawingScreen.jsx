@@ -2,6 +2,7 @@ import React, { useState, useEffect, useRef, useMemo } from 'react'
 import { useNavigate, useLocation } from 'react-router-dom'
 import { useTranslation } from 'react-i18next'
 import { PhaseManager } from '../game/PhaseManager'
+import { DifficultyManager } from '../game/DifficultyManager'
 import { ShapeRecognizer } from '../drawing/ShapeRecognizer'
 import DrawingCanvas from '../components/DrawingCanvas'
 import { useSocket } from '../hooks/useSocket'
@@ -46,7 +47,7 @@ export default function DrawingScreen() {
   const { socket } = useSocket()
   
   // Extract info passed from TowerScreen
-  const pieceInfo = location.state || { layer: 0, position: 1 } // Fallback
+  const pieceInfo = location.state || { layer: 0, position: 1, layers: null } // Fallback
 
   const [timeRemaining, setTimeRemaining] = useState(GAME.TIMER_SECONDS * 1000)
   const [currentPhase, setCurrentPhase] = useState(1)
@@ -70,8 +71,10 @@ export default function DrawingScreen() {
 
   useEffect(() => {
     // Initialize Game Logic
-    // In a real app we'd get difficulty from DifficultyManager based on pieceInfo
-    const difficulty = GAME.DIFFICULTY.EASY 
+    let difficulty = GAME.DIFFICULTY.EASY
+    if (pieceInfo.layers) {
+      difficulty = DifficultyManager.getDifficulty(pieceInfo.position, pieceInfo.layer, pieceInfo.layers)
+    }
     
     pmRef.current = new PhaseManager(difficulty)
     recognizerRef.current = new ShapeRecognizer()

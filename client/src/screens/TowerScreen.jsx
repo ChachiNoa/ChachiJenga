@@ -55,16 +55,19 @@ function TowerScreen() {
   const [layers, setLayers] = useState(initialData && initialData.tower ? initialData.tower.layers : createMockLayers())
   const [selectedPiece, setSelectedPiece] = useState(null)
   const [confirmOpen, setConfirmOpen] = useState(false)
-  const [isMyTurn, setIsMyTurn] = useState(isMyTurnInitially)
+  const [isMyTurn, setIsMyTurn] = useState(initialData && socket ? initialData.turn === socket.id : false)
   
   // Real or Mock game state for UI demonstration
   const [gameState, setGameState] = useState({
-    me: { name: 'Me', points: 0, isTurn: isMyTurnInitially },
-    opponent: { name: 'Opponent', points: 0, isTurn: !isMyTurnInitially }
+    me: { name: 'Me', points: 0, isTurn: initialData && socket ? initialData.turn === socket.id : false },
+    opponent: { name: 'Opponent', points: 0, isTurn: initialData && socket ? initialData.turn !== socket.id : false }
   })
 
   useEffect(() => {
     if (!socket) return
+
+    // Immediately request the true game state when this screen mounts
+    socket.emit('request_sync')
 
     const onTurnChanged = ({ turn }) => {
       const myTurn = turn === socket.id
@@ -83,10 +86,15 @@ function TowerScreen() {
     }
     
     // Server emits piece_extracted, we reload tower visually from a resync event,
-    // but for now we didn't add game_resync. Just a basic setup.
+    // but we can also get a full game_started payload which resyncs everything.
     const onGameStartedResync = (data) => {
       setLayers(data.tower.layers)
       onTurnChanged({ turn: data.turn })
+    }
+
+    const onPieceExtracted = (data) => {
+      // Just request full sync to update the tower blocks correctly
+      socket.emit('request_sync')
     }
 
     const onGameOver = (data) => {
@@ -96,12 +104,14 @@ function TowerScreen() {
     socket.on('turn_changed', onTurnChanged)
     socket.on('challenge_started', onChallengeStarted)
     socket.on('game_started', onGameStartedResync)
+    socket.on('piece_extracted', onPieceExtracted)
     socket.on('game_over', onGameOver)
 
     return () => {
       socket.off('turn_changed', onTurnChanged)
       socket.off('challenge_started', onChallengeStarted)
       socket.off('game_started', onGameStartedResync)
+      socket.off('piece_extracted', onPieceExtracted)
       socket.off('game_over', onGameOver)
     }
   }, [socket, navigate])
@@ -121,8 +131,8 @@ function TowerScreen() {
     if (socket) {
       socket.emit('select_piece', { layer: selectedPiece.layer, pos: selectedPiece.position })
     }
-    // Navigate to drawing screen, passing the selected piece
-    navigate('/drawing', { state: { layer: selectedPiece.layer, position: selectedPiece.position } })
+    // Navigate to drawing screen, passing the selected piece and current tower state
+    navigate('/drawing', { state: { layer: selectedPiece.layer, position: selectedPiece.position, layers } })
   }
 
   return (
