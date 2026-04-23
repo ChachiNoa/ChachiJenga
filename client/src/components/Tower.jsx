@@ -4,7 +4,7 @@ import { GAME } from '@/shared/constants'
 
 const TOWER_LAYERS = 18;
 const PIECES_PER_LAYER = 3;
-const PROTECTED_TOP = 0;
+const PROTECTED_TOP = GAME.PROTECTED_TOP_LAYERS;
 
 // Block rendering constants
 const BLOCK_W = 3
