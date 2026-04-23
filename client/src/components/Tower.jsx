@@ -1,8 +1,10 @@
 import React, { useRef, useEffect, useState, useMemo } from 'react'
+import { DifficultyManager } from '../game/DifficultyManager'
+import { GAME } from '@/shared/constants'
 
 const TOWER_LAYERS = 18;
 const PIECES_PER_LAYER = 3;
-const PROTECTED_TOP = 3;
+const PROTECTED_TOP = 0;
 
 // Block rendering constants
 const BLOCK_W = 3
@@ -44,6 +46,7 @@ export default function Tower({ layers, onSelectPiece, interactive = true }) {
         const depth = isHorizontal ? BLOCK_D : BLOCK_W
 
         const isProtected = lIndex >= TOWER_LAYERS - PROTECTED_TOP
+        const difficulty = DifficultyManager.getDifficulty(pIndex, lIndex, layers)
 
         list.push({
           layer: lIndex,
@@ -54,7 +57,8 @@ export default function Tower({ layers, onSelectPiece, interactive = true }) {
           width,
           depth,
           height: BLOCK_H,
-          selectable: interactive && !isProtected
+          selectable: interactive && !isProtected,
+          difficulty
         })
       })
     })
@@ -107,6 +111,23 @@ export default function Tower({ layers, onSelectPiece, interactive = true }) {
       let topColor = '#E6CBA8'
       let leftColor = '#D4B895'
       let rightColor = '#C3A682'
+
+      // DEV MODE: Color coding by difficulty
+      if (import.meta.env.DEV) {
+        if (block.difficulty === GAME.DIFFICULTY.EASY) {
+          topColor = '#A8DDFD'
+          leftColor = '#8AC3E6'
+          rightColor = '#72AAD0'
+        } else if (block.difficulty === GAME.DIFFICULTY.MEDIUM) {
+          topColor = '#FDFD96'
+          leftColor = '#E6E67A'
+          rightColor = '#CFCF61'
+        } else if (block.difficulty === GAME.DIFFICULTY.HARD) {
+          topColor = '#FFB347'
+          leftColor = '#E69A33'
+          rightColor = '#CC8220'
+        }
+      }
 
       if (isHovered && block.selectable) {
         topColor = '#B2FBA5' // Pastel green highlight
@@ -227,6 +248,14 @@ export default function Tower({ layers, onSelectPiece, interactive = true }) {
         onPointerOut={handlePointerLeave}
         onClick={handleClick}
       />
+      {import.meta.env.DEV && (
+        <div className="absolute bottom-20 left-4 bg-white/90 p-3 rounded-lg text-sm pointer-events-none z-10 shadow-lg border border-sky-100">
+          <div className="font-black mb-2 text-primary">DEV: Dificultad</div>
+          <div className="flex items-center gap-2 mb-1"><div className="w-4 h-4 bg-[#A8DDFD] border border-[#72AAD0] rounded-sm"></div> Fácil</div>
+          <div className="flex items-center gap-2 mb-1"><div className="w-4 h-4 bg-[#FDFD96] border border-[#CFCF61] rounded-sm"></div> Medio</div>
+          <div className="flex items-center gap-2"><div className="w-4 h-4 bg-[#FFB347] border border-[#CC8220] rounded-sm"></div> Difícil</div>
+        </div>
+      )}
     </div>
   )
 }

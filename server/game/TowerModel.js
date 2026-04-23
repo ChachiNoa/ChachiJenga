@@ -71,7 +71,24 @@ class TowerModel {
     this._layers[layerIndex].pieces[position].present = false
     this._piecesExtracted++
 
+    if (this.isLayerEmpty(layerIndex)) {
+      this._collapseEmptyLayer(layerIndex)
+    }
+
     return { success: true }
+  }
+
+  _collapseEmptyLayer(emptyLayerIndex) {
+    // Drop the present state of all layers above down by 1
+    for (let i = emptyLayerIndex; i < GAME.TOWER_LAYERS - 1; i++) {
+      for (let pos = 0; pos < GAME.PIECES_PER_LAYER; pos++) {
+        this._layers[i].pieces[pos].present = this._layers[i + 1].pieces[pos].present
+      }
+    }
+    // Clear the topmost layer
+    for (let pos = 0; pos < GAME.PIECES_PER_LAYER; pos++) {
+      this._layers[GAME.TOWER_LAYERS - 1].pieces[pos].present = false
+    }
   }
 
   getPiecesExtracted() {

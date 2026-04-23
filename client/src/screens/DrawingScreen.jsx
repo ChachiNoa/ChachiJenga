@@ -8,6 +8,7 @@ import DrawingCanvas from '../components/DrawingCanvas'
 import { useSocket } from '../hooks/useSocket'
 import { GAME } from '@/shared/constants'
 import { audio } from '../lib/audio'
+import { Button } from '@/components/ui/button'
 
 // Pseudo-random bounding box generator for SVGs
 function generateShapePositions(shapes, screenWidth, screenHeight) {
@@ -167,6 +168,32 @@ export default function DrawingScreen() {
     }
   }
 
+  const handleDevSkipPhase = () => {
+    // Force complete all pending shapes
+    const pendingShapes = shapesInfo.filter(s => !s.completed)
+    if (pendingShapes.length > 0) {
+      pendingShapes.forEach((shape, idx) => {
+        if (socket) socket.emit('drawing_result', { valid: true, shapeId: shape.id })
+        
+        // Mark visually
+        setShapesInfo(prev => prev.map(s => s.id === shape.id ? { ...s, completed: true } : s))
+        
+        const isLast = idx === pendingShapes.length - 1
+        const res = pmRef.current.completeShape(shape.id)
+        
+        if (isLast) {
+          if (res.pieceExtracted) {
+            if (socket) socket.emit('piece_extracted', { layer: pieceInfo.layer, pos: pieceInfo.position })
+            navigate('/tower', { replace: true })
+          } else if (res.phaseCompleted) {
+            setCurrentPhase(pmRef.current.getCurrentPhase())
+          }
+        }
+      })
+      audio.play('correct')
+    }
+  }
+
   // Format time (ms to SS.s)
   const seconds = (timeRemaining / 1000).toFixed(1)
   const isDangerTime = timeRemaining <= 10000
@@ -198,6 +225,19 @@ export default function DrawingScreen() {
           {completedShapes}/{totalShapes}
         </div>
       </div>
+
+      {import.meta.env.DEV && (
+        <div className="absolute left-4 top-24 z-30">
+          <Button 
+            variant="default"
+            size="sm"
+            onClick={handleDevSkipPhase}
+            className="bg-purple-500 hover:bg-purple-600 shadow-xl font-bold text-white"
+          >
+            🛠️ DEV: Saltar Fase
+          </Button>
+        </div>
+      )}
 
       {/* SVG Container (Layer below canvas) */}
       <div className="absolute inset-0 z-10 pointer-events-none">
