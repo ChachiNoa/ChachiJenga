@@ -89,10 +89,22 @@ function TowerScreen() {
       if (data.selectionEndTime) {
         setSelectionEndTime(data.selectionEndTime)
       }
-      setGameState(prev => ({
-        me: { ...prev.me, isTurn: myTurn },
-        opponent: { ...prev.opponent, isTurn: !myTurn }
-      }))
+      
+      setGameState(prev => {
+        let newMePts = prev.me.points;
+        let newOppPts = prev.opponent.points;
+        
+        if (data.scores) {
+          newMePts = data.scores[socket.id] !== undefined ? data.scores[socket.id] : newMePts;
+          const oppId = Object.keys(data.scores).find(id => id !== socket.id);
+          newOppPts = (oppId && data.scores[oppId] !== undefined) ? data.scores[oppId] : newOppPts;
+        }
+
+        return {
+          me: { ...prev.me, isTurn: myTurn, points: newMePts },
+          opponent: { ...prev.opponent, isTurn: !myTurn, points: newOppPts }
+        }
+      })
     }
 
     const onChallengeStarted = ({ layer, pos, player }) => {
@@ -113,6 +125,22 @@ function TowerScreen() {
     const onPieceExtracted = (data) => {
       // Just request full sync to update the tower blocks correctly
       socket.emit('request_sync')
+      
+      // Update scores if provided
+      if (data.scores) {
+         setGameState(prev => {
+          let newMePts = prev.me.points;
+          let newOppPts = prev.opponent.points;
+          newMePts = data.scores[socket.id] !== undefined ? data.scores[socket.id] : newMePts;
+          const oppId = Object.keys(data.scores).find(id => id !== socket.id);
+          newOppPts = (oppId && data.scores[oppId] !== undefined) ? data.scores[oppId] : newOppPts;
+          
+          return {
+            me: { ...prev.me, points: newMePts },
+            opponent: { ...prev.opponent, points: newOppPts }
+          }
+        })
+      }
     }
 
     const onGameOver = (data) => {

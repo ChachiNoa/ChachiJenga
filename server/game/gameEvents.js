@@ -86,7 +86,9 @@ function handleGameEvents(io, socket) {
     if (room && room.status === 'IN_PROGRESS') {
       socket.emit('game_started', {
         tower: room.tower.toJSON(),
-        turn: room.players[room.currentTurnIndex].socketId
+        turn: room.players[room.currentTurnIndex].socketId,
+        selectionEndTime: room.selectionEndTime,
+        scores: room.getLiveScores()
       });
     }
   });

@@ -1,4 +1,5 @@
 const { TowerModel } = require('./TowerModel');
+const { PointCalculator } = require('../scoring/PointCalculator');
 
 class GameRoom {
   constructor(roomId, player1, player2, io, db) {
@@ -22,7 +23,8 @@ class GameRoom {
     this.io.to(this.roomId).emit('game_started', {
       tower: this.tower.toJSON(),
       turn: this.players[this.currentTurnIndex].socketId,
-      selectionEndTime: this.selectionEndTime
+      selectionEndTime: this.selectionEndTime,
+      scores: this.getLiveScores()
     });
   }
 
@@ -35,8 +37,16 @@ class GameRoom {
     this._startSelectionTimer();
     this.io.to(this.roomId).emit('turn_changed', {
       turn: this.players[this.currentTurnIndex].socketId,
-      selectionEndTime: this.selectionEndTime
+      selectionEndTime: this.selectionEndTime,
+      scores: this.getLiveScores()
     });
+  }
+
+  getLiveScores() {
+    return {
+      [this.players[0].socketId]: PointCalculator.calculatePiecesBaseScore(this.extractedPieces[0]),
+      [this.players[1].socketId]: PointCalculator.calculatePiecesBaseScore(this.extractedPieces[1])
+    };
   }
 
   handleSelectPiece(socketId, layer, pos) {
@@ -132,7 +142,8 @@ class GameRoom {
     this.io.to(this.roomId).emit('piece_extracted', {
       layer,
       pos,
-      player: socketId
+      player: socketId,
+      scores: this.getLiveScores()
     });
 
     if (this.tower.checkCollapse()) {
