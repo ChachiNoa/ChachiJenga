@@ -17,9 +17,11 @@ class GameRoom {
 
   startGame() {
     this.status = 'IN_PROGRESS';
+    this._startSelectionTimer();
     this.io.to(this.roomId).emit('game_started', {
       tower: this.tower.toJSON(),
-      turn: this.players[this.currentTurnIndex].socketId
+      turn: this.players[this.currentTurnIndex].socketId,
+      selectionEndTime: this.selectionEndTime
     });
   }
 
@@ -29,8 +31,10 @@ class GameRoom {
 
   switchTurn() {
     this.currentTurnIndex = 1 - this.currentTurnIndex;
+    this._startSelectionTimer();
     this.io.to(this.roomId).emit('turn_changed', {
-      turn: this.players[this.currentTurnIndex].socketId
+      turn: this.players[this.currentTurnIndex].socketId,
+      selectionEndTime: this.selectionEndTime
     });
   }
 
@@ -41,6 +45,11 @@ class GameRoom {
     
     if (!this.tower.canSelectPiece(layer, pos)) {
       return { success: false, reason: 'Invalid piece' };
+    }
+
+    if (this.selectionTimer) {
+      clearTimeout(this.selectionTimer);
+      this.selectionTimer = null;
     }
 
     // Piece is valid, notify both players challenge started
@@ -69,6 +78,25 @@ class GameRoom {
         this._startChallengeTimer();
       }, msLeft);
     }
+  }
+
+  _startSelectionTimer() {
+    if (this.selectionTimer) clearTimeout(this.selectionTimer);
+    
+    // Server-side timing truth (15s + grace period of 1s)
+    this.selectionEndTime = Date.now() + 16000;
+    
+    const checkTimeout = () => {
+      if (this.status !== 'IN_PROGRESS') return;
+      const msLeft = this.selectionEndTime - Date.now();
+      if (msLeft <= 0) {
+        this.io.to(this.roomId).emit('tower_collapsed', { player: this.getCurrentPlayer().socketId, reason: 'selection_timeout' });
+        this.endGame('TIMEOUT', this.getCurrentPlayer().socketId);
+      } else {
+        this.selectionTimer = setTimeout(checkTimeout, msLeft);
+      }
+    };
+    checkTimeout();
   }
 
   handleDrawingResult(socketId, data) {
@@ -138,7 +166,7 @@ class GameRoom {
         let result1 = 'DRAW';
         let result2 = 'DRAW';
 
-        if (reason === 'COLLAPSE' || reason === 'FORFEIT') {
+        if (reason === 'COLLAPSE' || reason === 'FORFEIT' || reason === 'TIMEOUT') {
           result1 = (this.players[0].socketId === loserSocketId) ? 'DEFEAT' : 'VICTORY';
           if (reason === 'FORFEIT' && result1 === 'DEFEAT') result1 = 'FORFEIT';
 

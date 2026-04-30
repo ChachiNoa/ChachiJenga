@@ -55,6 +55,8 @@ function TowerScreen() {
   const [layers, setLayers] = useState(initialData && initialData.tower ? initialData.tower.layers : createMockLayers())
   const [selectedPiece, setSelectedPiece] = useState(null)
   const [confirmOpen, setConfirmOpen] = useState(false)
+  const [selectionEndTime, setSelectionEndTime] = useState(initialData?.selectionEndTime || null)
+  const [timeLeft, setTimeLeft] = useState(15)
   const [isMyTurn, setIsMyTurn] = useState(initialData && socket ? initialData.turn === socket.id : false)
   
   // Real or Mock game state for UI demonstration
@@ -64,14 +66,29 @@ function TowerScreen() {
   })
 
   useEffect(() => {
+    if (!selectionEndTime) return
+    const interval = setInterval(() => {
+      const remaining = Math.max(0, Math.ceil((selectionEndTime - Date.now()) / 1000))
+      setTimeLeft(remaining)
+      if (remaining === 0) {
+        clearInterval(interval)
+      }
+    }, 200)
+    return () => clearInterval(interval)
+  }, [selectionEndTime])
+
+  useEffect(() => {
     if (!socket) return
 
     // Immediately request the true game state when this screen mounts
     socket.emit('request_sync')
 
-    const onTurnChanged = ({ turn }) => {
-      const myTurn = turn === socket.id
+    const onTurnChanged = (data) => {
+      const myTurn = data.turn === socket.id
       setIsMyTurn(myTurn)
+      if (data.selectionEndTime) {
+        setSelectionEndTime(data.selectionEndTime)
+      }
       setGameState(prev => ({
         me: { ...prev.me, isTurn: myTurn },
         opponent: { ...prev.opponent, isTurn: !myTurn }
@@ -79,6 +96,7 @@ function TowerScreen() {
     }
 
     const onChallengeStarted = ({ layer, pos, player }) => {
+      setSelectionEndTime(null) // Challenge started, stop selection timer
       if (player !== socket.id) {
         // Opponent started the challenge, go to watch
         navigate('/watch', { replace: true })
@@ -89,7 +107,7 @@ function TowerScreen() {
     // but we can also get a full game_started payload which resyncs everything.
     const onGameStartedResync = (data) => {
       setLayers(data.tower.layers)
-      onTurnChanged({ turn: data.turn })
+      onTurnChanged(data)
     }
 
     const onPieceExtracted = (data) => {
@@ -135,6 +153,8 @@ function TowerScreen() {
     navigate('/drawing', { state: { layer: selectedPiece.layer, position: selectedPiece.position, layers } })
   }
 
+  const isDangerTime = isMyTurn && timeLeft <= 5 && selectionEndTime
+
   return (
     <div className="flex h-svh w-full flex-col bg-gradient-to-b from-sky-100 to-amber-50 overflow-hidden animate-page-enter">
       
@@ -146,10 +166,17 @@ function TowerScreen() {
           points={gameState.me.points} 
         />
         
-        <div className="rounded-full bg-background/80 px-4 py-1.5 shadow-sm backdrop-blur-sm">
-          <span className="text-sm font-bold uppercase tracking-wider text-primary">
-            {gameState.me.isTurn ? t('game.yourTurn') : t('game.opponentTurn')}
-          </span>
+        <div className={`rounded-full px-4 py-1.5 shadow-sm backdrop-blur-sm transition-colors ${isDangerTime ? 'bg-red-500 text-white animate-pulse' : 'bg-background/80 text-primary'}`}>
+          <div className="flex flex-col items-center">
+            <span className="text-sm font-bold uppercase tracking-wider">
+              {gameState.me.isTurn ? t('game.yourTurn') : t('game.opponentTurn')}
+            </span>
+            {selectionEndTime && (
+              <span className={`text-xl font-black ${isDangerTime ? 'text-white' : 'text-foreground'}`}>
+                00:{timeLeft.toString().padStart(2, '0')}
+              </span>
+            )}
+          </div>
         </div>
         
         <PlayerAvatar 

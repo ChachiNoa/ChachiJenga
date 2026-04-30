@@ -56,6 +56,7 @@ export default function SummaryScreen() {
             {reason === 'COLLAPSE' && t('summary.reasonCollapse', 'La torre se derrumbó')}
             {reason === 'FORFEIT' && t('summary.reasonForfeit', 'Abandono')}
             {reason === 'DRAW' && t('summary.reasonDraw', 'Límite de turnos')}
+            {reason === 'selection_timeout' && t('summary.reasonTimeout', 'Tiempo agotado')}
           </p>
         </div>
 
