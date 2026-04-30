@@ -68,6 +68,15 @@ export default function SummaryScreen() {
               </span>
             </div>
 
+            {data.piecesExtracted != null && (
+              <div className="flex justify-between items-center bg-muted/30 p-3 rounded-xl">
+                <span className="font-semibold text-muted-foreground">{t('summary.piecesExtracted', 'Piezas Extraídas')}</span>
+                <span className="text-xl font-black text-pastel-purple">
+                  {data.piecesExtracted}
+                </span>
+              </div>
+            )}
+
             <div className="flex justify-between items-center bg-muted/30 p-3 rounded-xl">
               <span className="font-semibold text-muted-foreground">{t('summary.eloChange', 'Cambio ELO')}</span>
               <div className="flex items-center gap-2">

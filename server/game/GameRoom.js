@@ -7,6 +7,9 @@ class GameRoom {
     this.io = io;
     this.tower = new TowerModel();
     
+    // Track extracted pieces per player for scoring { difficulty }
+    this.extractedPieces = [[], []]; // [player0Pieces, player1Pieces]
+    
     // Choose starting player
     this.currentTurnIndex = Math.random() < 0.5 ? 0 : 1;
     this.status = 'WAITING'; // WAITING, IN_PROGRESS, ENDED
@@ -94,6 +97,9 @@ class GameRoom {
     const result = this.tower.extractPiece(layer, pos);
     if (!result.success) return result;
 
+    // Track extracted piece for scoring
+    this.extractedPieces[this.currentTurnIndex].push({ difficulty: result.difficulty });
+
     this.io.to(this.roomId).emit('piece_extracted', {
       layer,
       pos,
@@ -143,12 +149,11 @@ class GameRoom {
         const { PointCalculator } = require('../scoring/PointCalculator');
         const { EloCalculator } = require('../scoring/EloCalculator');
 
-        // Extract pieces logic
-        // Let's assume all pieces drawn are just an array. We don't track them individually yet or simulate them.
-        // We will just do a mock empty array of pieces for the PointCalculator to get base score (0).
-        // Since we passed no pieces to PointCalculator:
-        const pts1 = PointCalculator.calculateMatchScore([], result1);
-        const pts2 = PointCalculator.calculateMatchScore([], result2);
+        // Use the real extracted pieces tracked during the game
+        const pieces1 = this.extractedPieces[0];
+        const pieces2 = this.extractedPieces[1];
+        const pts1 = PointCalculator.calculateMatchScore(pieces1, result1);
+        const pts2 = PointCalculator.calculateMatchScore(pieces2, result2);
 
         const newElo1 = EloCalculator.calculateNewElo(elo1, elo2, gp1, result1);
         const newElo2 = EloCalculator.calculateNewElo(elo2, elo1, gp2, result2);
@@ -156,18 +161,19 @@ class GameRoom {
         const eloChg1 = newElo1 - elo1;
         const eloChg2 = newElo2 - elo2;
 
-        summaryData1 = { result: result1, eloChange: eloChg1, points: pts1, prevElo: elo1, newElo: newElo1 };
-        summaryData2 = { result: result2, eloChange: eloChg2, points: pts2, prevElo: elo2, newElo: newElo2 };
+        summaryData1 = { result: result1, eloChange: eloChg1, points: pts1, prevElo: elo1, newElo: newElo1, piecesExtracted: pieces1.length };
+        summaryData2 = { result: result2, eloChange: eloChg2, points: pts2, prevElo: elo2, newElo: newElo2, piecesExtracted: pieces2.length };
 
         const updateUsr = this.db.prepare(`
           UPDATE users 
           SET elo = ?, total_points = total_points + ?, games_played = games_played + 1,
-              games_won = games_won + ?, games_lost = games_lost + ?, games_drawn = games_drawn + ?
+              games_won = games_won + ?, games_lost = games_lost + ?, games_drawn = games_drawn + ?,
+              pieces_extracted = pieces_extracted + ?
           WHERE id = ?
         `);
         
-        updateUsr.run(newElo1, pts1, result1 === 'VICTORY' ? 1 : 0, result1 === 'DEFEAT' || result1 === 'FORFEIT' ? 1 : 0, result1 === 'DRAW' ? 1 : 0, p1.id);
-        updateUsr.run(newElo2, pts2, result2 === 'VICTORY' ? 1 : 0, result2 === 'DEFEAT' || result2 === 'FORFEIT' ? 1 : 0, result2 === 'DRAW' ? 1 : 0, p2.id);
+        updateUsr.run(newElo1, pts1, result1 === 'VICTORY' ? 1 : 0, result1 === 'DEFEAT' || result1 === 'FORFEIT' ? 1 : 0, result1 === 'DRAW' ? 1 : 0, pieces1.length, p1.id);
+        updateUsr.run(newElo2, pts2, result2 === 'VICTORY' ? 1 : 0, result2 === 'DEFEAT' || result2 === 'FORFEIT' ? 1 : 0, result2 === 'DRAW' ? 1 : 0, pieces2.length, p2.id);
 
         const insMatch = this.db.prepare(`
           INSERT INTO matches (player1_id, player2_id, winner_id, result, player1_points, player2_points, player1_elo_change, player2_elo_change)

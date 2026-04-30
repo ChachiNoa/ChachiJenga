@@ -75,7 +75,36 @@ class TowerModel {
       this._collapseEmptyLayer(layerIndex)
     }
 
-    return { success: true }
+    return { success: true, difficulty: this._getDifficulty(layerIndex, position) }
+  }
+
+  /**
+   * Calculates difficulty of a piece based on its layer state.
+   * Same logic as client DifficultyManager.
+   */
+  _getDifficulty(layerIndex, position) {
+    // Top layer is always easy
+    let topmostActiveLayer = -1
+    for (let i = this._layers.length - 1; i >= 0; i--) {
+      if (this._layers[i].pieces.some(p => p.present)) {
+        topmostActiveLayer = i
+        break
+      }
+    }
+    if (layerIndex === topmostActiveLayer) return GAME.DIFFICULTY.EASY
+
+    const layerPieces = this._layers[layerIndex].pieces
+    const missingCount = layerPieces.filter(p => !p.present).length
+
+    if (missingCount === 0) return GAME.DIFFICULTY.EASY
+    if (missingCount === 1) {
+      const isCentralMissing = !layerPieces[1].present
+      if (isCentralMissing) return GAME.DIFFICULTY.HARD
+      return position === 1 ? GAME.DIFFICULTY.MEDIUM : GAME.DIFFICULTY.EASY
+    }
+    if (missingCount === 2) return GAME.DIFFICULTY.MEDIUM
+
+    return GAME.DIFFICULTY.EASY
   }
 
   _collapseEmptyLayer(emptyLayerIndex) {
