@@ -27,7 +27,7 @@ function HomeScreen() {
     if (user && profileOpen && !fullProfile) {
       fetch(`${import.meta.env.VITE_API_URL || 'http://localhost:3001'}/api/profile/${user.id}`)
         .then(r => r.json())
-        .then(data => data.user && setFullProfile(data.user))
+        .then(data => data.user && setFullProfile(data))
         .catch(console.error)
     }
   }, [user, profileOpen, fullProfile])
@@ -180,7 +180,7 @@ function HomeScreen() {
       {/* Profile Dialog */}
       <Dialog open={profileOpen} onOpenChange={setProfileOpen}>
         <DialogContent className="sm:max-w-md max-h-[80vh] overflow-y-auto">
-          <ProfileCard user={fullProfile || user} />
+          <ProfileCard user={fullProfile?.user || user} />
         </DialogContent>
       </Dialog>
     </div>

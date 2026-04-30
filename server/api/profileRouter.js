@@ -9,6 +9,7 @@ function createProfileRouter(db) {
       const user = db.prepare(`
         SELECT 
           id, display_name as displayName, avatar_url as avatarUrl, elo, 
+          total_points as totalPoints,
           games_played as gamesPlayed, games_won as gamesWon, 
           games_lost as gamesLost, games_drawn as gamesDrawn,
           pieces_extracted as piecesExtracted, shapes_drawn as shapesDrawn
