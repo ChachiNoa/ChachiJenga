@@ -68,6 +68,9 @@ class TowerModel {
       return { success: false, reason: 'Cannot select this piece' }
     }
 
+    // Calculate difficulty BEFORE extracting so the layer state is still intact
+    const difficulty = this._getDifficulty(layerIndex, position)
+
     this._layers[layerIndex].pieces[position].present = false
     this._piecesExtracted++
 
@@ -75,7 +78,7 @@ class TowerModel {
       this._collapseEmptyLayer(layerIndex)
     }
 
-    return { success: true, difficulty: this._getDifficulty(layerIndex, position) }
+    return { success: true, difficulty }
   }
 
   /**
