@@ -2,6 +2,7 @@ import { PDollarRecognizer, Point } from './pdollar'
 import { templates } from './shapes'
 
 const THRESHOLD = 0.10
+const MAX_POINTS_PER_STROKE = 40
 
 export class ShapeRecognizer {
   constructor() {
@@ -26,7 +27,11 @@ export class ShapeRecognizer {
     
     for (const stroke of strokes) {
       if (stroke.length === 0) continue
-      for (const pt of stroke) {
+      // Downsample dense strokes to speed up recognition
+      const sampled = stroke.length > MAX_POINTS_PER_STROKE
+        ? this._downsample(stroke, MAX_POINTS_PER_STROKE)
+        : stroke
+      for (const pt of sampled) {
         points.push(new Point(pt.x, pt.y, strokeId))
       }
       strokeId++
@@ -42,10 +47,6 @@ export class ShapeRecognizer {
     // Recognize against active templates
     const result = this.recognizer.Recognize(points, activeTemplates)
     
-    if (result) {
-      console.log(`[ShapeRecognizer] Detected: ${result.Name} with Score: ${result.Score.toFixed(3)}`)
-    }
-    
     if (result && result.Score >= THRESHOLD) {
       // Final check to make absolutely sure it's in the pending list
       if (pendingShapeNames.includes(result.Name)) {
@@ -57,5 +58,14 @@ export class ShapeRecognizer {
     }
 
     return null
+  }
+
+  _downsample(stroke, maxPoints) {
+    const step = stroke.length / maxPoints
+    const result = []
+    for (let i = 0; i < maxPoints; i++) {
+      result.push(stroke[Math.floor(i * step)])
+    }
+    return result
   }
 }

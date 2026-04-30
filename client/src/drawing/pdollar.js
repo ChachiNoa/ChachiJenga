@@ -4,7 +4,7 @@ export function Point(x, y, id) {
   this.ID = id;
 }
 
-const NumPoints = 32;
+const NumPoints = 16;
 
 export class PDollarRecognizer {
   constructor() {
@@ -127,17 +127,18 @@ function Distance(p1, p2) {
 function GreedyCloudMatch(pts1, template) {
   let pts2 = template.Points;
   let e = 0.50;
-  let step = Math.floor(Math.pow(pts1.length, 1.0 - e));
+  let step = Math.max(1, Math.floor(Math.pow(pts1.length, 1.0 - e)));
   let min = +Infinity;
   for (let i = 0; i < pts1.length; i += step) {
-    let d1 = CloudDistance(pts1, pts2, i);
-    let d2 = CloudDistance(pts2, pts1, i);
-    min = Math.min(min, Math.min(d1, d2));
+    let d1 = CloudDistance(pts1, pts2, i, min);
+    if (d1 < min) min = d1;
+    let d2 = CloudDistance(pts2, pts1, i, min);
+    if (d2 < min) min = d2;
   }
   return min;
 }
 
-function CloudDistance(pts1, pts2, start) {
+function CloudDistance(pts1, pts2, start, bestSoFar) {
   let matched = new Array(pts1.length).fill(false);
   let sum = 0;
   let i = start;
@@ -156,6 +157,7 @@ function CloudDistance(pts1, pts2, start) {
     matched[index] = true;
     let weight = 1 - ((i - start + pts1.length) % pts1.length) / pts1.length;
     sum += weight * min;
+    if (sum >= bestSoFar) return sum; // Early exit
     i = (i + 1) % pts1.length;
   } while (i !== start);
   return sum;
