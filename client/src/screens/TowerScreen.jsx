@@ -153,7 +153,7 @@ function TowerScreen() {
     navigate('/drawing', { state: { layer: selectedPiece.layer, position: selectedPiece.position, layers } })
   }
 
-  const isDangerTime = isMyTurn && timeLeft <= 5 && selectionEndTime
+  const isDangerTime = timeLeft <= 5 && selectionEndTime
 
   return (
     <div className="flex h-svh w-full flex-col bg-gradient-to-b from-sky-100 to-amber-50 overflow-hidden animate-page-enter">

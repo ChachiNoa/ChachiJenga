@@ -1,10 +1,11 @@
 const { TowerModel } = require('./TowerModel');
 
 class GameRoom {
-  constructor(roomId, player1, player2, io) {
+  constructor(roomId, player1, player2, io, db) {
     this.roomId = roomId;
     this.players = [player1, player2];
     this.io = io;
+    this.db = db;
     this.tower = new TowerModel();
     
     // Track extracted pieces per player for scoring { difficulty }
