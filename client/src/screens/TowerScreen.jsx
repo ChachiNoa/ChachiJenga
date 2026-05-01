@@ -285,17 +285,6 @@ function TowerScreen() {
         />
       </div>
 
-      <div className="absolute top-24 right-4 z-10">
-        <Button 
-          variant={devMode ? "default" : "outline"} 
-          size="sm" 
-          onClick={() => setDevMode(!devMode)}
-          className="opacity-70 hover:opacity-100"
-        >
-          Dev Mode: {devMode ? 'ON' : 'OFF'}
-        </Button>
-      </div>
-
       {/* 3D Tower Canvas */}
       <div className="flex-1 w-full relative pt-16">
         <Tower 
@@ -304,6 +293,17 @@ function TowerScreen() {
           interactive={isMyTurn && !confirmOpen}
           opponentHoveredPiece={opponentHoveredPiece}
         />
+        
+        <div className="absolute bottom-6 right-4 z-10">
+          <Button 
+            variant={devMode ? "default" : "outline"} 
+            size="sm" 
+            onClick={() => setDevMode(!devMode)}
+            className="shadow-md"
+          >
+            Modo Dev: {devMode ? 'ON' : 'OFF'}
+          </Button>
+        </div>
       </div>
 
       {/* Confirmation Dialog */}
