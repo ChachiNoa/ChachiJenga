@@ -116,7 +116,10 @@ describe('TowerModel', () => {
       tower.extractPiece(0, 0)
       tower.extractPiece(0, 1)
       tower.extractPiece(0, 2)
-      expect(tower.isLayerEmpty(0)).toBe(true)
+      // The layer should shift down, so layer 0 gets layer 1's pieces (3 pieces)
+      expect(tower.getRemainingInLayer(0)).toBe(3)
+      // And the topmost layer should become empty
+      expect(tower.getRemainingInLayer(GAME.TOWER_LAYERS - 1)).toBe(0)
     })
   })
 
@@ -126,15 +129,12 @@ describe('TowerModel', () => {
       expect(tower.checkCollapse()).toBe(false)
     })
 
-    it('should collapse if total pieces extracted exceed threshold', () => {
-      // Extract a LOT of pieces to trigger collapse probability
-      for (let layer = 0; layer < 12; layer++) {
-        for (let pos = 0; pos < 3; pos++) {
-          tower.extractPiece(layer, pos)
-        }
+    it('should collapse if no more pieces are selectable', () => {
+      let selectable = tower.getSelectablePieces()
+      while (selectable.length > 0) {
+        tower.extractPiece(selectable[0].layer, selectable[0].position)
+        selectable = tower.getSelectablePieces()
       }
-      // After removing 36 of 54 pieces, collapse should be very likely
-      // We use deterministic check: >= 60% removed => collapse
       expect(tower.checkCollapse()).toBe(true)
     })
   })

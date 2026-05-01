@@ -58,6 +58,18 @@ function handleGameEvents(io, socket) {
     socket.to(roomId).emit('opponent_stroke', data);
   });
 
+  socket.on('piece_hovered', (data) => {
+    const roomId = playerToRoom.get(socket.id);
+    if (!roomId) return;
+    socket.to(roomId).emit('opponent_piece_hovered', data);
+  });
+
+  socket.on('piece_unhovered', () => {
+    const roomId = playerToRoom.get(socket.id);
+    if (!roomId) return;
+    socket.to(roomId).emit('opponent_piece_unhovered');
+  });
+
   socket.on('stroke_complete', (data) => {
     const roomId = playerToRoom.get(socket.id);
     if (!roomId) return;

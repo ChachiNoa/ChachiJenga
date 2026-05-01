@@ -60,6 +60,8 @@ function TowerScreen() {
   const [layers, setLayers] = useState(initialData && initialData.tower ? initialData.tower.layers : createMockLayers())
   const [selectedPiece, setSelectedPiece] = useState(null)
   const [confirmOpen, setConfirmOpen] = useState(false)
+  const [confirmTimer, setConfirmTimer] = useState(3)
+  const [opponentHoveredPiece, setOpponentHoveredPiece] = useState(null)
   const [selectionEndTime, setSelectionEndTime] = useState(initialData?.selectionEndTime || null)
   const [timeLeft, setTimeLeft] = useState(15)
   const [isMyTurn, setIsMyTurn] = useState(initialData && socket ? initialData.turn === socket.id : false)
@@ -81,6 +83,26 @@ function TowerScreen() {
     }, 200)
     return () => clearInterval(interval)
   }, [selectionEndTime])
+
+  useEffect(() => {
+    let interval = null
+    if (confirmOpen) {
+      setConfirmTimer(3)
+      interval = setInterval(() => {
+        setConfirmTimer(prev => {
+          if (prev <= 1) {
+            setConfirmOpen(false)
+            if (socket) socket.emit('piece_unhovered')
+            return 3
+          }
+          return prev - 1
+        })
+      }, 1000)
+    }
+    return () => {
+      if (interval) clearInterval(interval)
+    }
+  }, [confirmOpen, socket])
 
   useEffect(() => {
     if (!socket) return
@@ -124,6 +146,7 @@ function TowerScreen() {
     // but we can also get a full game_started payload which resyncs everything.
     const onGameStartedResync = (data) => {
       setLayers(data.tower.layers)
+      setOpponentHoveredPiece(null)
       
       if (data.players) {
         setGameState(prev => {
@@ -164,11 +187,21 @@ function TowerScreen() {
       navigate('/summary', { state: { summary: data?.summary, reason: data?.reason } })
     }
 
+    const onOpponentHovered = (data) => {
+      setOpponentHoveredPiece({ layer: data.layer, position: data.pos })
+    }
+
+    const onOpponentUnhovered = () => {
+      setOpponentHoveredPiece(null)
+    }
+
     socket.on('turn_changed', onTurnChanged)
     socket.on('challenge_started', onChallengeStarted)
     socket.on('game_started', onGameStartedResync)
     socket.on('piece_extracted', onPieceExtracted)
     socket.on('game_over', onGameOver)
+    socket.on('opponent_piece_hovered', onOpponentHovered)
+    socket.on('opponent_piece_unhovered', onOpponentUnhovered)
 
     return () => {
       socket.off('turn_changed', onTurnChanged)
@@ -176,6 +209,8 @@ function TowerScreen() {
       socket.off('game_started', onGameStartedResync)
       socket.off('piece_extracted', onPieceExtracted)
       socket.off('game_over', onGameOver)
+      socket.off('opponent_piece_hovered', onOpponentHovered)
+      socket.off('opponent_piece_unhovered', onOpponentUnhovered)
     }
   }, [socket, navigate])
 
@@ -187,6 +222,16 @@ function TowerScreen() {
     audio.vibrate([30])
     setSelectedPiece({ layer, position })
     setConfirmOpen(true)
+    if (socket) {
+      socket.emit('piece_hovered', { layer, pos: position })
+    }
+  }
+
+  const handleCancelSelection = () => {
+    setConfirmOpen(false)
+    if (socket) {
+      socket.emit('piece_unhovered')
+    }
   }
 
   const handleConfirmExtraction = () => {
@@ -239,20 +284,23 @@ function TowerScreen() {
           layers={layers} 
           onSelectPiece={handleSelectPiece} 
           interactive={isMyTurn && !confirmOpen}
+          opponentHoveredPiece={opponentHoveredPiece}
         />
       </div>
 
       {/* Confirmation Dialog */}
-      <Dialog open={confirmOpen} onOpenChange={setConfirmOpen}>
+      <Dialog open={confirmOpen} onOpenChange={handleCancelSelection}>
         <DialogContent className="sm:max-w-[325px]">
           <DialogHeader>
             <DialogTitle>{t('game.confirmExtraction')}</DialogTitle>
             <DialogDescription>
-              {t('game.confirmExtractionDesc')}
+              ¿Estás seguro de extraer esta pieza? Tendrás que dibujar la forma que esconde para conseguirla y sumar puntos.
+              Si fallas, restará tiempo de tu turno final.
+              Auto-cancelando en {confirmTimer}s...
             </DialogDescription>
           </DialogHeader>
           <DialogFooter className="flex gap-2 sm:justify-center">
-            <Button variant="outline" onClick={() => setConfirmOpen(false)} className="flex-1">
+            <Button variant="outline" onClick={handleCancelSelection} className="flex-1">
               {t('common.cancel')}
             </Button>
             <Button onClick={handleConfirmExtraction} className="flex-1">

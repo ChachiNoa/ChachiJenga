@@ -135,13 +135,8 @@ class TowerModel {
     return this.getRemainingInLayer(layerIndex) === 0
   }
 
-  /**
-   * Deterministic collapse check based on percentage of pieces extracted.
-   * Collapse if >= 60% of total pieces have been extracted.
-   */
   checkCollapse() {
-    const ratio = this._piecesExtracted / GAME.TOTAL_PIECES
-    return ratio >= 0.6
+    return this.getSelectablePieces().length === 0
   }
 
   toJSON() {

@@ -12,7 +12,7 @@ const BLOCK_D = 1
 const BLOCK_H = 1
 const UNIT_WIDTH = 25 // pixel scale
 
-export default function Tower({ layers, onSelectPiece, interactive = true }) {
+export default function Tower({ layers, onSelectPiece, interactive = true, opponentHoveredPiece = null }) {
   const canvasRef = useRef(null)
   const [hoveredPiece, setHoveredPiece] = useState(null)
 
@@ -112,8 +112,13 @@ export default function Tower({ layers, onSelectPiece, interactive = true }) {
       let leftColor = '#D4B895'
       let rightColor = '#C3A682'
 
-      // DEV MODE: Color coding by difficulty
-      if (import.meta.env.DEV) {
+      const isOpponentHovered = opponentHoveredPiece?.layer === block.layer && opponentHoveredPiece?.position === block.position
+
+      if (isOpponentHovered) {
+        topColor = '#FFA8A8' // Pastel red/pink for opponent hover
+        leftColor = '#E68A8A'
+        rightColor = '#CC7070'
+      } else if (import.meta.env.DEV) {
         if (block.difficulty === GAME.DIFFICULTY.EASY) {
           topColor = '#A8DDFD'
           leftColor = '#8AC3E6'
@@ -129,7 +134,7 @@ export default function Tower({ layers, onSelectPiece, interactive = true }) {
         }
       }
 
-      if (isHovered && block.selectable) {
+      if (isHovered && block.selectable && !isOpponentHovered) {
         topColor = '#B2FBA5' // Pastel green highlight
         leftColor = '#9EE392'
         rightColor = '#8DCC82'
