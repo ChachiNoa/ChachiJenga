@@ -62,6 +62,7 @@ function TowerScreen() {
   const [confirmOpen, setConfirmOpen] = useState(false)
   const [confirmTimer, setConfirmTimer] = useState(3)
   const [opponentHoveredPiece, setOpponentHoveredPiece] = useState(null)
+  const [devMode, setDevMode] = useState(false)
   const [selectionEndTime, setSelectionEndTime] = useState(initialData?.selectionEndTime || null)
   const [timeLeft, setTimeLeft] = useState(15)
   const [isMyTurn, setIsMyTurn] = useState(initialData && socket ? initialData.turn === socket.id : false)
@@ -238,6 +239,12 @@ function TowerScreen() {
     setConfirmOpen(false)
     if (socket) {
       socket.emit('select_piece', { layer: selectedPiece.layer, pos: selectedPiece.position })
+      
+      if (devMode) {
+        socket.emit('drawing_result', { valid: true, shapeId: 'dev_mock' })
+        socket.emit('piece_extracted', { layer: selectedPiece.layer, pos: selectedPiece.position })
+        return
+      }
     }
     // Navigate to drawing screen, passing the selected piece and current tower state
     navigate('/drawing', { state: { layer: selectedPiece.layer, position: selectedPiece.position, layers } })
@@ -276,6 +283,17 @@ function TowerScreen() {
           points={gameState.opponent.points} 
           avatarUrl={gameState.opponent.avatarUrl}
         />
+      </div>
+
+      <div className="absolute top-24 right-4 z-10">
+        <Button 
+          variant={devMode ? "default" : "outline"} 
+          size="sm" 
+          onClick={() => setDevMode(!devMode)}
+          className="opacity-70 hover:opacity-100"
+        >
+          Dev Mode: {devMode ? 'ON' : 'OFF'}
+        </Button>
       </div>
 
       {/* 3D Tower Canvas */}
