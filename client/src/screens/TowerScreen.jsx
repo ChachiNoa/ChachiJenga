@@ -32,8 +32,13 @@ function PlayerAvatar({ name, isMyTurn, points, avatarUrl }) {
     <div className={`flex flex-col items-center gap-1 ${isMyTurn ? 'opacity-100 scale-110' : 'opacity-60 scale-95'} transition-all`}>
       <div className={`relative rounded-full p-1 ${isMyTurn ? 'bg-primary' : 'bg-transparent'}`}>
         <Avatar className="h-12 w-12 border-2 border-background">
-          <AvatarImage src={avatarUrl} />
-          <AvatarFallback>{initials}</AvatarFallback>
+          {avatarUrl && avatarUrl.length <= 4 ? (
+            <AvatarFallback className="text-2xl bg-primary/10">{avatarUrl}</AvatarFallback>
+          ) : avatarUrl ? (
+            <AvatarImage src={avatarUrl} />
+          ) : (
+            <AvatarFallback>{initials}</AvatarFallback>
+          )}
         </Avatar>
       </div>
       <span className="text-xs font-bold text-foreground">{name}</span>
@@ -61,8 +66,8 @@ function TowerScreen() {
   
   // Real or Mock game state for UI demonstration
   const [gameState, setGameState] = useState({
-    me: { name: 'Me', points: 0, isTurn: initialData && socket ? initialData.turn === socket.id : false },
-    opponent: { name: 'Opponent', points: 0, isTurn: initialData && socket ? initialData.turn !== socket.id : false }
+    me: { name: 'Me', points: 0, avatarUrl: null, isTurn: initialData && socket ? initialData.turn === socket.id : false },
+    opponent: { name: 'Opponent', points: 0, avatarUrl: null, isTurn: initialData && socket ? initialData.turn !== socket.id : false }
   })
 
   useEffect(() => {
@@ -119,6 +124,18 @@ function TowerScreen() {
     // but we can also get a full game_started payload which resyncs everything.
     const onGameStartedResync = (data) => {
       setLayers(data.tower.layers)
+      
+      if (data.players) {
+        setGameState(prev => {
+          const meData = data.players.find(p => p.id === socket.id);
+          const oppData = data.players.find(p => p.id !== socket.id);
+          return {
+            me: { ...prev.me, name: meData?.name || prev.me.name, avatarUrl: meData?.avatarUrl || prev.me.avatarUrl },
+            opponent: { ...prev.opponent, name: oppData?.name || prev.opponent.name, avatarUrl: oppData?.avatarUrl || prev.opponent.avatarUrl }
+          }
+        });
+      }
+      
       onTurnChanged(data)
     }
 
@@ -192,6 +209,7 @@ function TowerScreen() {
           name={gameState.me.name} 
           isMyTurn={gameState.me.isTurn} 
           points={gameState.me.points} 
+          avatarUrl={gameState.me.avatarUrl}
         />
         
         <div className={`rounded-full px-4 py-1.5 shadow-sm backdrop-blur-sm transition-colors ${isDangerTime ? 'bg-red-500 text-white animate-pulse' : 'bg-background/80 text-primary'}`}>
@@ -211,6 +229,7 @@ function TowerScreen() {
           name={gameState.opponent.name} 
           isMyTurn={gameState.opponent.isTurn} 
           points={gameState.opponent.points} 
+          avatarUrl={gameState.opponent.avatarUrl}
         />
       </div>
 

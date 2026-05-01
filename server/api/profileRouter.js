@@ -44,6 +44,28 @@ function createProfileRouter(db) {
     }
   });
 
+  router.patch('/:id/avatar', express.json(), (req, res) => {
+    try {
+      const { id } = req.params;
+      const { emoji } = req.body;
+      if (!emoji) {
+        return res.status(400).json({ error: 'Emoji is required' });
+      }
+      
+      const update = db.prepare('UPDATE users SET avatar_url = ? WHERE id = ?');
+      const result = update.run(emoji, id);
+      
+      if (result.changes === 0) {
+        return res.status(404).json({ error: 'User not found' });
+      }
+      
+      res.json({ success: true, avatarUrl: emoji });
+    } catch (e) {
+      console.error('[Profile API - Avatar]', e);
+      res.status(500).json({ error: 'Failed to update avatar' });
+    }
+  });
+
   return router;
 }
 

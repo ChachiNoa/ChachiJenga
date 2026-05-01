@@ -68,6 +68,7 @@ function HomeScreen() {
       socket.emit('join_queue', {
         id: user.id || 'anonymous',
         name: user.displayName || 'Player',
+        avatarUrl: fullProfile?.user?.avatarUrl || user.avatarUrl,
         elo: user.elo || 1000
       })
     }
@@ -180,7 +181,14 @@ function HomeScreen() {
       {/* Profile Dialog */}
       <Dialog open={profileOpen} onOpenChange={setProfileOpen}>
         <DialogContent className="sm:max-w-md max-h-[80vh] overflow-y-auto">
-          <ProfileCard user={fullProfile?.user || user} />
+          <ProfileCard 
+            user={fullProfile?.user || user} 
+            onAvatarChange={(emoji) => {
+              if (fullProfile) {
+                setFullProfile({ ...fullProfile, user: { ...fullProfile.user, avatarUrl: emoji } })
+              }
+            }} 
+          />
         </DialogContent>
       </Dialog>
     </div>

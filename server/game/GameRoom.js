@@ -12,6 +12,9 @@ class GameRoom {
     // Track extracted pieces per player for scoring { difficulty }
     this.extractedPieces = [[], []]; // [player0Pieces, player1Pieces]
     
+    // Track shapes successfully drawn per player
+    this.shapesDrawn = [0, 0];
+    
     // Choose starting player
     this.currentTurnIndex = Math.random() < 0.5 ? 0 : 1;
     this.status = 'WAITING'; // WAITING, IN_PROGRESS, ENDED
@@ -24,7 +27,8 @@ class GameRoom {
       tower: this.tower.toJSON(),
       turn: this.players[this.currentTurnIndex].socketId,
       selectionEndTime: this.selectionEndTime,
-      scores: this.getLiveScores()
+      scores: this.getLiveScores(),
+      players: this.players.map(p => ({ id: p.socketId, name: p.user.name, avatarUrl: p.user.avatarUrl }))
     });
   }
 
@@ -116,7 +120,9 @@ class GameRoom {
     // Forward to opponent
     this.io.to(this.players.find(p => p.socketId !== socketId).socketId).emit('opponent_drawing_result', data);
 
-    if (!data.valid) {
+    if (data.valid) {
+      this.shapesDrawn[this.currentTurnIndex]++;
+    } else {
       // Apply error penalty on the server (-4s)
       this.challengeEndTime -= 4000;
       this._startChallengeTimer();
@@ -201,19 +207,19 @@ class GameRoom {
         const eloChg1 = newElo1 - elo1;
         const eloChg2 = newElo2 - elo2;
 
-        summaryData1 = { result: result1, eloChange: eloChg1, points: pts1, prevElo: elo1, newElo: newElo1, piecesExtracted: pieces1.length };
-        summaryData2 = { result: result2, eloChange: eloChg2, points: pts2, prevElo: elo2, newElo: newElo2, piecesExtracted: pieces2.length };
+        summaryData1 = { result: result1, eloChange: eloChg1, points: pts1, prevElo: elo1, newElo: newElo1, piecesExtracted: pieces1.length, shapesDrawn: this.shapesDrawn[0] };
+        summaryData2 = { result: result2, eloChange: eloChg2, points: pts2, prevElo: elo2, newElo: newElo2, piecesExtracted: pieces2.length, shapesDrawn: this.shapesDrawn[1] };
 
         const updateUsr = this.db.prepare(`
           UPDATE users 
           SET elo = ?, total_points = total_points + ?, games_played = games_played + 1,
               games_won = games_won + ?, games_lost = games_lost + ?, games_drawn = games_drawn + ?,
-              pieces_extracted = pieces_extracted + ?
+              pieces_extracted = pieces_extracted + ?, shapes_drawn = shapes_drawn + ?
           WHERE id = ?
         `);
         
-        updateUsr.run(newElo1, pts1, result1 === 'VICTORY' ? 1 : 0, result1 === 'DEFEAT' || result1 === 'FORFEIT' ? 1 : 0, result1 === 'DRAW' ? 1 : 0, pieces1.length, p1.id);
-        updateUsr.run(newElo2, pts2, result2 === 'VICTORY' ? 1 : 0, result2 === 'DEFEAT' || result2 === 'FORFEIT' ? 1 : 0, result2 === 'DRAW' ? 1 : 0, pieces2.length, p2.id);
+        updateUsr.run(newElo1, pts1, result1 === 'VICTORY' ? 1 : 0, result1 === 'DEFEAT' || result1 === 'FORFEIT' ? 1 : 0, result1 === 'DRAW' ? 1 : 0, pieces1.length, this.shapesDrawn[0], p1.id);
+        updateUsr.run(newElo2, pts2, result2 === 'VICTORY' ? 1 : 0, result2 === 'DEFEAT' || result2 === 'FORFEIT' ? 1 : 0, result2 === 'DRAW' ? 1 : 0, pieces2.length, this.shapesDrawn[1], p2.id);
 
         const insMatch = this.db.prepare(`
           INSERT INTO matches (player1_id, player2_id, winner_id, result, player1_points, player2_points, player1_elo_change, player2_elo_change)

@@ -1,8 +1,13 @@
+import { useState } from 'react'
 import { useTranslation } from 'react-i18next'
 import { Card, CardHeader, CardTitle, CardContent } from '@/components/ui/card'
 import { Avatar, AvatarImage, AvatarFallback } from '@/components/ui/avatar'
 import { Badge } from '@/components/ui/badge'
 import { Gamepad2, Trophy, Puzzle, Pencil, Star, TrendingUp, XCircle, Minus } from 'lucide-react'
+import { Dialog, DialogContent, DialogHeader, DialogTitle } from '@/components/ui/dialog'
+import { Button } from '@/components/ui/button'
+
+const EMOJIS = ['😀', '😎', '🤓', '🤠', '🤖', '👾', '👻', '🐶', '🐱', '🦊', '🐼', '🦁', '🐸', '🦄', '🍕', '🌮', '🎸', '🎮', '🚀', '⭐']
 
 function getInitials(name) {
   return name
@@ -24,10 +29,32 @@ function StatItem({ icon: Icon, label, value, color, subtext }) {
   )
 }
 
-function ProfileCard({ user }) {
+function ProfileCard({ user, onAvatarChange }) {
   const { t } = useTranslation()
+  const [showPicker, setShowPicker] = useState(false)
+  const [isUpdating, setIsUpdating] = useState(false)
 
   if (!user) return null
+
+  const handleSelectEmoji = async (emoji) => {
+    setIsUpdating(true)
+    try {
+      const res = await fetch(`${import.meta.env.VITE_API_URL || 'http://localhost:3001'}/api/profile/${user.id}/avatar`, {
+        method: 'PATCH',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ emoji })
+      })
+      const data = await res.json()
+      if (data.success && onAvatarChange) {
+        onAvatarChange(emoji)
+      }
+    } catch (e) {
+      console.error('Failed to update avatar', e)
+    } finally {
+      setIsUpdating(false)
+      setShowPicker(false)
+    }
+  }
 
   const gamesPlayed = user.gamesPlayed || 0
   const gamesWon = user.gamesWon || 0
@@ -45,13 +72,20 @@ function ProfileCard({ user }) {
       <h2 className="mb-4 text-xl font-bold text-foreground">{t('profile.title')}</h2>
       <Card>
         <CardHeader className="items-center pb-2">
-          <Avatar className="h-16 w-16">
-            {user.avatarUrl ? (
-              <AvatarImage src={user.avatarUrl} alt={user.displayName} />
-            ) : (
-              <AvatarFallback className="text-xl">{getInitials(user.displayName || '?')}</AvatarFallback>
-            )}
-          </Avatar>
+          <div className="relative group cursor-pointer" onClick={() => setShowPicker(true)}>
+            <Avatar className="h-16 w-16 transition-all group-hover:scale-105 group-hover:ring-2 group-hover:ring-primary/50">
+              {user.avatarUrl && user.avatarUrl.length <= 4 ? (
+                <AvatarFallback className="text-4xl bg-primary/10">{user.avatarUrl}</AvatarFallback>
+              ) : user.avatarUrl ? (
+                <AvatarImage src={user.avatarUrl} alt={user.displayName} />
+              ) : (
+                <AvatarFallback className="text-xl">{getInitials(user.displayName || '?')}</AvatarFallback>
+              )}
+            </Avatar>
+            <div className="absolute inset-0 bg-black/40 rounded-full opacity-0 group-hover:opacity-100 flex items-center justify-center transition-opacity">
+              <Pencil className="h-5 w-5 text-white drop-shadow-md" />
+            </div>
+          </div>
           <CardTitle className="mt-2 text-lg">{user.displayName}</CardTitle>
           <Badge variant="secondary" className="mt-1">
             ELO: {user.elo || 1000}
@@ -120,6 +154,27 @@ function ProfileCard({ user }) {
           </div>
         </CardContent>
       </Card>
+
+      <Dialog open={showPicker} onOpenChange={setShowPicker}>
+        <DialogContent className="sm:max-w-xs">
+          <DialogHeader>
+            <DialogTitle className="text-center">{t('profile.chooseAvatar', 'Elige un icono')}</DialogTitle>
+          </DialogHeader>
+          <div className="grid grid-cols-4 gap-3 p-4">
+            {EMOJIS.map(emoji => (
+              <Button
+                key={emoji}
+                variant="outline"
+                className="h-12 w-12 text-2xl"
+                disabled={isUpdating}
+                onClick={() => handleSelectEmoji(emoji)}
+              >
+                {emoji}
+              </Button>
+            ))}
+          </div>
+        </DialogContent>
+      </Dialog>
     </div>
   )
 }
