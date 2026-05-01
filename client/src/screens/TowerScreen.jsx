@@ -294,14 +294,12 @@ function TowerScreen() {
           <DialogHeader>
             <DialogTitle>{t('game.confirmExtraction')}</DialogTitle>
             <DialogDescription>
-              ¿Estás seguro de extraer esta pieza? Tendrás que dibujar la forma que esconde para conseguirla y sumar puntos.
-              Si fallas, restará tiempo de tu turno final.
-              Auto-cancelando en {confirmTimer}s...
+              ¿Seguro que quieres extraer esta pieza? Deberás dibujar su forma para conseguirla. Si fallas, perderás tiempo de tu próximo turno.
             </DialogDescription>
           </DialogHeader>
           <DialogFooter className="flex gap-2 sm:justify-center">
             <Button variant="outline" onClick={handleCancelSelection} className="flex-1">
-              {t('common.cancel')}
+              {t('common.cancel')} ({confirmTimer}s)
             </Button>
             <Button onClick={handleConfirmExtraction} className="flex-1">
               {t('common.confirm')}

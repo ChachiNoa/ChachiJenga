@@ -206,7 +206,7 @@ export default function Tower({ layers, onSelectPiece, interactive = true, oppon
 
     const ctx = canvas.getContext('2d')
     drawTower(ctx, canvas.width, canvas.height)
-  }, [blocks, hoveredPiece])
+  }, [blocks, hoveredPiece, opponentHoveredPiece])
 
   const handlePointerMove = (e) => {
     if (!interactive) return
