@@ -64,6 +64,58 @@ function incrementUserStats(db, id, { gamesPlayed = 0, gamesWon = 0, gamesLost =
   return stmt.run(eloChange, pointsChange, gamesPlayed, gamesWon, gamesLost, gamesDrawn, piecesExtracted, shapesDrawn, id)
 }
 
+// ─── Friendships ──────────────────────────────────────
+
+function sendFriendRequest(db, requesterId, addresseeId) {
+  const stmt = db.prepare(`
+    INSERT INTO friendships (requester_id, addressee_id)
+    VALUES (?, ?)
+  `)
+  return stmt.run(requesterId, addresseeId)
+}
+
+function getPendingFriendRequests(db, userId) {
+  const stmt = db.prepare(`
+    SELECT f.id as friendshipId, u.id as userId, u.display_name as displayName, u.tag, u.avatar_url as avatarUrl, f.created_at as createdAt
+    FROM friendships f
+    JOIN users u ON f.requester_id = u.id
+    WHERE f.addressee_id = ? AND f.status = 'pending'
+    ORDER BY f.created_at DESC
+  `)
+  return stmt.all(userId)
+}
+
+function updateFriendRequestStatus(db, friendshipId, addresseeId, status) {
+  const stmt = db.prepare(`
+    UPDATE friendships
+    SET status = ?
+    WHERE id = ? AND addressee_id = ? AND status = 'pending'
+  `)
+  return stmt.run(status, friendshipId, addresseeId)
+}
+
+function getFriends(db, userId) {
+  const stmt = db.prepare(`
+    SELECT 
+      f.id as friendshipId,
+      u.id as userId, u.display_name as displayName, u.tag, u.avatar_url as avatarUrl, u.elo
+    FROM friendships f
+    JOIN users u ON (f.requester_id = u.id OR f.addressee_id = u.id)
+    WHERE (f.requester_id = ? OR f.addressee_id = ?) 
+      AND u.id != ? 
+      AND f.status = 'accepted'
+  `)
+  return stmt.all(userId, userId, userId)
+}
+
+function deleteFriendship(db, friendshipId, userId) {
+  const stmt = db.prepare(`
+    DELETE FROM friendships
+    WHERE id = ? AND (requester_id = ? OR addressee_id = ?)
+  `)
+  return stmt.run(friendshipId, userId, userId)
+}
+
 // ─── Ranking ──────────────────────────────────────────
 
 function getTopPlayers(db, limit = 100) {
@@ -167,6 +219,12 @@ module.exports = {
   updateUserLogin,
   updateUserStats,
   incrementUserStats,
+  // Friendships
+  sendFriendRequest,
+  getPendingFriendRequests,
+  updateFriendRequestStatus,
+  getFriends,
+  deleteFriendship,
   // Ranking
   getTopPlayers,
   getPlayerRank,

@@ -8,6 +8,7 @@ import { loadAuth, clearAuth } from '@/network/authApi'
 import SettingsDialog from '@/components/SettingsDialog'
 import RankingList from '@/components/RankingList'
 import ProfileCard from '@/components/ProfileCard'
+import FriendsDialog from '@/components/FriendsDialog'
 import { useSocket } from '@/hooks/useSocket'
 import { audio } from '@/lib/audio'
 
@@ -207,11 +208,7 @@ function HomeScreen() {
       </Dialog>
 
       {/* Friends Dialog */}
-      <Dialog open={friendsOpen} onOpenChange={setFriendsOpen}>
-        <DialogContent className="sm:max-w-md max-h-[80vh] overflow-hidden flex flex-col p-6">
-          <div className="text-center font-bold">Amigos (Próximamente)</div>
-        </DialogContent>
-      </Dialog>
+      <FriendsDialog open={friendsOpen} onOpenChange={setFriendsOpen} />
 
       {/* Guild Dialog */}
       <Dialog open={guildOpen} onOpenChange={setGuildOpen}>
