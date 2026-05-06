@@ -1,7 +1,7 @@
 import { useTranslation } from 'react-i18next'
 import { useLocation, useNavigate } from 'react-router-dom'
 import { useState, useEffect } from 'react'
-import { Trophy, User, Settings, Gamepad2, Loader2, X } from 'lucide-react'
+import { Trophy, User, Settings, Gamepad2, Loader2, X, Shield, Users } from 'lucide-react'
 import { Button } from '@/components/ui/button'
 import { Dialog, DialogContent } from '@/components/ui/dialog'
 import { loadAuth, clearAuth } from '@/network/authApi'
@@ -19,6 +19,8 @@ function HomeScreen() {
   const [settingsOpen, setSettingsOpen] = useState(false)
   const [rankingOpen, setRankingOpen] = useState(false)
   const [profileOpen, setProfileOpen] = useState(false)
+  const [guildOpen, setGuildOpen] = useState(false)
+  const [friendsOpen, setFriendsOpen] = useState(false)
   const [user, setUser] = useState(null)
   const [fullProfile, setFullProfile] = useState(null)
   const { socket, isConnected } = useSocket()
@@ -131,23 +133,35 @@ function HomeScreen() {
         </div>
       )}
 
-        {/* Ranking & Profile cards */}
-      <div className="mb-8 grid w-full max-w-xs grid-cols-2 gap-4">
+      {/* Ranking & Profile & Guild cards */}
+      <div className="mb-4 grid w-full max-w-xs grid-cols-3 gap-3">
         <button
           onClick={() => setRankingOpen(true)}
-          className="flex flex-col items-center gap-2 rounded-2xl bg-card p-6 shadow-md transition-all hover:-translate-y-0.5 hover:shadow-lg"
+          className="flex flex-col items-center justify-center gap-2 rounded-2xl bg-card p-3 shadow-md transition-all hover:-translate-y-0.5 hover:shadow-lg"
         >
-          <Trophy className="h-8 w-8 text-pastel-orange" />
-          <span className="font-semibold text-card-foreground">{t('home.ranking')}</span>
+          <Trophy className="h-6 w-6 text-pastel-orange" />
+          <span className="text-xs font-semibold text-card-foreground">{t('home.ranking')}</span>
         </button>
         <button
           onClick={() => setProfileOpen(true)}
-          className="flex flex-col items-center gap-2 rounded-2xl bg-card p-6 shadow-md transition-all hover:-translate-y-0.5 hover:shadow-lg"
+          className="flex flex-col items-center justify-center gap-2 rounded-2xl bg-card p-3 shadow-md transition-all hover:-translate-y-0.5 hover:shadow-lg"
         >
-          <User className="h-8 w-8 text-pastel-blue" />
-          <span className="font-semibold text-card-foreground">{t('home.profile')}</span>
+          <User className="h-6 w-6 text-pastel-blue" />
+          <span className="text-xs font-semibold text-card-foreground">{t('home.profile')}</span>
+        </button>
+        <button
+          onClick={() => setGuildOpen(true)}
+          className="flex flex-col items-center justify-center gap-2 rounded-2xl bg-card p-3 shadow-md transition-all hover:-translate-y-0.5 hover:shadow-lg"
+        >
+          <Shield className="h-6 w-6 text-pastel-green" />
+          <span className="text-xs font-semibold text-card-foreground">Gremio</span>
         </button>
       </div>
+
+      <Button variant="outline" className="mb-8 w-full max-w-xs gap-2 rounded-2xl shadow-sm h-12" onClick={() => setFriendsOpen(true)}>
+        <Users className="h-5 w-5" />
+        Amigos
+      </Button>
 
       {/* Quick stats */}
       <div className="mb-8 w-full max-w-xs rounded-2xl bg-card/80 p-4 shadow-sm backdrop-blur-sm">
@@ -189,6 +203,20 @@ function HomeScreen() {
               }
             }} 
           />
+        </DialogContent>
+      </Dialog>
+
+      {/* Friends Dialog */}
+      <Dialog open={friendsOpen} onOpenChange={setFriendsOpen}>
+        <DialogContent className="sm:max-w-md max-h-[80vh] overflow-hidden flex flex-col p-6">
+          <div className="text-center font-bold">Amigos (Próximamente)</div>
+        </DialogContent>
+      </Dialog>
+
+      {/* Guild Dialog */}
+      <Dialog open={guildOpen} onOpenChange={setGuildOpen}>
+        <DialogContent className="sm:max-w-md max-h-[80vh] overflow-hidden flex flex-col p-6">
+          <div className="text-center font-bold">Gremio (Próximamente)</div>
         </DialogContent>
       </Dialog>
     </div>

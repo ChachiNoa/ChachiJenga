@@ -87,6 +87,7 @@ function ProfileCard({ user, onAvatarChange }) {
             </div>
           </div>
           <CardTitle className="mt-2 text-lg">{user.displayName}</CardTitle>
+          {user.tag && <p className="text-sm text-muted-foreground mt-[-2px]">{user.tag}</p>}
           <Badge variant="secondary" className="mt-1">
             ELO: {user.elo || 1000}
           </Badge>

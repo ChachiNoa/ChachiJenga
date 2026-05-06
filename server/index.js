@@ -29,10 +29,12 @@ app.get('/api/health', (req, res) => {
 
 const { createRankingRouter } = require('./api/rankingRouter')
 const { createProfileRouter } = require('./api/profileRouter')
+const { createUsersRouter } = require('./api/usersRouter')
 
 app.use('/auth', createAuthRouter(db))
 app.use('/api/ranking', createRankingRouter(db))
 app.use('/api/profile', createProfileRouter(db))
+app.use('/api/users', createUsersRouter(db))
 
 const { setupMatchmaking } = require('./matchmaking/matchmakingService')
 

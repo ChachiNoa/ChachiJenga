@@ -28,7 +28,7 @@ class GameRoom {
       turn: this.players[this.currentTurnIndex].socketId,
       selectionEndTime: this.selectionEndTime,
       scores: this.getLiveScores(),
-      players: this.players.map(p => ({ id: p.socketId, name: p.user.name, avatarUrl: p.user.avatarUrl }))
+      players: this.players.map(p => ({ id: p.socketId, name: p.user.name, avatarUrl: p.user.avatarUrl, tag: p.user.tag }))
     });
   }
 

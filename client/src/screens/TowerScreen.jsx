@@ -25,7 +25,7 @@ const createMockLayers = () => {
   return layers
 }
 
-function PlayerAvatar({ name, isMyTurn, points, avatarUrl }) {
+function PlayerAvatar({ name, tag, isMyTurn, points, avatarUrl }) {
   const initials = name ? name.substring(0, 2).toUpperCase() : '?'
   
   return (
@@ -41,7 +41,10 @@ function PlayerAvatar({ name, isMyTurn, points, avatarUrl }) {
           )}
         </Avatar>
       </div>
-      <span className="text-xs font-bold text-foreground">{name}</span>
+      <div className="flex flex-col items-center leading-none">
+        <span className="text-xs font-bold text-foreground">{name}</span>
+        {tag && <span className="text-[10px] text-muted-foreground">{tag}</span>}
+      </div>
       <span className="text-sm font-black text-primary">{points} pts</span>
     </div>
   )
@@ -259,6 +262,7 @@ function TowerScreen() {
       <div className="absolute left-0 right-0 top-0 z-10 flex items-start justify-between p-4">
         <PlayerAvatar 
           name={gameState.me.name} 
+          tag={gameState.me.tag}
           isMyTurn={gameState.me.isTurn} 
           points={gameState.me.points} 
           avatarUrl={gameState.me.avatarUrl}
@@ -279,6 +283,7 @@ function TowerScreen() {
         
         <PlayerAvatar 
           name={gameState.opponent.name} 
+          tag={gameState.opponent.tag}
           isMyTurn={gameState.opponent.isTurn} 
           points={gameState.opponent.points} 
           avatarUrl={gameState.opponent.avatarUrl}

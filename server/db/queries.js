@@ -5,12 +5,12 @@
 
 // ─── Users ────────────────────────────────────────────
 
-function createUser(db, { googleId, displayName, email, avatarUrl }) {
+function createUser(db, { googleId, displayName, tag, email, avatarUrl }) {
   const stmt = db.prepare(`
-    INSERT INTO users (google_id, display_name, email, avatar_url)
-    VALUES (?, ?, ?, ?)
+    INSERT INTO users (google_id, display_name, tag, email, avatar_url)
+    VALUES (?, ?, ?, ?, ?)
   `)
-  return stmt.run(googleId, displayName, email, avatarUrl || null)
+  return stmt.run(googleId, displayName, tag, email, avatarUrl || null)
 }
 
 function findUserByGoogleId(db, googleId) {

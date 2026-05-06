@@ -22,6 +22,8 @@ describe('Database Setup', () => {
       .map((t) => t.name)
 
     expect(tables).toContain('users')
+    expect(tables).toContain('friendships')
+    expect(tables).toContain('guilds')
     expect(tables).toContain('matches')
     expect(tables).toContain('match_turns')
   })

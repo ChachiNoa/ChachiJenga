@@ -20,8 +20,13 @@ async function authenticateWithGoogle(db, googleIdToken) {
   let user = findUserByGoogleId(db, googleUser.googleId)
 
   if (!user) {
-    const result = createUser(db, googleUser)
-    user = { id: result.lastInsertRowid, ...googleUser, elo: 1000, games_played: 0 }
+    // Generate a unique tag for the new user
+    const maxTagStmt = db.prepare("SELECT MAX(CAST(SUBSTR(tag, 2) AS INTEGER)) as maxTag FROM users WHERE tag IS NOT NULL")
+    const currentMaxTag = maxTagStmt.get().maxTag || 0
+    const nextTag = `#${(currentMaxTag + 1).toString().padStart(5, '0')}`
+    
+    const result = createUser(db, { ...googleUser, tag: nextTag })
+    user = { id: result.lastInsertRowid, ...googleUser, tag: nextTag, elo: 1000, games_played: 0 }
   } else {
     updateUserLogin(db, user.id)
   }

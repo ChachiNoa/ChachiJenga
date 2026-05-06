@@ -2,6 +2,7 @@ CREATE TABLE IF NOT EXISTS users (
   id INTEGER PRIMARY KEY AUTOINCREMENT,
   google_id TEXT UNIQUE NOT NULL,
   display_name TEXT NOT NULL,
+  tag TEXT UNIQUE,
   email TEXT UNIQUE NOT NULL,
   avatar_url TEXT,
   elo INTEGER DEFAULT 1000,
@@ -12,8 +13,27 @@ CREATE TABLE IF NOT EXISTS users (
   games_drawn INTEGER DEFAULT 0,
   pieces_extracted INTEGER DEFAULT 0,
   shapes_drawn INTEGER DEFAULT 0,
+  guild_id INTEGER REFERENCES guilds(id),
   created_at DATETIME DEFAULT CURRENT_TIMESTAMP,
   last_login DATETIME DEFAULT CURRENT_TIMESTAMP
+);
+
+CREATE TABLE IF NOT EXISTS friendships (
+  id INTEGER PRIMARY KEY AUTOINCREMENT,
+  requester_id INTEGER NOT NULL REFERENCES users(id),
+  addressee_id INTEGER NOT NULL REFERENCES users(id),
+  status TEXT CHECK(status IN ('pending', 'accepted', 'rejected')) DEFAULT 'pending',
+  created_at DATETIME DEFAULT CURRENT_TIMESTAMP,
+  UNIQUE(requester_id, addressee_id)
+);
+
+CREATE TABLE IF NOT EXISTS guilds (
+  id INTEGER PRIMARY KEY AUTOINCREMENT,
+  name TEXT UNIQUE NOT NULL,
+  owner_id INTEGER NOT NULL REFERENCES users(id),
+  description TEXT,
+  is_public BOOLEAN DEFAULT 1,
+  created_at DATETIME DEFAULT CURRENT_TIMESTAMP
 );
 
 CREATE TABLE IF NOT EXISTS matches (

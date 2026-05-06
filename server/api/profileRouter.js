@@ -8,11 +8,12 @@ function createProfileRouter(db) {
       const { id } = req.params;
       const user = db.prepare(`
         SELECT 
-          id, display_name as displayName, avatar_url as avatarUrl, elo, 
+          id, display_name as displayName, tag, avatar_url as avatarUrl, elo, 
           total_points as totalPoints,
           games_played as gamesPlayed, games_won as gamesWon, 
           games_lost as gamesLost, games_drawn as gamesDrawn,
-          pieces_extracted as piecesExtracted, shapes_drawn as shapesDrawn
+          pieces_extracted as piecesExtracted, shapes_drawn as shapesDrawn,
+          guild_id as guildId
         FROM users
         WHERE id = ? OR google_id = ?
       `).get(id, id);
