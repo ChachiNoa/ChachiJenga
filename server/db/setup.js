@@ -28,6 +28,12 @@ function setupDatabase(dbPath) {
     db.exec('ALTER TABLE users ADD COLUMN guild_id INTEGER')
   }
 
+  // Migration: add guild_role column if it doesn't exist
+  const hasGuildRoleColumn = tableInfo.some(col => col.name === 'guild_role')
+  if (!hasGuildRoleColumn) {
+    db.exec("ALTER TABLE users ADD COLUMN guild_role TEXT DEFAULT 'member'")
+  }
+
   // Migration: populate tag for existing users
   const usersWithoutTag = db.prepare('SELECT id FROM users WHERE tag IS NULL').all()
   if (usersWithoutTag.length > 0) {

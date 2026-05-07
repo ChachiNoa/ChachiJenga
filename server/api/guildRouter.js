@@ -135,14 +135,17 @@ function createGuildRouter(db) {
     }
   })
 
-  // Edit guild
+  // Edit guild (owner or admin)
   router.patch('/:id', requireAuth, express.json(), (req, res) => {
     try {
       const guild = queries.getGuildById(db, req.params.id)
       if (!guild) return res.status(404).json({ error: 'Guild not found' })
       
-      if (guild.ownerId !== req.user.id) {
-        return res.status(403).json({ error: 'Only the owner can edit the guild' })
+      const user = queries.findUserById(db, req.user.id)
+      const isOwner = guild.ownerId === req.user.id
+      const isAdmin = user.guild_role === 'admin' && user.guild_id === parseInt(req.params.id)
+      if (!isOwner && !isAdmin) {
+        return res.status(403).json({ error: 'Only the owner or admins can edit the guild' })
       }
 
       const { name, description, isPublic } = req.body
@@ -151,6 +154,96 @@ function createGuildRouter(db) {
     } catch (e) {
       console.error('[Guild API - Edit]', e)
       res.status(500).json({ error: 'Failed to update guild' })
+    }
+  })
+
+  // Kick a member from guild
+  router.post('/:id/kick/:userId', requireAuth, (req, res) => {
+    try {
+      const guild = queries.getGuildById(db, req.params.id)
+      if (!guild) return res.status(404).json({ error: 'Guild not found' })
+
+      const targetId = parseInt(req.params.userId)
+      if (targetId === req.user.id) return res.status(400).json({ error: 'Cannot kick yourself' })
+
+      const isOwner = guild.ownerId === req.user.id
+      const caller = queries.findUserById(db, req.user.id)
+      const isAdmin = caller.guild_role === 'admin' && caller.guild_id === guild.id
+
+      if (!isOwner && !isAdmin) {
+        return res.status(403).json({ error: 'Only owner or admins can kick members' })
+      }
+
+      const target = queries.findUserById(db, targetId)
+      if (!target || target.guild_id !== guild.id) {
+        return res.status(400).json({ error: 'User is not in this guild' })
+      }
+
+      // Admins cannot kick other admins
+      if (isAdmin && !isOwner && target.guild_role === 'admin') {
+        return res.status(403).json({ error: 'Admins cannot kick other admins' })
+      }
+
+      queries.kickFromGuild(db, targetId)
+      res.json({ success: true })
+    } catch (e) {
+      console.error('[Guild API - Kick]', e)
+      res.status(500).json({ error: 'Failed to kick member' })
+    }
+  })
+
+  // Promote member to admin (owner only)
+  router.post('/:id/promote/:userId', requireAuth, (req, res) => {
+    try {
+      const guild = queries.getGuildById(db, req.params.id)
+      if (!guild) return res.status(404).json({ error: 'Guild not found' })
+      if (guild.ownerId !== req.user.id) return res.status(403).json({ error: 'Only the owner can promote members' })
+
+      const target = queries.findUserById(db, parseInt(req.params.userId))
+      if (!target || target.guild_id !== guild.id) return res.status(400).json({ error: 'User is not in this guild' })
+
+      queries.setGuildRole(db, target.id, 'admin')
+      res.json({ success: true })
+    } catch (e) {
+      console.error('[Guild API - Promote]', e)
+      res.status(500).json({ error: 'Failed to promote member' })
+    }
+  })
+
+  // Demote admin to member (owner only)
+  router.post('/:id/demote/:userId', requireAuth, (req, res) => {
+    try {
+      const guild = queries.getGuildById(db, req.params.id)
+      if (!guild) return res.status(404).json({ error: 'Guild not found' })
+      if (guild.ownerId !== req.user.id) return res.status(403).json({ error: 'Only the owner can demote admins' })
+
+      const target = queries.findUserById(db, parseInt(req.params.userId))
+      if (!target || target.guild_id !== guild.id) return res.status(400).json({ error: 'User is not in this guild' })
+
+      queries.setGuildRole(db, target.id, 'member')
+      res.json({ success: true })
+    } catch (e) {
+      console.error('[Guild API - Demote]', e)
+      res.status(500).json({ error: 'Failed to demote member' })
+    }
+  })
+
+  // Transfer ownership (owner only)
+  router.post('/:id/transfer/:userId', requireAuth, (req, res) => {
+    try {
+      const guild = queries.getGuildById(db, req.params.id)
+      if (!guild) return res.status(404).json({ error: 'Guild not found' })
+      if (guild.ownerId !== req.user.id) return res.status(403).json({ error: 'Only the owner can transfer ownership' })
+
+      const newOwnerId = parseInt(req.params.userId)
+      const target = queries.findUserById(db, newOwnerId)
+      if (!target || target.guild_id !== guild.id) return res.status(400).json({ error: 'User is not in this guild' })
+
+      queries.transferGuildOwnership(db, guild.id, newOwnerId)
+      res.json({ success: true })
+    } catch (e) {
+      console.error('[Guild API - Transfer]', e)
+      res.status(500).json({ error: 'Failed to transfer ownership' })
     }
   })
 

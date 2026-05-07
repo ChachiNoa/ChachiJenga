@@ -23,6 +23,7 @@ CREATE TABLE IF NOT EXISTS users (
   pieces_extracted INTEGER DEFAULT 0,
   shapes_drawn INTEGER DEFAULT 0,
   guild_id INTEGER REFERENCES guilds(id),
+  guild_role TEXT CHECK(guild_role IN ('member', 'admin')) DEFAULT 'member',
   created_at DATETIME DEFAULT CURRENT_TIMESTAMP,
   last_login DATETIME DEFAULT CURRENT_TIMESTAMP
 );

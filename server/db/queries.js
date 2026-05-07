@@ -137,7 +137,7 @@ function getGuildById(db, guildId) {
 
 function getGuildMembers(db, guildId) {
   const stmt = db.prepare(`
-    SELECT id, display_name as displayName, tag, avatar_url as avatarUrl, elo, total_points as totalPoints
+    SELECT id, display_name as displayName, tag, avatar_url as avatarUrl, elo, total_points as totalPoints, guild_role as guildRole
     FROM users
     WHERE guild_id = ?
     ORDER BY total_points DESC
@@ -172,19 +172,34 @@ function updateGuild(db, guildId, { name, description, isPublic }) {
 }
 
 function deleteGuild(db, guildId) {
-  db.prepare('UPDATE users SET guild_id = NULL WHERE guild_id = ?').run(guildId)
+  db.prepare('UPDATE users SET guild_id = NULL, guild_role = \'member\' WHERE guild_id = ?').run(guildId)
   const stmt = db.prepare('DELETE FROM guilds WHERE id = ?')
   return stmt.run(guildId)
 }
 
 function joinGuild(db, userId, guildId) {
-  const stmt = db.prepare('UPDATE users SET guild_id = ? WHERE id = ?')
+  const stmt = db.prepare("UPDATE users SET guild_id = ?, guild_role = 'member' WHERE id = ?")
   return stmt.run(guildId, userId)
 }
 
 function leaveGuild(db, userId) {
-  const stmt = db.prepare('UPDATE users SET guild_id = NULL WHERE id = ?')
+  const stmt = db.prepare("UPDATE users SET guild_id = NULL, guild_role = 'member' WHERE id = ?")
   return stmt.run(userId)
+}
+
+function kickFromGuild(db, userId) {
+  const stmt = db.prepare("UPDATE users SET guild_id = NULL, guild_role = 'member' WHERE id = ?")
+  return stmt.run(userId)
+}
+
+function setGuildRole(db, userId, role) {
+  const stmt = db.prepare('UPDATE users SET guild_role = ? WHERE id = ?')
+  return stmt.run(role, userId)
+}
+
+function transferGuildOwnership(db, guildId, newOwnerId) {
+  const stmt = db.prepare('UPDATE guilds SET owner_id = ? WHERE id = ?')
+  return stmt.run(newOwnerId, guildId)
 }
 
 // ─── Ranking ──────────────────────────────────────────
@@ -305,6 +320,9 @@ module.exports = {
   deleteGuild,
   joinGuild,
   leaveGuild,
+  kickFromGuild,
+  setGuildRole,
+  transferGuildOwnership,
   // Ranking
   getTopPlayers,
   getPlayerRank,
