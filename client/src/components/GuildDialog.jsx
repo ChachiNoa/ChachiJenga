@@ -1,13 +1,34 @@
-import { useState, useEffect } from 'react'
+import { useState, useEffect, useCallback } from 'react'
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from '@/components/ui/dialog'
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs'
 import { Button } from '@/components/ui/button'
 import { Input } from '@/components/ui/input'
 import { Badge } from '@/components/ui/badge'
 import { Avatar, AvatarFallback } from '@/components/ui/avatar'
-import { Shield, Crown, Plus, LogOut, Trash2, Pencil, Globe, Lock, Users, Trophy } from 'lucide-react'
+import { Shield, Crown, Plus, LogOut, Trash2, Pencil, Globe, Lock, Users, Trophy, UserPlus, UserMinus, ShieldCheck, ShieldOff, ArrowRightLeft } from 'lucide-react'
 
 const API = import.meta.env.VITE_API_URL || 'http://localhost:3001'
+
+// ─── Confirmation Dialog ─────────────────────────────
+function ConfirmDialog({ open, onClose, title, message, confirmLabel, variant, onConfirm }) {
+  if (!open) return null
+  return (
+    <Dialog open={open} onOpenChange={(v) => !v && onClose()}>
+      <DialogContent className="sm:max-w-sm">
+        <DialogHeader>
+          <DialogTitle className="text-lg">{title}</DialogTitle>
+        </DialogHeader>
+        <p className="text-sm text-muted-foreground py-2">{message}</p>
+        <div className="flex gap-2 pt-2">
+          <Button variant="outline" onClick={onClose} className="flex-1">Cancelar</Button>
+          <Button variant={variant || 'destructive'} onClick={() => { onConfirm(); onClose() }} className="flex-1">
+            {confirmLabel || 'Confirmar'}
+          </Button>
+        </div>
+      </DialogContent>
+    </Dialog>
+  )
+}
 
 export default function GuildDialog({ open, onOpenChange, auth }) {
   const [activeTab, setActiveTab] = useState('my')
@@ -16,40 +37,54 @@ export default function GuildDialog({ open, onOpenChange, auth }) {
   const [ranking, setRanking] = useState([])
   const [loading, setLoading] = useState(true)
   const [isOwner, setIsOwner] = useState(false)
+  const [myRole, setMyRole] = useState('member') // 'member' | 'admin'
 
-  // Create form state
+  // Create form
   const [showCreate, setShowCreate] = useState(false)
   const [createName, setCreateName] = useState('')
   const [createDesc, setCreateDesc] = useState('')
   const [createPublic, setCreatePublic] = useState(true)
   const [createError, setCreateError] = useState('')
 
-  // Edit form state
+  // Edit form
   const [editing, setEditing] = useState(false)
   const [editName, setEditName] = useState('')
   const [editDesc, setEditDesc] = useState('')
   const [editPublic, setEditPublic] = useState(true)
 
+  // Confirmation dialog
+  const [confirm, setConfirm] = useState({ open: false, title: '', message: '', confirmLabel: '', variant: 'destructive', onConfirm: () => {} })
+
+  // Toast-style feedback
+  const [toast, setToast] = useState('')
+
+  const showToast = (msg) => {
+    setToast(msg)
+    setTimeout(() => setToast(''), 2500)
+  }
+
+  const showConfirm = (title, message, onConfirm, confirmLabel = 'Confirmar', variant = 'destructive') => {
+    setConfirm({ open: true, title, message, confirmLabel, variant, onConfirm })
+  }
+
+  const authHeaders = useCallback(() => ({
+    Authorization: `Bearer ${auth?.token}`,
+    'Content-Type': 'application/json'
+  }), [auth?.token])
 
   useEffect(() => {
-    if (open) {
+    if (open && auth?.token) {
       fetchMyGuild()
       fetchRanking()
     }
   }, [open])
 
-  const authHeaders = () => ({
-    Authorization: `Bearer ${auth?.token}`,
-    'Content-Type': 'application/json'
-  })
-
   const fetchMyGuild = async () => {
     setLoading(true)
     try {
-      // Get user profile to check guild_id
       const profileRes = await fetch(`${API}/api/profile/${auth.user.id}`)
       const profileData = await profileRes.json()
-      
+
       if (profileData.user?.guildId) {
         const guildRes = await fetch(`${API}/api/guilds/${profileData.user.guildId}`, {
           headers: authHeaders()
@@ -59,11 +94,14 @@ export default function GuildDialog({ open, onOpenChange, auth }) {
           setGuild(data.guild)
           setMembers(data.members)
           setIsOwner(data.guild.ownerId === auth.user.id)
+          const me = data.members.find(m => m.id === auth.user.id)
+          setMyRole(me?.guildRole || 'member')
         }
       } else {
         setGuild(null)
         setMembers([])
         setIsOwner(false)
+        setMyRole('member')
       }
     } catch (e) {
       console.error('[GuildDialog]', e)
@@ -79,107 +117,123 @@ export default function GuildDialog({ open, onOpenChange, auth }) {
     } catch (e) { console.error(e) }
   }
 
+  // ─── Actions ────────────────────────────────────────
+
   const handleCreate = async () => {
     setCreateError('')
     if (!createName.trim()) { setCreateError('El nombre es obligatorio'); return }
     try {
       const res = await fetch(`${API}/api/guilds`, {
-        method: 'POST',
-        headers: authHeaders(),
+        method: 'POST', headers: authHeaders(),
         body: JSON.stringify({ name: createName, description: createDesc, isPublic: createPublic })
       })
       const data = await res.json()
-      if (res.ok) {
-        setShowCreate(false)
-        setCreateName('')
-        setCreateDesc('')
-        fetchMyGuild()
-        fetchRanking()
-      } else {
-        setCreateError(data.error || 'Error al crear gremio')
-      }
+      if (res.ok) { setShowCreate(false); setCreateName(''); setCreateDesc(''); fetchMyGuild(); fetchRanking() }
+      else setCreateError(data.error || 'Error al crear gremio')
     } catch (e) { setCreateError('Error de conexión') }
   }
 
   const handleJoin = async (guildId) => {
     try {
-      const res = await fetch(`${API}/api/guilds/${guildId}/join`, {
-        method: 'POST',
-        headers: authHeaders()
-      })
+      const res = await fetch(`${API}/api/guilds/${guildId}/join`, { method: 'POST', headers: authHeaders() })
       const data = await res.json()
-      if (res.ok) {
-        fetchMyGuild()
-        fetchRanking()
-        setActiveTab('my')
-      } else {
-        alert(data.error || 'No se pudo unir al gremio')
-      }
+      if (res.ok) { fetchMyGuild(); fetchRanking(); setActiveTab('my') }
+      else showToast(data.error || 'No se pudo unir')
     } catch (e) { console.error(e) }
   }
 
-  const handleLeave = async () => {
-    if (!confirm('¿Seguro que quieres salir del gremio?')) return
-    try {
-      const res = await fetch(`${API}/api/guilds/${guild.id}/leave`, {
-        method: 'POST',
-        headers: authHeaders()
-      })
-      if (res.ok) {
-        fetchMyGuild()
-        fetchRanking()
-      } else {
-        const data = await res.json()
-        alert(data.error || 'Error al salir')
-      }
-    } catch (e) { console.error(e) }
+  const handleLeave = () => {
+    showConfirm('Salir del Gremio', '¿Seguro que quieres salir del gremio?', async () => {
+      try {
+        const res = await fetch(`${API}/api/guilds/${guild.id}/leave`, { method: 'POST', headers: authHeaders() })
+        if (res.ok) { fetchMyGuild(); fetchRanking() }
+        else { const d = await res.json(); showToast(d.error || 'Error al salir') }
+      } catch (e) { console.error(e) }
+    }, 'Salir')
   }
 
-  const handleDelete = async () => {
-    if (!confirm('¿Seguro que quieres ELIMINAR el gremio? Se eliminarán todos los miembros.')) return
-    try {
-      const res = await fetch(`${API}/api/guilds/${guild.id}`, {
-        method: 'DELETE',
-        headers: authHeaders()
-      })
-      if (res.ok) {
-        fetchMyGuild()
-        fetchRanking()
-      }
-    } catch (e) { console.error(e) }
+  const handleDelete = () => {
+    showConfirm('Eliminar Gremio', '¿Seguro que quieres ELIMINAR el gremio? Se expulsarán todos los miembros y no se puede deshacer.', async () => {
+      try {
+        const res = await fetch(`${API}/api/guilds/${guild.id}`, { method: 'DELETE', headers: authHeaders() })
+        if (res.ok) { fetchMyGuild(); fetchRanking() }
+      } catch (e) { console.error(e) }
+    }, 'Eliminar')
   }
 
   const handleEdit = async () => {
     try {
       const res = await fetch(`${API}/api/guilds/${guild.id}`, {
-        method: 'PATCH',
-        headers: authHeaders(),
+        method: 'PATCH', headers: authHeaders(),
         body: JSON.stringify({ name: editName, description: editDesc, isPublic: editPublic })
       })
-      if (res.ok) {
-        setEditing(false)
-        fetchMyGuild()
-        fetchRanking()
-      }
+      if (res.ok) { setEditing(false); fetchMyGuild(); fetchRanking() }
     } catch (e) { console.error(e) }
   }
 
   const startEdit = () => {
-    setEditName(guild.name)
-    setEditDesc(guild.description || '')
-    setEditPublic(!!guild.isPublic)
-    setEditing(true)
+    setEditName(guild.name); setEditDesc(guild.description || ''); setEditPublic(!!guild.isPublic); setEditing(true)
+  }
+
+  const handleKick = (member) => {
+    showConfirm('Expulsar Miembro', `¿Seguro que quieres expulsar a ${member.displayName} del gremio?`, async () => {
+      try {
+        const res = await fetch(`${API}/api/guilds/${guild.id}/kick/${member.id}`, { method: 'POST', headers: authHeaders() })
+        if (res.ok) fetchMyGuild()
+        else { const d = await res.json(); showToast(d.error || 'Error al expulsar') }
+      } catch (e) { console.error(e) }
+    }, 'Expulsar')
+  }
+
+  const handlePromote = (member) => {
+    showConfirm('Hacer Admin', `¿Hacer admin a ${member.displayName}? Podrá expulsar miembros y editar el gremio.`, async () => {
+      try {
+        const res = await fetch(`${API}/api/guilds/${guild.id}/promote/${member.id}`, { method: 'POST', headers: authHeaders() })
+        if (res.ok) fetchMyGuild()
+      } catch (e) { console.error(e) }
+    }, 'Promover', 'default')
+  }
+
+  const handleDemote = (member) => {
+    showConfirm('Quitar Admin', `¿Quitar el rol de admin a ${member.displayName}?`, async () => {
+      try {
+        const res = await fetch(`${API}/api/guilds/${guild.id}/demote/${member.id}`, { method: 'POST', headers: authHeaders() })
+        if (res.ok) fetchMyGuild()
+      } catch (e) { console.error(e) }
+    }, 'Quitar Admin')
+  }
+
+  const handleTransfer = (member) => {
+    showConfirm('Transferir Propiedad', `¿Transferir la propiedad del gremio a ${member.displayName}? Tú dejarás de ser el dueño.`, async () => {
+      try {
+        const res = await fetch(`${API}/api/guilds/${guild.id}/transfer/${member.id}`, { method: 'POST', headers: authHeaders() })
+        if (res.ok) fetchMyGuild()
+      } catch (e) { console.error(e) }
+    }, 'Transferir')
+  }
+
+  const handleAddFriend = async (member) => {
+    try {
+      const res = await fetch(`${API}/api/friends/request`, {
+        method: 'POST', headers: authHeaders(),
+        body: JSON.stringify({ tag: member.tag })
+      })
+      const data = await res.json()
+      if (res.ok) showToast(`Solicitud enviada a ${member.displayName}`)
+      else showToast(data.error || 'Error al enviar solicitud')
+    } catch (e) { showToast('Error de conexión') }
   }
 
   // ─── Render helpers ─────────────────────────────────
+
+  const canManage = isOwner || myRole === 'admin'
 
   const renderNoGuild = () => (
     <div className="flex flex-col items-center justify-center py-8 gap-4">
       <Shield className="h-16 w-16 text-muted-foreground/30" />
       <p className="text-muted-foreground text-center">No estás en ningún gremio</p>
       <Button onClick={() => setShowCreate(true)} className="gap-2">
-        <Plus className="h-4 w-4" />
-        Crear Gremio
+        <Plus className="h-4 w-4" /> Crear Gremio
       </Button>
     </div>
   )
@@ -195,20 +249,10 @@ export default function GuildDialog({ open, onOpenChange, auth }) {
         <Input value={createDesc} onChange={e => setCreateDesc(e.target.value)} placeholder="Somos los mejores..." maxLength={100} />
       </div>
       <div className="flex items-center gap-3">
-        <Button
-          variant={createPublic ? "default" : "outline"}
-          size="sm"
-          onClick={() => setCreatePublic(true)}
-          className="gap-1"
-        >
+        <Button variant={createPublic ? "default" : "outline"} size="sm" onClick={() => setCreatePublic(true)} className="gap-1">
           <Globe className="h-3 w-3" /> Público
         </Button>
-        <Button
-          variant={!createPublic ? "default" : "outline"}
-          size="sm"
-          onClick={() => setCreatePublic(false)}
-          className="gap-1"
-        >
+        <Button variant={!createPublic ? "default" : "outline"} size="sm" onClick={() => setCreatePublic(false)} className="gap-1">
           <Lock className="h-3 w-3" /> Privado
         </Button>
       </div>
@@ -223,6 +267,57 @@ export default function GuildDialog({ open, onOpenChange, auth }) {
     </div>
   )
 
+  const renderMemberActions = (m) => {
+    if (m.id === auth.user.id) return null // Can't act on yourself
+    const memberIsOwner = guild.ownerId === m.id
+    if (memberIsOwner) return null // Can't act on owner
+
+    const memberIsAdmin = m.guildRole === 'admin'
+
+    return (
+      <div className="flex gap-0.5">
+        {/* Send friend request */}
+        <Button variant="ghost" size="icon" className="h-7 w-7 text-blue-500 hover:text-blue-600" title="Enviar solicitud de amistad"
+          onClick={() => handleAddFriend(m)}>
+          <UserPlus className="h-3 w-3" />
+        </Button>
+
+        {/* Owner actions */}
+        {isOwner && (
+          <>
+            {memberIsAdmin ? (
+              <Button variant="ghost" size="icon" className="h-7 w-7 text-orange-500 hover:text-orange-600" title="Quitar admin"
+                onClick={() => handleDemote(m)}>
+                <ShieldOff className="h-3 w-3" />
+              </Button>
+            ) : (
+              <Button variant="ghost" size="icon" className="h-7 w-7 text-green-500 hover:text-green-600" title="Hacer admin"
+                onClick={() => handlePromote(m)}>
+                <ShieldCheck className="h-3 w-3" />
+              </Button>
+            )}
+            <Button variant="ghost" size="icon" className="h-7 w-7 text-purple-500 hover:text-purple-600" title="Transferir propiedad"
+              onClick={() => handleTransfer(m)}>
+              <ArrowRightLeft className="h-3 w-3" />
+            </Button>
+            <Button variant="ghost" size="icon" className="h-7 w-7 text-red-500 hover:text-red-600" title="Expulsar"
+              onClick={() => handleKick(m)}>
+              <UserMinus className="h-3 w-3" />
+            </Button>
+          </>
+        )}
+
+        {/* Admin actions (can only kick non-admins) */}
+        {!isOwner && myRole === 'admin' && !memberIsAdmin && (
+          <Button variant="ghost" size="icon" className="h-7 w-7 text-red-500 hover:text-red-600" title="Expulsar"
+            onClick={() => handleKick(m)}>
+            <UserMinus className="h-3 w-3" />
+          </Button>
+        )}
+      </div>
+    )
+  }
+
   const renderGuildInfo = () => (
     <div className="space-y-4">
       {/* Guild header */}
@@ -233,26 +328,20 @@ export default function GuildDialog({ open, onOpenChange, auth }) {
               <Shield className="h-5 w-5 text-primary" />
               {guild.name}
             </h3>
-            {guild.description && (
-              <p className="text-sm text-muted-foreground mt-1">{guild.description}</p>
-            )}
+            {guild.description && <p className="text-sm text-muted-foreground mt-1">{guild.description}</p>}
             <div className="flex items-center gap-2 mt-2">
               <Badge variant="secondary">
                 {guild.isPublic ? <><Globe className="h-3 w-3 mr-1" />Público</> : <><Lock className="h-3 w-3 mr-1" />Privado</>}
               </Badge>
-              <Badge variant="outline">
-                <Users className="h-3 w-3 mr-1" />{members.length}/15
-              </Badge>
+              <Badge variant="outline"><Users className="h-3 w-3 mr-1" />{members.length}/15</Badge>
+              {isOwner && <Badge className="bg-yellow-100 text-yellow-800 border-yellow-300"><Crown className="h-3 w-3 mr-1" />Dueño</Badge>}
+              {!isOwner && myRole === 'admin' && <Badge className="bg-blue-100 text-blue-800 border-blue-300"><ShieldCheck className="h-3 w-3 mr-1" />Admin</Badge>}
             </div>
           </div>
-          {isOwner && (
+          {canManage && (
             <div className="flex gap-1">
-              <Button variant="ghost" size="icon" onClick={startEdit} className="h-8 w-8">
-                <Pencil className="h-3.5 w-3.5" />
-              </Button>
-              <Button variant="ghost" size="icon" onClick={handleDelete} className="h-8 w-8 text-red-500 hover:text-red-600">
-                <Trash2 className="h-3.5 w-3.5" />
-              </Button>
+              <Button variant="ghost" size="icon" onClick={startEdit} className="h-8 w-8"><Pencil className="h-3.5 w-3.5" /></Button>
+              {isOwner && <Button variant="ghost" size="icon" onClick={handleDelete} className="h-8 w-8 text-red-500 hover:text-red-600"><Trash2 className="h-3.5 w-3.5" /></Button>}
             </div>
           )}
         </div>
@@ -276,9 +365,7 @@ export default function GuildDialog({ open, onOpenChange, auth }) {
 
       {/* Members list */}
       <div>
-        <h4 className="text-sm font-semibold text-muted-foreground uppercase tracking-wider mb-2">
-          Miembros ({members.length})
-        </h4>
+        <h4 className="text-sm font-semibold text-muted-foreground uppercase tracking-wider mb-2">Miembros ({members.length})</h4>
         <div className="space-y-2">
           {members.map((m, i) => (
             <div key={m.id} className="flex items-center justify-between p-2.5 rounded-lg bg-card border shadow-sm">
@@ -295,10 +382,12 @@ export default function GuildDialog({ open, onOpenChange, auth }) {
                   <div className="text-sm font-bold flex items-center gap-1">
                     {m.displayName}
                     {guild.ownerId === m.id && <Crown className="h-3 w-3 text-yellow-500" />}
+                    {m.guildRole === 'admin' && guild.ownerId !== m.id && <ShieldCheck className="h-3 w-3 text-blue-500" />}
                   </div>
                   <div className="text-[10px] text-muted-foreground">{m.tag} · ELO {m.elo} · {m.totalPoints} pts</div>
                 </div>
               </div>
+              {renderMemberActions(m)}
             </div>
           ))}
         </div>
@@ -307,8 +396,7 @@ export default function GuildDialog({ open, onOpenChange, auth }) {
       {/* Leave button (non-owner only) */}
       {!isOwner && (
         <Button variant="destructive" onClick={handleLeave} className="w-full gap-2">
-          <LogOut className="h-4 w-4" />
-          Salir del Gremio
+          <LogOut className="h-4 w-4" /> Salir del Gremio
         </Button>
       )}
     </div>
@@ -340,9 +428,7 @@ export default function GuildDialog({ open, onOpenChange, auth }) {
             <div className="flex items-center gap-2">
               <span className="text-sm font-bold text-primary">{g.totalPoints} pts</span>
               {!guild && (g.isPublic ? (
-                <Button size="sm" variant="outline" onClick={() => handleJoin(g.id)} className="h-7 text-xs">
-                  Unirse
-                </Button>
+                <Button size="sm" variant="outline" onClick={() => handleJoin(g.id)} className="h-7 text-xs">Unirse</Button>
               ) : null)}
             </div>
           </div>
@@ -352,42 +438,52 @@ export default function GuildDialog({ open, onOpenChange, auth }) {
   )
 
   return (
-    <Dialog open={open} onOpenChange={onOpenChange}>
-      <DialogContent className="sm:max-w-md max-h-[85vh] overflow-hidden flex flex-col p-0">
-        <DialogHeader className="px-6 py-4 pb-2">
-          <DialogTitle className="text-2xl flex items-center gap-2">
-            <Shield className="h-6 w-6 text-primary" />
-            Gremio
-          </DialogTitle>
-        </DialogHeader>
+    <>
+      <Dialog open={open} onOpenChange={onOpenChange}>
+        <DialogContent className="sm:max-w-md max-h-[85vh] overflow-hidden flex flex-col p-0">
+          <DialogHeader className="px-6 py-4 pb-2">
+            <DialogTitle className="text-2xl flex items-center gap-2">
+              <Shield className="h-6 w-6 text-primary" /> Gremio
+            </DialogTitle>
+          </DialogHeader>
 
-        <Tabs value={activeTab} onValueChange={setActiveTab} className="flex-1 flex flex-col min-h-0">
-          <div className="px-6">
-            <TabsList className="w-full">
-              <TabsTrigger value="my" className="flex-1">Mi Gremio</TabsTrigger>
-              <TabsTrigger value="ranking" className="flex-1">Ranking</TabsTrigger>
-            </TabsList>
-          </div>
+          <Tabs value={activeTab} onValueChange={setActiveTab} className="flex-1 flex flex-col min-h-0">
+            <div className="px-6">
+              <TabsList className="w-full">
+                <TabsTrigger value="my" className="flex-1">Mi Gremio</TabsTrigger>
+                <TabsTrigger value="ranking" className="flex-1">Ranking</TabsTrigger>
+              </TabsList>
+            </div>
 
-          <div className="flex-1 overflow-y-auto px-6 py-4 min-h-[300px]">
-            <TabsContent value="my" className="m-0">
-              {loading ? (
-                <div className="text-center text-muted-foreground py-8">Cargando...</div>
-              ) : showCreate ? (
-                renderCreateForm()
-              ) : guild ? (
-                renderGuildInfo()
-              ) : (
-                renderNoGuild()
-              )}
-            </TabsContent>
+            <div className="flex-1 overflow-y-auto px-6 py-4 min-h-[300px]">
+              <TabsContent value="my" className="m-0">
+                {loading ? (
+                  <div className="text-center text-muted-foreground py-8">Cargando...</div>
+                ) : showCreate ? renderCreateForm() : guild ? renderGuildInfo() : renderNoGuild()}
+              </TabsContent>
+              <TabsContent value="ranking" className="m-0">{renderRanking()}</TabsContent>
+            </div>
+          </Tabs>
 
-            <TabsContent value="ranking" className="m-0">
-              {renderRanking()}
-            </TabsContent>
-          </div>
-        </Tabs>
-      </DialogContent>
-    </Dialog>
+          {/* Toast feedback */}
+          {toast && (
+            <div className="absolute bottom-4 left-1/2 -translate-x-1/2 bg-foreground text-background px-4 py-2 rounded-lg text-sm font-medium shadow-lg animate-in fade-in slide-in-from-bottom-2 z-50">
+              {toast}
+            </div>
+          )}
+        </DialogContent>
+      </Dialog>
+
+      {/* Confirmation overlay */}
+      <ConfirmDialog
+        open={confirm.open}
+        onClose={() => setConfirm(c => ({ ...c, open: false }))}
+        title={confirm.title}
+        message={confirm.message}
+        confirmLabel={confirm.confirmLabel}
+        variant={confirm.variant}
+        onConfirm={confirm.onConfirm}
+      />
+    </>
   )
 }
