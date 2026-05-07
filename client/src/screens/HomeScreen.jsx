@@ -24,6 +24,7 @@ function HomeScreen() {
   const [guildOpen, setGuildOpen] = useState(false)
   const [friendsOpen, setFriendsOpen] = useState(false)
   const [user, setUser] = useState(null)
+  const [authToken, setAuthToken] = useState(null)
   const [fullProfile, setFullProfile] = useState(null)
   const { socket, isConnected } = useSocket()
 
@@ -42,7 +43,9 @@ function HomeScreen() {
       navigate('/login', { replace: true })
       return
     }
+    // Capture auth at mount time so it doesn't change if another tab logs in
     setUser(auth.user)
+    setAuthToken(auth.token)
   }, [navigate])
 
   useEffect(() => {
@@ -210,10 +213,10 @@ function HomeScreen() {
       </Dialog>
 
       {/* Friends Dialog */}
-      <FriendsDialog open={friendsOpen} onOpenChange={setFriendsOpen} />
+      <FriendsDialog open={friendsOpen} onOpenChange={setFriendsOpen} auth={{ token: authToken, user }} />
 
       {/* Guild Dialog */}
-      <GuildDialog open={guildOpen} onOpenChange={setGuildOpen} />
+      <GuildDialog open={guildOpen} onOpenChange={setGuildOpen} auth={{ token: authToken, user }} />
     </div>
   )
 }

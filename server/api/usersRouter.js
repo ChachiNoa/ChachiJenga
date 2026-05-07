@@ -14,7 +14,7 @@ function createUsersRouter(db) {
     // Ensure the tag starts with #
     const formattedTag = tag.startsWith('#') ? tag : `#${tag}`
 
-    const stmt = db.prepare('SELECT id, display_name, tag, avatar_url, elo FROM users WHERE tag = ?')
+    const stmt = db.prepare('SELECT id, display_name as displayName, tag, avatar_url as avatarUrl, elo FROM users WHERE tag = ?')
     const user = stmt.get(formattedTag)
 
     if (!user) {

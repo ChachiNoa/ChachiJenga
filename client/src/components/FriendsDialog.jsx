@@ -5,10 +5,9 @@ import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs'
 import { Button } from '@/components/ui/button'
 import { Input } from '@/components/ui/input'
 import { Search, UserPlus, Check, X, UserMinus, User } from 'lucide-react'
-import { loadAuth } from '@/network/authApi'
 import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar'
 
-export default function FriendsDialog({ open, onOpenChange }) {
+export default function FriendsDialog({ open, onOpenChange, auth }) {
   const { t } = useTranslation()
   const [activeTab, setActiveTab] = useState('friends') // 'friends', 'pending', 'add'
   const [friends, setFriends] = useState([])
@@ -17,8 +16,6 @@ export default function FriendsDialog({ open, onOpenChange }) {
   const [searchResult, setSearchResult] = useState(null)
   const [searchError, setSearchError] = useState('')
   const [isLoading, setIsLoading] = useState(false)
-
-  const auth = loadAuth()
 
   useEffect(() => {
     if (open && auth?.token) {

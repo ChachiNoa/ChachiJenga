@@ -6,11 +6,10 @@ import { Input } from '@/components/ui/input'
 import { Badge } from '@/components/ui/badge'
 import { Avatar, AvatarFallback } from '@/components/ui/avatar'
 import { Shield, Crown, Plus, LogOut, Trash2, Pencil, Globe, Lock, Users, Trophy } from 'lucide-react'
-import { loadAuth } from '@/network/authApi'
 
 const API = import.meta.env.VITE_API_URL || 'http://localhost:3001'
 
-export default function GuildDialog({ open, onOpenChange }) {
+export default function GuildDialog({ open, onOpenChange, auth }) {
   const [activeTab, setActiveTab] = useState('my')
   const [guild, setGuild] = useState(null)
   const [members, setMembers] = useState([])
@@ -31,7 +30,6 @@ export default function GuildDialog({ open, onOpenChange }) {
   const [editDesc, setEditDesc] = useState('')
   const [editPublic, setEditPublic] = useState(true)
 
-  const auth = loadAuth()
 
   useEffect(() => {
     if (open) {
