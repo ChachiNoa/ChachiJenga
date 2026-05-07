@@ -9,6 +9,7 @@ import SettingsDialog from '@/components/SettingsDialog'
 import RankingList from '@/components/RankingList'
 import ProfileCard from '@/components/ProfileCard'
 import FriendsDialog from '@/components/FriendsDialog'
+import GuildDialog from '@/components/GuildDialog'
 import { useSocket } from '@/hooks/useSocket'
 import { audio } from '@/lib/audio'
 
@@ -72,6 +73,7 @@ function HomeScreen() {
         id: user.id || 'anonymous',
         name: user.displayName || 'Player',
         avatarUrl: fullProfile?.user?.avatarUrl || user.avatarUrl,
+        tag: fullProfile?.user?.tag || user.tag,
         elo: user.elo || 1000
       })
     }
@@ -211,11 +213,7 @@ function HomeScreen() {
       <FriendsDialog open={friendsOpen} onOpenChange={setFriendsOpen} />
 
       {/* Guild Dialog */}
-      <Dialog open={guildOpen} onOpenChange={setGuildOpen}>
-        <DialogContent className="sm:max-w-md max-h-[80vh] overflow-hidden flex flex-col p-6">
-          <div className="text-center font-bold">Gremio (Próximamente)</div>
-        </DialogContent>
-      </Dialog>
+      <GuildDialog open={guildOpen} onOpenChange={setGuildOpen} />
     </div>
   )
 }

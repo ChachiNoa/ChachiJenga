@@ -116,6 +116,77 @@ function deleteFriendship(db, friendshipId, userId) {
   return stmt.run(friendshipId, userId, userId)
 }
 
+// ─── Guilds ───────────────────────────────────────────
+
+function createGuild(db, { name, ownerId, description, isPublic }) {
+  const stmt = db.prepare(`
+    INSERT INTO guilds (name, owner_id, description, is_public)
+    VALUES (?, ?, ?, ?)
+  `)
+  return stmt.run(name, ownerId, description, isPublic === undefined ? 1 : (isPublic ? 1 : 0))
+}
+
+function getGuildById(db, guildId) {
+  const stmt = db.prepare(`
+    SELECT id, name, owner_id as ownerId, description, is_public as isPublic, created_at as createdAt
+    FROM guilds
+    WHERE id = ?
+  `)
+  return stmt.get(guildId)
+}
+
+function getGuildMembers(db, guildId) {
+  const stmt = db.prepare(`
+    SELECT id, display_name as displayName, tag, avatar_url as avatarUrl, elo, total_points as totalPoints
+    FROM users
+    WHERE guild_id = ?
+    ORDER BY total_points DESC
+  `)
+  return stmt.all(guildId)
+}
+
+function getGuildsRanking(db, limit = 50) {
+  const stmt = db.prepare(`
+    SELECT g.id, g.name, g.is_public as isPublic, SUM(u.total_points) as totalPoints, COUNT(u.id) as memberCount
+    FROM guilds g
+    JOIN users u ON g.id = u.guild_id
+    GROUP BY g.id
+    ORDER BY totalPoints DESC
+    LIMIT ?
+  `)
+  return stmt.all(limit)
+}
+
+function updateGuild(db, guildId, { name, description, isPublic }) {
+  const updates = []
+  const params = []
+  if (name !== undefined) { updates.push('name = ?'); params.push(name) }
+  if (description !== undefined) { updates.push('description = ?'); params.push(description) }
+  if (isPublic !== undefined) { updates.push('is_public = ?'); params.push(isPublic ? 1 : 0) }
+  
+  if (updates.length === 0) return { changes: 0 }
+  
+  params.push(guildId)
+  const stmt = db.prepare(`UPDATE guilds SET ${updates.join(', ')} WHERE id = ?`)
+  return stmt.run(...params)
+}
+
+function deleteGuild(db, guildId) {
+  db.prepare('UPDATE users SET guild_id = NULL WHERE guild_id = ?').run(guildId)
+  const stmt = db.prepare('DELETE FROM guilds WHERE id = ?')
+  return stmt.run(guildId)
+}
+
+function joinGuild(db, userId, guildId) {
+  const stmt = db.prepare('UPDATE users SET guild_id = ? WHERE id = ?')
+  return stmt.run(guildId, userId)
+}
+
+function leaveGuild(db, userId) {
+  const stmt = db.prepare('UPDATE users SET guild_id = NULL WHERE id = ?')
+  return stmt.run(userId)
+}
+
 // ─── Ranking ──────────────────────────────────────────
 
 function getTopPlayers(db, limit = 100) {
@@ -225,6 +296,15 @@ module.exports = {
   updateFriendRequestStatus,
   getFriends,
   deleteFriendship,
+  // Guilds
+  createGuild,
+  getGuildById,
+  getGuildMembers,
+  getGuildsRanking,
+  updateGuild,
+  deleteGuild,
+  joinGuild,
+  leaveGuild,
   // Ranking
   getTopPlayers,
   getPlayerRank,
