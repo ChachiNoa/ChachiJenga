@@ -1,3 +1,12 @@
+CREATE TABLE IF NOT EXISTS guilds (
+  id INTEGER PRIMARY KEY AUTOINCREMENT,
+  name TEXT UNIQUE NOT NULL,
+  owner_id INTEGER NOT NULL,
+  description TEXT,
+  is_public BOOLEAN DEFAULT 1,
+  created_at DATETIME DEFAULT CURRENT_TIMESTAMP
+);
+
 CREATE TABLE IF NOT EXISTS users (
   id INTEGER PRIMARY KEY AUTOINCREMENT,
   google_id TEXT UNIQUE NOT NULL,
@@ -25,15 +34,6 @@ CREATE TABLE IF NOT EXISTS friendships (
   status TEXT CHECK(status IN ('pending', 'accepted', 'rejected')) DEFAULT 'pending',
   created_at DATETIME DEFAULT CURRENT_TIMESTAMP,
   UNIQUE(requester_id, addressee_id)
-);
-
-CREATE TABLE IF NOT EXISTS guilds (
-  id INTEGER PRIMARY KEY AUTOINCREMENT,
-  name TEXT UNIQUE NOT NULL,
-  owner_id INTEGER NOT NULL REFERENCES users(id),
-  description TEXT,
-  is_public BOOLEAN DEFAULT 1,
-  created_at DATETIME DEFAULT CURRENT_TIMESTAMP
 );
 
 CREATE TABLE IF NOT EXISTS matches (

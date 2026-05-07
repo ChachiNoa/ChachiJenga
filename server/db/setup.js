@@ -18,13 +18,14 @@ function setupDatabase(dbPath) {
   const tableInfo = db.pragma('table_info(users)')
   const hasTagColumn = tableInfo.some(col => col.name === 'tag')
   if (!hasTagColumn) {
-    db.exec('ALTER TABLE users ADD COLUMN tag TEXT UNIQUE')
+    // SQLite doesn't support ADD COLUMN with UNIQUE — add plain, index later
+    db.exec('ALTER TABLE users ADD COLUMN tag TEXT')
   }
 
   // Migration: add guild_id column if it doesn't exist
   const hasGuildIdColumn = tableInfo.some(col => col.name === 'guild_id')
   if (!hasGuildIdColumn) {
-    db.exec('ALTER TABLE users ADD COLUMN guild_id INTEGER REFERENCES guilds(id)')
+    db.exec('ALTER TABLE users ADD COLUMN guild_id INTEGER')
   }
 
   // Migration: populate tag for existing users
@@ -33,7 +34,6 @@ function setupDatabase(dbPath) {
     const updateTag = db.prepare('UPDATE users SET tag = ? WHERE id = ?')
     const maxTagStmt = db.prepare("SELECT MAX(CAST(SUBSTR(tag, 2) AS INTEGER)) as maxTag FROM users WHERE tag IS NOT NULL")
     
-    // We do it in a transaction
     const populateTags = db.transaction((users) => {
       let currentMaxTag = maxTagStmt.get().maxTag || 0
       for (const user of users) {
@@ -44,6 +44,9 @@ function setupDatabase(dbPath) {
     })
     populateTags(usersWithoutTag)
   }
+
+  // Ensure unique index on tag (safe to run repeatedly — IF NOT EXISTS)
+  db.exec('CREATE UNIQUE INDEX IF NOT EXISTS idx_users_tag ON users(tag)')
 
 
   return db
