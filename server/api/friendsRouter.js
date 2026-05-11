@@ -51,7 +51,14 @@ function createFriendsRouter(db) {
       `).get(req.user.id, targetUser.id, targetUser.id, req.user.id)
 
       if (existing) {
-        return res.status(400).json({ error: 'Friendship or request already exists' })
+        if (existing.status === 'accepted') {
+          return res.status(400).json({ error: 'Ya sois amigos' })
+        }
+        if (existing.status === 'pending') {
+          return res.status(400).json({ error: 'Ya hay una solicitud pendiente' })
+        }
+        // If rejected, delete old row so we can re-send
+        db.prepare('DELETE FROM friendships WHERE id = ?').run(existing.id)
       }
 
       queries.sendFriendRequest(db, req.user.id, targetUser.id)
