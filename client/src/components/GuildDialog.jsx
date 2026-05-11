@@ -5,7 +5,7 @@ import { Button } from '@/components/ui/button'
 import { Input } from '@/components/ui/input'
 import { Badge } from '@/components/ui/badge'
 import { Avatar, AvatarFallback } from '@/components/ui/avatar'
-import { Shield, Crown, Plus, LogOut, Trash2, Pencil, Globe, Lock, Users, Trophy, UserPlus, UserMinus, UsersRound, ShieldCheck, ShieldOff, ArrowRightLeft, Info } from 'lucide-react'
+import { Shield, Crown, Plus, LogOut, Trash2, Pencil, Globe, Lock, Users, Trophy, UserPlus, UserMinus, UsersRound, ShieldCheck, ShieldOff, ArrowRightLeft, Info, Check, X } from 'lucide-react'
 
 const API = import.meta.env.VITE_API_URL || 'http://localhost:3001'
 
@@ -40,6 +40,7 @@ export default function GuildDialog({ open, onOpenChange, auth }) {
   const [myRole, setMyRole] = useState('member') // 'member' | 'admin'
   const [friendIds, setFriendIds] = useState(new Set()) // IDs of current friends
   const [showInfo, setShowInfo] = useState(false)
+  const [invitations, setInvitations] = useState([])
 
   // Create form
   const [showCreate, setShowCreate] = useState(false)
@@ -79,8 +80,16 @@ export default function GuildDialog({ open, onOpenChange, auth }) {
       fetchMyGuild()
       fetchRanking()
       fetchFriendIds()
+      fetchInvitations()
     }
-  }, [open])
+  }, [open, activeTab])
+
+  const fetchInvitations = async () => {
+    try {
+      const res = await fetch(`${API}/api/guilds/invitations/pending`, { headers: authHeaders() })
+      if (res.ok) setInvitations(await res.json())
+    } catch (e) { console.error(e) }
+  }
 
   const fetchFriendIds = async () => {
     try {
@@ -235,6 +244,24 @@ export default function GuildDialog({ open, onOpenChange, auth }) {
       if (res.ok) showToast(`Solicitud enviada a ${member.displayName}`)
       else showToast(data.error || 'Error al enviar solicitud')
     } catch (e) { showToast('Error de conexión') }
+  }
+
+  const respondInvitation = async (id, accept) => {
+    try {
+      const res = await fetch(`${API}/api/guilds/invitations/${id}/${accept ? 'accept' : 'reject'}`, {
+        method: 'POST', headers: authHeaders()
+      })
+      if (res.ok) {
+        fetchInvitations()
+        if (accept) {
+          fetchMyGuild()
+          setActiveTab('my')
+        }
+      } else {
+        const d = await res.json()
+        showToast(d.error || 'Error al procesar solicitud')
+      }
+    } catch (e) { console.error(e) }
   }
 
   // ─── Render helpers ─────────────────────────────────
@@ -451,6 +478,40 @@ export default function GuildDialog({ open, onOpenChange, auth }) {
     </div>
   )
 
+  const renderInvitations = () => (
+    <div className="space-y-3">
+      {invitations.length === 0 ? (
+        <div className="text-center text-muted-foreground py-8">
+          <Shield className="h-12 w-12 mx-auto mb-2 opacity-20" />
+          <p>No tienes invitaciones a gremios</p>
+        </div>
+      ) : (
+        invitations.map(inv => (
+          <div key={inv.id} className="flex flex-col sm:flex-row sm:items-center justify-between p-3 rounded-xl bg-card border shadow-sm gap-3">
+            <div className="flex items-center gap-3">
+              <Shield className="h-8 w-8 text-primary opacity-80" />
+              <div>
+                <div className="font-bold flex items-center gap-1.5 text-sm">
+                  {inv.guildName}
+                  {inv.isPublic ? <Globe className="h-2.5 w-2.5 text-muted-foreground" /> : <Lock className="h-2.5 w-2.5 text-muted-foreground" />}
+                </div>
+                <div className="text-[10px] text-muted-foreground">Invitado por {inv.inviterName} ({inv.inviterTag})</div>
+              </div>
+            </div>
+            <div className="flex gap-2">
+              <Button size="sm" onClick={() => respondInvitation(inv.id, true)} className="flex-1">
+                <Check className="h-4 w-4 mr-1" /> Aceptar
+              </Button>
+              <Button size="sm" variant="outline" onClick={() => respondInvitation(inv.id, false)} className="flex-1">
+                <X className="h-4 w-4 mr-1" /> Rechazar
+              </Button>
+            </div>
+          </div>
+        ))
+      )}
+    </div>
+  )
+
   const renderInfoPanel = () => (
     <div className="mx-6 mb-3 p-4 rounded-xl border bg-card/50 text-xs space-y-3 animate-in fade-in slide-in-from-top-2">
       <div>
@@ -495,8 +556,12 @@ export default function GuildDialog({ open, onOpenChange, auth }) {
           <Tabs value={activeTab} onValueChange={setActiveTab} className="flex-1 flex flex-col min-h-0">
             <div className="px-6">
               <TabsList className="w-full">
-                <TabsTrigger value="my" className="flex-1">Mi Gremio</TabsTrigger>
-                <TabsTrigger value="ranking" className="flex-1">Ranking</TabsTrigger>
+                <TabsTrigger value="my" className="flex-1 text-xs sm:text-sm">Mi Gremio</TabsTrigger>
+                <TabsTrigger value="ranking" className="flex-1 text-xs sm:text-sm">Ranking</TabsTrigger>
+                <TabsTrigger value="invitations" className="flex-1 relative text-xs sm:text-sm">
+                  Invitaciones
+                  {invitations.length > 0 && <span className="absolute top-1 right-2 w-2 h-2 bg-red-500 rounded-full animate-pulse" />}
+                </TabsTrigger>
               </TabsList>
             </div>
 
@@ -507,6 +572,7 @@ export default function GuildDialog({ open, onOpenChange, auth }) {
                 ) : showCreate ? renderCreateForm() : guild ? renderGuildInfo() : renderNoGuild()}
               </TabsContent>
               <TabsContent value="ranking" className="m-0">{renderRanking()}</TabsContent>
+              <TabsContent value="invitations" className="m-0 h-full">{renderInvitations()}</TabsContent>
             </div>
           </Tabs>
 

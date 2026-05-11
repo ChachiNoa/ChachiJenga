@@ -37,6 +37,16 @@ CREATE TABLE IF NOT EXISTS friendships (
   UNIQUE(requester_id, addressee_id)
 );
 
+CREATE TABLE IF NOT EXISTS guild_invitations (
+  id INTEGER PRIMARY KEY AUTOINCREMENT,
+  guild_id INTEGER NOT NULL REFERENCES guilds(id),
+  inviter_id INTEGER NOT NULL REFERENCES users(id),
+  invitee_id INTEGER NOT NULL REFERENCES users(id),
+  status TEXT CHECK(status IN ('pending', 'accepted', 'rejected')) DEFAULT 'pending',
+  created_at DATETIME DEFAULT CURRENT_TIMESTAMP,
+  UNIQUE(guild_id, invitee_id)
+);
+
 CREATE TABLE IF NOT EXISTS matches (
   id INTEGER PRIMARY KEY AUTOINCREMENT,
   player1_id INTEGER NOT NULL REFERENCES users(id),

@@ -18,6 +18,62 @@ function createGuildRouter(db) {
     }
   })
 
+  // Get pending invitations for the current user
+  router.get('/invitations/pending', requireAuth, (req, res) => {
+    try {
+      const invitations = queries.getPendingGuildInvitations(db, req.user.id)
+      res.json(invitations)
+    } catch (e) {
+      console.error('[Guild API - Invitations]', e)
+      res.status(500).json({ error: 'Failed to fetch pending invitations' })
+    }
+  })
+
+  // Accept guild invitation
+  router.post('/invitations/:invitationId/accept', requireAuth, (req, res) => {
+    try {
+      const invitation = queries.getGuildInvitationById(db, req.params.invitationId)
+      if (!invitation || invitation.invitee_id !== req.user.id || invitation.status !== 'pending') {
+        return res.status(404).json({ error: 'Invitation not found or no longer valid' })
+      }
+
+      // Check if user is already in a guild
+      const user = queries.findUserById(db, req.user.id)
+      if (user.guild_id) {
+        return res.status(400).json({ error: 'You are already in a guild' })
+      }
+
+      // Check guild limits
+      const members = queries.getGuildMembers(db, invitation.guild_id)
+      if (members.length >= 15) {
+        return res.status(400).json({ error: 'Guild is full (Max 15)' })
+      }
+
+      const tx = db.transaction(() => {
+        queries.respondGuildInvitation(db, req.params.invitationId, req.user.id, 'accepted')
+        queries.joinGuild(db, req.user.id, invitation.guild_id)
+      })
+      tx()
+
+      res.json({ success: true })
+    } catch (e) {
+      console.error('[Guild API - Accept Invite]', e)
+      res.status(500).json({ error: 'Failed to accept invitation' })
+    }
+  })
+
+  // Reject guild invitation
+  router.post('/invitations/:invitationId/reject', requireAuth, (req, res) => {
+    try {
+      const result = queries.respondGuildInvitation(db, req.params.invitationId, req.user.id, 'rejected')
+      if (result.changes === 0) return res.status(404).json({ error: 'Invitation not found' })
+      res.json({ success: true })
+    } catch (e) {
+      console.error('[Guild API - Reject Invite]', e)
+      res.status(500).json({ error: 'Failed to reject invitation' })
+    }
+  })
+
   // Create a new guild
   router.post('/', requireAuth, express.json(), (req, res) => {
     try {
@@ -60,6 +116,48 @@ function createGuildRouter(db) {
     } catch (e) {
       console.error('[Guild API - Details]', e)
       res.status(500).json({ error: 'Failed to fetch guild details' })
+    }
+  })
+
+  // Invite user to guild
+  router.post('/:id/invite/:userId', requireAuth, (req, res) => {
+    try {
+      const guild = queries.getGuildById(db, req.params.id)
+      if (!guild) return res.status(404).json({ error: 'Guild not found' })
+
+      const inviterId = req.user.id
+      const inviteeId = parseInt(req.params.userId)
+
+      if (inviterId === inviteeId) {
+        return res.status(400).json({ error: 'You cannot invite yourself' })
+      }
+
+      const inviter = queries.findUserById(db, inviterId)
+      if (inviter.guild_id !== guild.id) {
+        return res.status(403).json({ error: 'You are not in this guild' })
+      }
+
+      // Check permission: anyone can invite if public, else only admin/owner
+      if (!guild.isPublic && guild.ownerId !== inviterId && inviter.guild_role !== 'admin') {
+        return res.status(403).json({ error: 'Only admins or owner can invite to a private guild' })
+      }
+
+      const invitee = queries.findUserById(db, inviteeId)
+      if (!invitee) return res.status(404).json({ error: 'User not found' })
+      if (invitee.guild_id) {
+        return res.status(400).json({ error: 'User is already in a guild' })
+      }
+
+      const existingInvites = queries.getPendingGuildInvitations(db, inviteeId)
+      if (existingInvites.some(i => i.guildId === guild.id)) {
+        return res.status(400).json({ error: 'User already has a pending invitation to this guild' })
+      }
+
+      queries.createGuildInvitation(db, guild.id, inviterId, inviteeId)
+      res.json({ success: true })
+    } catch (e) {
+      console.error('[Guild API - Invite]', e)
+      res.status(500).json({ error: 'Failed to send invitation' })
     }
   })
 

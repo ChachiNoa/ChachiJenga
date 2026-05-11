@@ -142,13 +142,16 @@ export default function FriendsDialog({ open, onOpenChange, auth }) {
   const inviteToGuild = async (friendId, friendName) => {
     if (!myGuild) { showToast('No estás en ningún gremio'); return }
     try {
-      const res = await fetch(`${API}/api/guilds/${myGuild.id}/join`, {
+      const res = await fetch(`${API}/api/guilds/${myGuild.id}/invite/${friendId}`, {
         method: 'POST',
         headers: { Authorization: `Bearer ${auth.token}`, 'Content-Type': 'application/json' }
       })
-      // We can't directly join FOR someone else - we use the existing endpoint logic
-      // Instead, we'll just show the guild name so they can find it
-      showToast(`Dile a ${friendName} que busque "${myGuild.name}" en el ranking de gremios`)
+      const data = await res.json()
+      if (res.ok) {
+        showToast(`Invitación enviada a ${friendName}`)
+      } else {
+        showToast(data.error || 'Error al invitar')
+      }
     } catch (e) { showToast('Error de conexión') }
   }
 

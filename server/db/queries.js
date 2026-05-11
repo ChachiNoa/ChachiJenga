@@ -202,6 +202,40 @@ function transferGuildOwnership(db, guildId, newOwnerId) {
   return stmt.run(newOwnerId, guildId)
 }
 
+// ─── Guild Invitations ────────────────────────────────
+
+function createGuildInvitation(db, guildId, inviterId, inviteeId) {
+  // Delete any old rejected invitation for same guild+invitee
+  db.prepare('DELETE FROM guild_invitations WHERE guild_id = ? AND invitee_id = ? AND status = ?').run(guildId, inviteeId, 'rejected')
+  const stmt = db.prepare('INSERT INTO guild_invitations (guild_id, inviter_id, invitee_id) VALUES (?, ?, ?)')
+  return stmt.run(guildId, inviterId, inviteeId)
+}
+
+function getPendingGuildInvitations(db, userId) {
+  const stmt = db.prepare(`
+    SELECT gi.id, gi.guild_id as guildId, gi.created_at as createdAt,
+           g.name as guildName, g.is_public as isPublic,
+           u.display_name as inviterName, u.tag as inviterTag
+    FROM guild_invitations gi
+    JOIN guilds g ON gi.guild_id = g.id
+    JOIN users u ON gi.inviter_id = u.id
+    WHERE gi.invitee_id = ? AND gi.status = 'pending'
+    ORDER BY gi.created_at DESC
+  `)
+  return stmt.all(userId)
+}
+
+function respondGuildInvitation(db, invitationId, userId, status) {
+  const stmt = db.prepare(`
+    UPDATE guild_invitations SET status = ? WHERE id = ? AND invitee_id = ? AND status = 'pending'
+  `)
+  return stmt.run(status, invitationId, userId)
+}
+
+function getGuildInvitationById(db, invitationId) {
+  return db.prepare('SELECT * FROM guild_invitations WHERE id = ?').get(invitationId)
+}
+
 // ─── Ranking ──────────────────────────────────────────
 
 function getTopPlayers(db, limit = 100) {
@@ -323,6 +357,11 @@ module.exports = {
   kickFromGuild,
   setGuildRole,
   transferGuildOwnership,
+  // Guild Invitations
+  createGuildInvitation,
+  getPendingGuildInvitations,
+  respondGuildInvitation,
+  getGuildInvitationById,
   // Ranking
   getTopPlayers,
   getPlayerRank,
