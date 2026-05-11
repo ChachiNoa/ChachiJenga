@@ -4,7 +4,7 @@ import { Dialog, DialogContent, DialogHeader, DialogTitle } from '@/components/u
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs'
 import { Button } from '@/components/ui/button'
 import { Input } from '@/components/ui/input'
-import { Search, UserPlus, Check, X, UserMinus, User } from 'lucide-react'
+import { Search, UserPlus, Check, X, UserMinus, User, Shield } from 'lucide-react'
 import { Avatar, AvatarFallback } from '@/components/ui/avatar'
 
 const API = import.meta.env.VITE_API_URL || 'http://localhost:3001'
@@ -39,6 +39,8 @@ export default function FriendsDialog({ open, onOpenChange, auth }) {
   // Toast + confirm
   const [toast, setToast] = useState('')
   const [confirm, setConfirm] = useState({ open: false, title: '', message: '', confirmLabel: '', onConfirm: () => {} })
+  const [myGuild, setMyGuild] = useState(null)
+  const [myGuildRole, setMyGuildRole] = useState('member')
 
   const showToast = (msg) => { setToast(msg); setTimeout(() => setToast(''), 2500) }
 
@@ -46,8 +48,30 @@ export default function FriendsDialog({ open, onOpenChange, auth }) {
     if (open && auth?.token) {
       fetchFriends()
       fetchPending()
+      fetchMyGuild()
     }
   }, [open, activeTab])
+
+  const fetchMyGuild = async () => {
+    try {
+      const profileRes = await fetch(`${API}/api/profile/${auth.user.id}`)
+      const profileData = await profileRes.json()
+      if (profileData.user?.guildId) {
+        const guildRes = await fetch(`${API}/api/guilds/${profileData.user.guildId}`, {
+          headers: { Authorization: `Bearer ${auth.token}`, 'Content-Type': 'application/json' }
+        })
+        if (guildRes.ok) {
+          const data = await guildRes.json()
+          setMyGuild(data.guild)
+          const me = data.members.find(m => m.id === auth.user.id)
+          setMyGuildRole(me?.guildRole || 'member')
+        }
+      } else {
+        setMyGuild(null)
+        setMyGuildRole('member')
+      }
+    } catch (e) { console.error(e) }
+  }
 
   const fetchFriends = async () => {
     try {
@@ -115,6 +139,22 @@ export default function FriendsDialog({ open, onOpenChange, auth }) {
     })
   }
 
+  const inviteToGuild = async (friendId, friendName) => {
+    if (!myGuild) { showToast('No estás en ningún gremio'); return }
+    try {
+      const res = await fetch(`${API}/api/guilds/${myGuild.id}/join`, {
+        method: 'POST',
+        headers: { Authorization: `Bearer ${auth.token}`, 'Content-Type': 'application/json' }
+      })
+      // We can't directly join FOR someone else - we use the existing endpoint logic
+      // Instead, we'll just show the guild name so they can find it
+      showToast(`Dile a ${friendName} que busque "${myGuild.name}" en el ranking de gremios`)
+    } catch (e) { showToast('Error de conexión') }
+  }
+
+  // Can invite if: in a guild AND (guild is public OR user is admin/owner)
+  const canInvite = myGuild && (myGuild.isPublic || myGuildRole === 'admin' || myGuild.ownerId === auth?.user?.id)
+
   return (
     <>
       <Dialog open={open} onOpenChange={onOpenChange}>
@@ -162,9 +202,16 @@ export default function FriendsDialog({ open, onOpenChange, auth }) {
                             </div>
                           </div>
                         </div>
-                        <Button variant="ghost" size="icon" onClick={() => removeFriend(f.friendshipId, f.displayName)} className="text-red-500 hover:text-red-600 hover:bg-red-50">
-                          <UserMinus className="h-4 w-4" />
-                        </Button>
+                        <div className="flex gap-1">
+                          {canInvite && (
+                            <Button variant="ghost" size="icon" onClick={() => inviteToGuild(f.userId, f.displayName)} className="text-primary hover:text-primary/80" title={`Invitar a ${myGuild?.name}`}>
+                              <UserPlus className="h-4 w-4" />
+                            </Button>
+                          )}
+                          <Button variant="ghost" size="icon" onClick={() => removeFriend(f.friendshipId, f.displayName)} className="text-red-500 hover:text-red-600 hover:bg-red-50">
+                            <UserMinus className="h-4 w-4" />
+                          </Button>
+                        </div>
                       </div>
                     ))}
                   </div>

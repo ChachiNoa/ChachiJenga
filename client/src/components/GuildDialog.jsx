@@ -5,7 +5,7 @@ import { Button } from '@/components/ui/button'
 import { Input } from '@/components/ui/input'
 import { Badge } from '@/components/ui/badge'
 import { Avatar, AvatarFallback } from '@/components/ui/avatar'
-import { Shield, Crown, Plus, LogOut, Trash2, Pencil, Globe, Lock, Users, Trophy, UserPlus, UserMinus, ShieldCheck, ShieldOff, ArrowRightLeft } from 'lucide-react'
+import { Shield, Crown, Plus, LogOut, Trash2, Pencil, Globe, Lock, Users, Trophy, UserPlus, UserMinus, UsersRound, ShieldCheck, ShieldOff, ArrowRightLeft, Info } from 'lucide-react'
 
 const API = import.meta.env.VITE_API_URL || 'http://localhost:3001'
 
@@ -38,6 +38,8 @@ export default function GuildDialog({ open, onOpenChange, auth }) {
   const [loading, setLoading] = useState(true)
   const [isOwner, setIsOwner] = useState(false)
   const [myRole, setMyRole] = useState('member') // 'member' | 'admin'
+  const [friendIds, setFriendIds] = useState(new Set()) // IDs of current friends
+  const [showInfo, setShowInfo] = useState(false)
 
   // Create form
   const [showCreate, setShowCreate] = useState(false)
@@ -76,8 +78,19 @@ export default function GuildDialog({ open, onOpenChange, auth }) {
     if (open && auth?.token) {
       fetchMyGuild()
       fetchRanking()
+      fetchFriendIds()
     }
   }, [open])
+
+  const fetchFriendIds = async () => {
+    try {
+      const res = await fetch(`${API}/api/friends`, { headers: { Authorization: `Bearer ${auth.token}` } })
+      if (res.ok) {
+        const list = await res.json()
+        setFriendIds(new Set(list.map(f => f.userId)))
+      }
+    } catch (e) { console.error(e) }
+  }
 
   const fetchMyGuild = async () => {
     setLoading(true)
@@ -270,20 +283,21 @@ export default function GuildDialog({ open, onOpenChange, auth }) {
   const renderMemberActions = (m) => {
     if (m.id === auth.user.id) return null // Can't act on yourself
     const memberIsOwner = guild.ownerId === m.id
-    if (memberIsOwner) return null // Can't act on owner
-
     const memberIsAdmin = m.guildRole === 'admin'
+    const isFriend = friendIds.has(m.id)
 
     return (
       <div className="flex gap-0.5">
-        {/* Send friend request */}
-        <Button variant="ghost" size="icon" className="h-7 w-7 text-blue-500 hover:text-blue-600" title="Enviar solicitud de amistad"
-          onClick={() => handleAddFriend(m)}>
-          <UserPlus className="h-3 w-3" />
-        </Button>
+        {/* Send friend request (anyone, but hide if already friends) */}
+        {!isFriend && (
+          <Button variant="ghost" size="icon" className="h-7 w-7 text-blue-500 hover:text-blue-600" title="Enviar solicitud de amistad"
+            onClick={() => handleAddFriend(m)}>
+            <UsersRound className="h-3 w-3" />
+          </Button>
+        )}
 
-        {/* Owner actions */}
-        {isOwner && (
+        {/* Owner actions (not on the owner themselves) */}
+        {isOwner && !memberIsOwner && (
           <>
             {memberIsAdmin ? (
               <Button variant="ghost" size="icon" className="h-7 w-7 text-orange-500 hover:text-orange-600" title="Quitar admin"
@@ -307,8 +321,8 @@ export default function GuildDialog({ open, onOpenChange, auth }) {
           </>
         )}
 
-        {/* Admin actions (can only kick non-admins) */}
-        {!isOwner && myRole === 'admin' && !memberIsAdmin && (
+        {/* Admin actions (can only kick non-admins, not the owner) */}
+        {!isOwner && myRole === 'admin' && !memberIsAdmin && !memberIsOwner && (
           <Button variant="ghost" size="icon" className="h-7 w-7 text-red-500 hover:text-red-600" title="Expulsar"
             onClick={() => handleKick(m)}>
             <UserMinus className="h-3 w-3" />
@@ -437,15 +451,46 @@ export default function GuildDialog({ open, onOpenChange, auth }) {
     </div>
   )
 
+  const renderInfoPanel = () => (
+    <div className="mx-6 mb-3 p-4 rounded-xl border bg-card/50 text-xs space-y-3 animate-in fade-in slide-in-from-top-2">
+      <div>
+        <p className="font-semibold text-muted-foreground uppercase tracking-wider mb-1.5">Todos los miembros</p>
+        <div className="flex items-center gap-2"><UsersRound className="h-3.5 w-3.5 text-blue-500 shrink-0" /><span>Enviar solicitud de amistad</span></div>
+      </div>
+      <hr />
+      <div>
+        <p className="font-semibold text-muted-foreground uppercase tracking-wider mb-1.5">Administradores</p>
+        <div className="flex items-center gap-2"><UserMinus className="h-3.5 w-3.5 text-red-500 shrink-0" /><span>Expulsar a un miembro (no a otros admins)</span></div>
+      </div>
+      <hr />
+      <div>
+        <p className="font-semibold text-muted-foreground uppercase tracking-wider mb-1.5">Propietario</p>
+        <div className="flex items-center gap-2"><ShieldCheck className="h-3.5 w-3.5 text-green-500 shrink-0" /><span>Hacer administrador a un miembro</span></div>
+        <div className="flex items-center gap-2 mt-1"><ShieldOff className="h-3.5 w-3.5 text-orange-500 shrink-0" /><span>Quitar el rol de administrador</span></div>
+        <div className="flex items-center gap-2 mt-1"><ArrowRightLeft className="h-3.5 w-3.5 text-purple-500 shrink-0" /><span>Transferir la propiedad del gremio</span></div>
+        <div className="flex items-center gap-2 mt-1"><UserMinus className="h-3.5 w-3.5 text-red-500 shrink-0" /><span>Expulsar a cualquier miembro</span></div>
+      </div>
+    </div>
+  )
+
   return (
     <>
       <Dialog open={open} onOpenChange={onOpenChange}>
         <DialogContent className="sm:max-w-md max-h-[85vh] overflow-hidden flex flex-col p-0">
           <DialogHeader className="px-6 py-4 pb-2">
-            <DialogTitle className="text-2xl flex items-center gap-2">
-              <Shield className="h-6 w-6 text-primary" /> Gremio
-            </DialogTitle>
+            <div className="flex items-center justify-between">
+              <DialogTitle className="text-2xl flex items-center gap-2">
+                <Shield className="h-6 w-6 text-primary" /> Gremio
+              </DialogTitle>
+              {guild && (
+                <Button variant="ghost" size="icon" className="h-8 w-8" onClick={() => setShowInfo(v => !v)} title="Info de iconos">
+                  <Info className={`h-4 w-4 ${showInfo ? 'text-primary' : 'text-muted-foreground'}`} />
+                </Button>
+              )}
+            </div>
           </DialogHeader>
+
+          {showInfo && guild && renderInfoPanel()}
 
           <Tabs value={activeTab} onValueChange={setActiveTab} className="flex-1 flex flex-col min-h-0">
             <div className="px-6">
