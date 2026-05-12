@@ -122,14 +122,31 @@ export default function DrawingScreen() {
       socket.emit('stroke_complete', { strokes })
     }
 
-    // Which shapes are we looking for?
-    const pendingNames = shapesInfo.filter(s => !s.completed).map(s => s.type)
-    
-    const match = recognizerRef.current.recognize(strokes, pendingNames)
+    // Calculate drawn center
+    let minX = Infinity, maxX = -Infinity, minY = Infinity, maxY = -Infinity
+    strokes.forEach(stroke => stroke.forEach(pt => {
+      if (pt.x < minX) minX = pt.x
+      if (pt.x > maxX) maxX = pt.x
+      if (pt.y < minY) minY = pt.y
+      if (pt.y > maxY) maxY = pt.y
+    }))
+    const drawCenterX = (minX + maxX) / 2
+    const drawCenterY = (minY + maxY) / 2
+
+    // Which shapes are we looking for? (Filter only shapes that are near the drawing center)
+    const pendingNearShapes = shapesInfo.filter(s => {
+      if (s.completed) return false
+      // Center of the shape is x + 40, y + 40 (shapeSize is 80)
+      const dist = Math.hypot(drawCenterX - (s.x + 40), drawCenterY - (s.y + 40))
+      return dist < 100 // Tolerance radius
+    })
+
+    const pendingNames = pendingNearShapes.map(s => s.type)
+    const match = pendingNames.length > 0 ? recognizerRef.current.recognize(strokes, pendingNames) : null
     
     if (match) {
       // Find the ID of the matched shape type
-      const shapeToComplete = shapesInfo.find(s => s.type === match.name && !s.completed)
+      const shapeToComplete = pendingNearShapes.find(s => s.type === match.name)
       
       if (shapeToComplete) {
         if (socket) {

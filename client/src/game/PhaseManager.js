@@ -2,9 +2,9 @@ import { GAME } from '@/shared/constants'
 
 // Note: Shapes will be defined fully later. For now we use placeholder types for logic.
 const SHAPE_CATEGORIES = {
-  [GAME.DIFFICULTY.EASY]: ['circle', 'square', 'triangle', 'rectangle'],
-  [GAME.DIFFICULTY.MEDIUM]: ['star', 'heart', 'diamond', 'arrow'],
-  [GAME.DIFFICULTY.HARD]: ['lightning', 'moon', 'spiral', 'cross', 'hexagon']
+  [GAME.DIFFICULTY.EASY]: ['circle', 'hline', 'vline', 'square'],
+  [GAME.DIFFICULTY.MEDIUM]: ['dline1', 'dline2', 'rect_h', 'rect_v'],
+  [GAME.DIFFICULTY.HARD]: ['triangle', 'gt', 'lt']
 }
 
 export class PhaseManager {

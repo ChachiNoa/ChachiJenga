@@ -31,30 +31,23 @@ export class DifficultyManager {
     const missingCount = layerPieces.filter(p => !p.present).length
 
     if (missingCount === 0) {
-      // Ninguna pieza falta
-      return GAME.DIFFICULTY.EASY
+      // 3 piezas presentes
+      if (position === 1) return GAME.DIFFICULTY.EASY
+      return GAME.DIFFICULTY.MEDIUM
     }
 
     if (missingCount === 1) {
-      const isCentralMissing = !layerPieces[1].present
-      if (isCentralMissing) {
-        // Falta la central -> Extraer lateral
-        return GAME.DIFFICULTY.HARD
+      // 2 piezas presentes
+      if (position === 1) {
+        return GAME.DIFFICULTY.MEDIUM // Si sacamos la del medio, queda una sola en un lado
       } else {
-        // Falta un lateral
-        if (position === 1) {
-          // Extraer central
-          return GAME.DIFFICULTY.MEDIUM
-        } else {
-          // Extraer el otro lateral
-          return GAME.DIFFICULTY.EASY
-        }
+        return GAME.DIFFICULTY.HARD // Si sacamos un lado, queda solo la otra
       }
     }
 
     if (missingCount === 2) {
-      // Faltan dos piezas (es la última pieza de la fila)
-      return GAME.DIFFICULTY.MEDIUM
+      // 1 pieza presente (la última)
+      return GAME.DIFFICULTY.HARD
     }
 
     return GAME.DIFFICULTY.EASY // Fallback

@@ -5,12 +5,19 @@ import { ShapeRecognizer } from '../drawing/ShapeRecognizer'
 vi.mock('../drawing/pdollar', () => {
   return {
     PDollarRecognizer: class {
+      constructor() {
+        this.PointClouds = []
+      }
+      AddGesture = vi.fn((name, points) => {
+        this.PointClouds.push({ Name: name, Points: points })
+      })
       Recognize = vi.fn((points, templates) => {
         // Dummy logic: if we pass a specific number of points, return fake scores
         if (points.length === 0) return { Name: 'none', Score: 0.0 }
+        if (points.length === 2) return { Name: 'circle', Score: 0.05 } // Low score below threshold
         if (points.length === 3) return { Name: 'triangle', Score: 0.85 }
         if (points.length === 4) return { Name: 'square', Score: 0.75 }
-        return { Name: 'circle', Score: 0.65 } // Low score
+        return { Name: 'circle', Score: 0.65 } // Above threshold
       })
     },
     Point: function(x, y, id) {
@@ -34,12 +41,12 @@ describe('ShapeRecognizer', () => {
     expect(result).toBeNull()
   })
 
-  it('should ignore results below confidence threshold (70%)', () => {
-    // 2 points returns 'circle' with 0.65 score based on our mock
+  it('should ignore results below confidence threshold (10%)', () => {
+    // 2 points returns 'circle' with 0.05 score based on our mock
     const strokes = [[{x: 0, y: 0}, {x: 1, y: 1}]]
     const result = recognizer.recognize(strokes, ['circle'])
     
-    expect(result).toBeNull() // Score 0.65 is < 0.70 threshold
+    expect(result).toBeNull() // Score 0.05 is < 0.10 threshold
   })
 
   it('should accept results above threshold and matching pending shapes', () => {

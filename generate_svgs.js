@@ -5,24 +5,17 @@ const dir = path.join(__dirname, 'client', 'public', 'assets', 'shapes');
 fs.mkdirSync(dir, { recursive: true });
 
 const shapes = {
-  // BÁSICAS
-  circle: `<svg viewBox="-50 -50 100 100" xmlns="http://www.w3.org/2000/svg"><circle cx="0" cy="0" r="40" stroke="currentColor" stroke-width="8" fill="none"/></svg>`,
-  square: `<svg viewBox="-50 -50 100 100" xmlns="http://www.w3.org/2000/svg"><rect x="-35" y="-35" width="70" height="70" stroke="currentColor" stroke-width="8" fill="none"/></svg>`,
-  triangle: `<svg viewBox="-50 -50 100 100" xmlns="http://www.w3.org/2000/svg"><polygon points="0,-40 40,30 -40,30" stroke="currentColor" stroke-width="8" fill="none"/></svg>`,
-  rectangle: `<svg viewBox="-50 -50 100 100" xmlns="http://www.w3.org/2000/svg"><rect x="-40" y="-25" width="80" height="50" stroke="currentColor" stroke-width="8" fill="none"/></svg>`,
-
-  // INTERMEDIAS
-  star: `<svg viewBox="-50 -50 100 100" xmlns="http://www.w3.org/2000/svg"><polygon points="0,-45 11,-14 43,-14 17,5 27,36 0,17 -27,36 -17,5 -43,-14 -11,-14" stroke="currentColor" stroke-width="8" fill="none"/></svg>`,
-  heart: `<svg viewBox="-50 -50 100 100" xmlns="http://www.w3.org/2000/svg"><path d="M0,15 A15,15 0 0,0 -30,-10 A15,15 0 0,1 0,-10 A15,15 0 0,1 30,-10 A15,15 0 0,0 0,15 Z" stroke="currentColor" stroke-width="8" fill="none"/></svg>`,
-  diamond: `<svg viewBox="-50 -50 100 100" xmlns="http://www.w3.org/2000/svg"><polygon points="0,-40 30,0 0,40 -30,0" stroke="currentColor" stroke-width="8" fill="none"/></svg>`,
-  arrow: `<svg viewBox="-50 -50 100 100" xmlns="http://www.w3.org/2000/svg"><polygon points="0,-40 20,-10 10,-10 10,40 -10,40 -10,-10 -20,-10" stroke="currentColor" stroke-width="8" fill="none"/></svg>`,
-
-  // AVANZADAS
-  lightning: `<svg viewBox="-50 -50 100 100" xmlns="http://www.w3.org/2000/svg"><polygon points="-10,-40 -20,0 10,0 0,40 20,5 -10,5" stroke="currentColor" stroke-width="8" fill="none"/></svg>`,
-  moon: `<svg viewBox="-50 -50 100 100" xmlns="http://www.w3.org/2000/svg"><path d="M 10,-35 A 40,40 0 1,0 10,35 A 30,30 0 1,1 10,-35 Z" stroke="currentColor" stroke-width="8" fill="none"/></svg>`,
-  spiral: `<svg viewBox="-50 -50 100 100" xmlns="http://www.w3.org/2000/svg"><path d="M0,0 C20,0 20,20 0,20 C-30,20 -30,-20 0,-20 C40,-20 40,40 0,40" stroke="currentColor" stroke-width="8" fill="none"/></svg>`,
-  cross: `<svg viewBox="-50 -50 100 100" xmlns="http://www.w3.org/2000/svg"><polygon points="-10,-40 10,-40 10,-10 40,-10 40,10 10,10 10,40 -10,40 -10,10 -40,10 -40,-10 -10,-10" stroke="currentColor" stroke-width="8" fill="none"/></svg>`,
-  hexagon: `<svg viewBox="-50 -50 100 100" xmlns="http://www.w3.org/2000/svg"><polygon points="0,-40 35,-20 35,20 0,40 -35,20 -35,-20" stroke="currentColor" stroke-width="8" fill="none"/></svg>`,
+  circle: `<svg viewBox="-50 -50 100 100" xmlns="http://www.w3.org/2000/svg"><circle cx="0" cy="0" r="40" stroke="currentColor" stroke-width="8" fill="none" stroke-linecap="round" stroke-linejoin="round"/></svg>`,
+  hline: `<svg viewBox="-50 -50 100 100" xmlns="http://www.w3.org/2000/svg"><line x1="-40" y1="0" x2="40" y2="0" stroke="currentColor" stroke-width="8" stroke-linecap="round" stroke-linejoin="round"/></svg>`,
+  vline: `<svg viewBox="-50 -50 100 100" xmlns="http://www.w3.org/2000/svg"><line x1="0" y1="-40" x2="0" y2="40" stroke="currentColor" stroke-width="8" stroke-linecap="round" stroke-linejoin="round"/></svg>`,
+  dline1: `<svg viewBox="-50 -50 100 100" xmlns="http://www.w3.org/2000/svg"><line x1="-30" y1="30" x2="30" y2="-30" stroke="currentColor" stroke-width="8" stroke-linecap="round" stroke-linejoin="round"/></svg>`,
+  dline2: `<svg viewBox="-50 -50 100 100" xmlns="http://www.w3.org/2000/svg"><line x1="-30" y1="-30" x2="30" y2="30" stroke="currentColor" stroke-width="8" stroke-linecap="round" stroke-linejoin="round"/></svg>`,
+  square: `<svg viewBox="-50 -50 100 100" xmlns="http://www.w3.org/2000/svg"><rect x="-35" y="-35" width="70" height="70" stroke="currentColor" stroke-width="8" fill="none" stroke-linecap="round" stroke-linejoin="round"/></svg>`,
+  rect_h: `<svg viewBox="-50 -50 100 100" xmlns="http://www.w3.org/2000/svg"><rect x="-40" y="-20" width="80" height="40" stroke="currentColor" stroke-width="8" fill="none" stroke-linecap="round" stroke-linejoin="round"/></svg>`,
+  rect_v: `<svg viewBox="-50 -50 100 100" xmlns="http://www.w3.org/2000/svg"><rect x="-20" y="-40" width="40" height="80" stroke="currentColor" stroke-width="8" fill="none" stroke-linecap="round" stroke-linejoin="round"/></svg>`,
+  triangle: `<svg viewBox="-50 -50 100 100" xmlns="http://www.w3.org/2000/svg"><polygon points="0,-40 40,30 -40,30" stroke="currentColor" stroke-width="8" fill="none" stroke-linecap="round" stroke-linejoin="round"/></svg>`,
+  gt: `<svg viewBox="-50 -50 100 100" xmlns="http://www.w3.org/2000/svg"><polyline points="-20,-35 20,0 -20,35" stroke="currentColor" stroke-width="8" fill="none" stroke-linecap="round" stroke-linejoin="round"/></svg>`,
+  lt: `<svg viewBox="-50 -50 100 100" xmlns="http://www.w3.org/2000/svg"><polyline points="20,-35 -20,0 20,35" stroke="currentColor" stroke-width="8" fill="none" stroke-linecap="round" stroke-linejoin="round"/></svg>`
 };
 
 for (const [name, content] of Object.entries(shapes)) {
