@@ -1,0 +1,12 @@
+{
+  "name": "chachijenga-root",
+  "version": "1.0.0",
+  "description": "Root package.json for Railway deployment",
+  "scripts": {
+    "install": "cd server && npm install",
+    "start": "cd server && node index.js"
+  },
+  "engines": {
+    "node": ">=18.0.0"
+  }
+}
