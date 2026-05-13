@@ -1,25 +1,26 @@
-const { OAuth2Client } = require('google-auth-library')
+const admin = require('firebase-admin')
 
-const client = new OAuth2Client(process.env.GOOGLE_CLIENT_ID)
+// Note: firebase-admin should be initialized in index.js or similar
+// If not initialized, this will fail. We'll handle initialization there.
 
 /**
- * Verify a Google ID token and extract user info.
- * @param {string} idToken - The ID token from Google Sign-In
+ * Verify a Firebase ID token and extract user info.
+ * @param {string} idToken - The ID token from Firebase Auth
  * @returns {Promise<{googleId: string, email: string, displayName: string, avatarUrl: string}>}
  */
 async function verifyGoogleToken(idToken) {
-  const ticket = await client.verifyIdToken({
-    idToken,
-    audience: process.env.GOOGLE_CLIENT_ID,
-  })
-
-  const payload = ticket.getPayload()
-
-  return {
-    googleId: payload.sub,
-    email: payload.email,
-    displayName: payload.name,
-    avatarUrl: payload.picture || null,
+  try {
+    const decodedToken = await admin.auth().verifyIdToken(idToken)
+    
+    return {
+      googleId: decodedToken.uid, // Firebase UID
+      email: decodedToken.email,
+      displayName: decodedToken.name || decodedToken.email.split('@')[0],
+      avatarUrl: decodedToken.picture || null,
+    }
+  } catch (error) {
+    console.error('[Firebase Auth Verify Error]:', error)
+    throw new Error('Invalid or expired Firebase token')
   }
 }
 

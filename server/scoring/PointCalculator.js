@@ -1,4 +1,4 @@
-const { GAME } = require('../../shared/constants');
+const { GAME } = require('../shared/constants');
 
 class PointCalculator {
   static getPieceValue(difficulty) {

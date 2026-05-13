@@ -4,6 +4,8 @@ import { getErrorMessage, getSuccessMessage } from '../lib/errorTranslations'
 import { Globe } from 'lucide-react'
 import { useEffect, useCallback, useState } from 'react'
 import { loginWithGoogle, devLogin, saveAuth, loadAuth } from '@/network/authApi'
+import { auth as firebaseAuth, googleProvider } from '../lib/firebase'
+import { signInWithPopup } from 'firebase/auth'
 
 const LANGUAGES = [
   { code: 'es', label: 'Español' },
@@ -17,7 +19,8 @@ function LoginScreen() {
   const navigate = useNavigate()
 
   const currentLang = LANGUAGES.find((l) => l.code === i18n.language) || LANGUAGES[0]
-  const isDevMode = !GOOGLE_CLIENT_ID
+  // In production, we use Firebase. In local without config, we use Dev Mode.
+  const isDevMode = !import.meta.env.VITE_FIREBASE_API_KEY && !GOOGLE_CLIENT_ID
 
   // Redirect if already authenticated
   useEffect(() => {
@@ -42,40 +45,17 @@ function LoginScreen() {
     }
   }
 
-  useEffect(() => {
-    if (!GOOGLE_CLIENT_ID) return
-
-    const script = document.createElement('script')
-    script.src = 'https://accounts.google.com/gsi/client'
-    script.async = true
-    script.defer = true
-    document.head.appendChild(script)
-
-    script.onload = () => {
-      window.google?.accounts.id.initialize({
-        client_id: GOOGLE_CLIENT_ID,
-        callback: handleGoogleResponse,
-      })
-    }
-
-    return () => {
-      document.head.removeChild(script)
-    }
-  }, [])
-
-  const handleGoogleResponse = useCallback(async (response) => {
+  const handleGoogleLogin = async () => {
     try {
-      const { token, user } = await loginWithGoogle(response.credential)
+      const result = await signInWithPopup(firebaseAuth, googleProvider)
+      const idToken = await result.user.getIdToken()
+      
+      const { token, user } = await loginWithGoogle(idToken)
       saveAuth(token, user)
       navigate('/home', { replace: true })
     } catch (error) {
+      console.error('Firebase Login Error:', error)
       showToast(error.message || 'Error en inicio de sesión')
-    }
-  }, [navigate])
-
-  const handleGoogleLogin = () => {
-    if (GOOGLE_CLIENT_ID && window.google) {
-      window.google.accounts.id.prompt()
     }
   }
 

@@ -4,6 +4,10 @@ const http = require('http')
 const { Server } = require('socket.io')
 const cors = require('cors')
 const { setupDatabase } = require('./db/setup')
+const admin = require('firebase-admin')
+
+// Initialize Firebase Admin
+admin.initializeApp()
 const { createAuthRouter } = require('./auth/authRouter')
 
 const app = express()
