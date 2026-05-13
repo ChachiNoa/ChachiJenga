@@ -1,5 +1,5 @@
 import { useTranslation } from 'react-i18next'
-import { useNavigate } from 'react-i18next'
+import { useNavigate } from 'react-router-dom'
 import { getErrorMessage, getSuccessMessage } from '../lib/errorTranslations'
 import { Globe } from 'lucide-react'
 import { useEffect, useCallback, useState } from 'react'
