@@ -1,5 +1,6 @@
 import { useTranslation } from 'react-i18next'
-import { useNavigate } from 'react-router-dom'
+import { useNavigate } from 'react-i18next'
+import { getErrorMessage, getSuccessMessage } from '../lib/errorTranslations'
 import { Globe } from 'lucide-react'
 import { useEffect, useCallback, useState } from 'react'
 import { loginWithGoogle, devLogin, saveAuth, loadAuth } from '@/network/authApi'
@@ -27,6 +28,14 @@ function LoginScreen() {
   }, [navigate])
 
   // Initialize Google Sign-In
+  const [toast, setToast] = useState({ message: '', type: 'error' })
+
+  const showToast = (msg, type = 'error') => {
+    const finalMsg = type === 'error' ? getErrorMessage(msg) : getSuccessMessage(msg)
+    setToast({ message: finalMsg, type })
+    setTimeout(() => setToast({ message: '', type: 'error' }), 3000)
+  }
+
   useEffect(() => {
     if (!GOOGLE_CLIENT_ID) return
 
@@ -54,7 +63,7 @@ function LoginScreen() {
       saveAuth(token, user)
       navigate('/home', { replace: true })
     } catch (error) {
-      // TODO: Show error toast to user
+      showToast(error.message || 'Error en inicio de sesión')
     }
   }, [navigate])
 
@@ -66,7 +75,6 @@ function LoginScreen() {
 
   const [devName, setDevName] = useState('Dev Player')
   const [devLoading, setDevLoading] = useState(false)
-  const [devError, setDevError] = useState('')
 
   const handleDevLogin = async () => {
     setDevLoading(true)
@@ -76,7 +84,7 @@ function LoginScreen() {
       saveAuth(token, user)
       navigate('/home', { replace: true })
     } catch (err) {
-      setDevError(err.message || 'Failed to connect to server')
+      showToast(err.message || 'Failed to connect to server')
       setDevLoading(false)
     }
   }
@@ -162,11 +170,6 @@ function LoginScreen() {
             >
               {devLoading ? '⏳ Conectando...' : '🎮 Entrar como ' + devName}
             </button>
-            {devError && (
-              <p className="text-xs text-red-500 text-center animate-shake">
-                ❌ {devError}
-              </p>
-            )}
           </div>
 
           {/* Quick access buttons for two players */}
@@ -195,6 +198,14 @@ function LoginScreen() {
         <div className="h-2 w-8 rounded-full bg-pastel-yellow opacity-60" />
         <div className="h-2 w-8 rounded-full bg-pastel-purple opacity-60" />
       </div>
+
+      {/* Toast feedback */}
+      {toast.message && (
+        <div className={`absolute bottom-6 left-1/2 -translate-x-1/2 px-6 py-3 rounded-2xl text-sm font-bold shadow-xl border-4 border-white/40 animate-in fade-in slide-in-from-bottom-4 z-[100] flex items-center gap-3 ${toast.type === 'error' ? 'bg-error text-red-900 border-red-200' : 'bg-success text-green-900 border-green-200'}`}>
+          <span className="text-xl">{toast.type === 'error' ? '⚠️' : '✅'}</span>
+          <span>{toast.message}</span>
+        </div>
+      )}
     </div>
   )
 }

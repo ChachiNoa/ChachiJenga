@@ -1,5 +1,6 @@
 import { useState, useEffect } from 'react'
 import { useTranslation } from 'react-i18next'
+import { getErrorMessage, getSuccessMessage } from '../lib/errorTranslations'
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from '@/components/ui/dialog'
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs'
 import { Button } from '@/components/ui/button'
@@ -37,12 +38,16 @@ export default function FriendsDialog({ open, onOpenChange, auth }) {
   const [isLoading, setIsLoading] = useState(false)
 
   // Toast + confirm
-  const [toast, setToast] = useState('')
+  const [toast, setToast] = useState({ message: '', type: 'error' })
   const [confirm, setConfirm] = useState({ open: false, title: '', message: '', confirmLabel: '', onConfirm: () => {} })
   const [myGuild, setMyGuild] = useState(null)
   const [myGuildRole, setMyGuildRole] = useState('member')
 
-  const showToast = (msg) => { setToast(msg); setTimeout(() => setToast(''), 2500) }
+  const showToast = (msg, type = 'error') => {
+    const finalMsg = type === 'error' ? getErrorMessage(msg) : getSuccessMessage(msg)
+    setToast({ message: finalMsg, type })
+    setTimeout(() => setToast({ message: '', type: 'error' }), 3000)
+  }
 
   useEffect(() => {
     if (open && auth?.token) {
@@ -110,8 +115,8 @@ export default function FriendsDialog({ open, onOpenChange, auth }) {
         body: JSON.stringify({ tag: searchResult.tag })
       })
       const data = await res.json()
-      if (res.ok) { setSearchResult(null); setSearchTag(''); showToast('Solicitud enviada') }
-      else showToast(data.error || 'Error al enviar solicitud')
+      if (res.ok) { setSearchResult(null); setSearchTag(''); fetchPending(); fetchFriends(); showToast('Friend request sent', 'success') }
+      else showToast(data.error || 'Error al añadir')
     } catch (e) { console.error(e) }
   }
 
@@ -299,9 +304,10 @@ export default function FriendsDialog({ open, onOpenChange, auth }) {
           </Tabs>
 
           {/* Toast feedback */}
-          {toast && (
-            <div className="absolute bottom-4 left-1/2 -translate-x-1/2 bg-foreground text-background px-4 py-2 rounded-lg text-sm font-medium shadow-lg z-50">
-              {toast}
+          {toast.message && (
+            <div className={`absolute bottom-6 left-1/2 -translate-x-1/2 px-6 py-3 rounded-2xl text-sm font-bold shadow-xl border-4 border-white/40 animate-in fade-in slide-in-from-bottom-4 z-[100] flex items-center gap-3 ${toast.type === 'error' ? 'bg-error text-red-900 border-red-200' : 'bg-success text-green-900 border-green-200'}`}>
+              <span className="text-xl">{toast.type === 'error' ? '⚠️' : '✅'}</span>
+              <span>{toast.message}</span>
             </div>
           )}
         </DialogContent>
