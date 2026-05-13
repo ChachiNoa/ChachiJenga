@@ -144,8 +144,8 @@ function createGuildRouter(db) {
 
       const invitee = queries.findUserById(db, inviteeId)
       if (!invitee) return res.status(404).json({ error: 'User not found' })
-      if (invitee.guild_id) {
-        return res.status(400).json({ error: 'User is already in a guild' })
+      if (invitee.guild_id === guild.id) {
+        return res.status(400).json({ error: 'User is already in this guild' })
       }
 
       const existingInvites = queries.getPendingGuildInvitations(db, inviteeId)

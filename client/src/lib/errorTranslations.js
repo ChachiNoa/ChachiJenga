@@ -2,8 +2,9 @@ import i18n from '../i18n';
 
 const errorMap = {
   es: {
-    'User is already in a guild': 'El usuario ya pertenece a un gremio',
-    'You are already in a guild': 'Ya perteneces a un gremio',
+    'User is already in a guild': 'Ya estás en un gremio, debes salirte primero',
+    'You are already in a guild': 'Ya estás en un gremio, debes salirte primero',
+    'User is already in this guild': 'El usuario ya pertenece a este gremio',
     'Guild not found': 'Gremio no encontrado',
     'Guild name already exists': 'El nombre del gremio ya está en uso',
     'Guild is full (Max 15)': 'El gremio está lleno (Máx 15)',
