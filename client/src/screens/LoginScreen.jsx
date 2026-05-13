@@ -61,6 +61,7 @@ function LoginScreen() {
 
   const [devName, setDevName] = useState('Dev Player')
   const [devLoading, setDevLoading] = useState(false)
+  const [showDevOptions, setShowDevOptions] = useState(false)
 
   const handleDevLogin = async () => {
     setDevLoading(true)
@@ -104,11 +105,11 @@ function LoginScreen() {
       </div>
 
       {/* Login options */}
-      {!isDevMode ? (
-        /* Google login button */
+      <div className="w-full max-w-xs flex flex-col gap-6">
+        {/* Google login button (Always visible) */}
         <button
           onClick={handleGoogleLogin}
-          className="flex items-center gap-3 rounded-xl bg-white px-8 py-4 text-lg font-semibold text-gray-700 shadow-lg transition-all hover:-translate-y-0.5 hover:shadow-xl active:translate-y-0 active:shadow-md"
+          className="flex items-center justify-center gap-3 rounded-xl bg-white px-8 py-4 text-lg font-semibold text-gray-700 shadow-lg transition-all hover:-translate-y-0.5 hover:shadow-xl active:translate-y-0 active:shadow-md border-2 border-transparent hover:border-pastel-purple/30"
         >
           <svg className="h-6 w-6" viewBox="0 0 24 24">
             <path
@@ -130,51 +131,62 @@ function LoginScreen() {
           </svg>
           {t('login.signInWithGoogle')}
         </button>
-      ) : (
-        /* DEV MODE login panel */
-        <div className="w-full max-w-xs flex flex-col gap-3">
-          <div className="rounded-2xl bg-white/90 p-6 shadow-lg backdrop-blur-sm flex flex-col gap-4">
-            <div className="flex items-center gap-2 text-sm font-bold text-amber-600 uppercase tracking-wider">
-              <span className="flex h-5 w-5 items-center justify-center rounded-full bg-amber-100 text-xs">⚡</span>
-              Dev Mode
-            </div>
-            <p className="text-xs text-muted-foreground">
-              Elige un nombre y pulsa entrar. Abre dos pestañas con nombres distintos para probar multijugador.
-            </p>
-            <input
-              type="text"
-              value={devName}
-              onChange={(e) => setDevName(e.target.value)}
-              placeholder="Tu nombre de dev..."
-              className="w-full rounded-lg border border-border bg-background px-4 py-2.5 text-sm font-medium focus:outline-none focus:ring-2 focus:ring-primary"
-              onKeyDown={(e) => e.key === 'Enter' && handleDevLogin()}
-            />
-            <button
-              onClick={handleDevLogin}
-              disabled={devLoading || !devName.trim()}
-              className="w-full rounded-xl bg-primary px-6 py-3 text-base font-bold text-primary-foreground shadow-md transition-all hover:-translate-y-0.5 hover:shadow-lg active:translate-y-0 disabled:opacity-50 disabled:cursor-not-allowed"
-            >
-              {devLoading ? '⏳ Conectando...' : '🎮 Entrar como ' + devName}
-            </button>
-          </div>
 
-          {/* Quick access buttons for two players */}
-          <div className="flex gap-2">
-            <button
-              onClick={() => { setDevName('Jugador 1'); }}
-              className="flex-1 rounded-lg bg-pastel-blue/50 px-3 py-2 text-xs font-semibold transition-colors hover:bg-pastel-blue"
-            >
-              👤 Jugador 1
-            </button>
-            <button
-              onClick={() => { setDevName('Jugador 2'); }}
-              className="flex-1 rounded-lg bg-pastel-pink/50 px-3 py-2 text-xs font-semibold transition-colors hover:bg-pastel-pink"
-            >
-              👤 Jugador 2
-            </button>
-          </div>
+        {/* Separator */}
+        <div className="flex items-center gap-4 py-2">
+          <div className="h-px flex-1 bg-foreground/10" />
+          <span className="text-xs font-bold text-foreground/30 uppercase tracking-widest">{t('common.or') || 'O'}</span>
+          <div className="h-px flex-1 bg-foreground/10" />
         </div>
-      )}
+
+        {/* DEV MODE login panel (Toggleable) */}
+        <div className="flex flex-col gap-3">
+          <button 
+            onClick={() => setShowDevOptions(!showDevOptions)}
+            className="text-xs font-bold text-foreground/40 hover:text-amber-600 transition-colors uppercase tracking-wider flex items-center justify-center gap-2"
+          >
+            {showDevOptions ? '🙈 Ocultar opciones dev' : '⚡ Mostrar opciones dev (Temporal)'}
+          </button>
+
+          {showDevOptions && (
+            <div className="rounded-2xl bg-white/90 p-6 shadow-lg backdrop-blur-sm flex flex-col gap-4 animate-in fade-in zoom-in-95 duration-200">
+              <p className="text-xs text-muted-foreground">
+                Crea una cuenta de prueba rápidamente para testear sin Google.
+              </p>
+              <input
+                type="text"
+                value={devName}
+                onChange={(e) => setDevName(e.target.value)}
+                placeholder="Nombre del jugador..."
+                className="w-full rounded-lg border border-border bg-background px-4 py-2.5 text-sm font-medium focus:outline-none focus:ring-2 focus:ring-primary"
+                onKeyDown={(e) => e.key === 'Enter' && handleDevLogin()}
+              />
+              <button
+                onClick={handleDevLogin}
+                disabled={devLoading || !devName.trim()}
+                className="w-full rounded-xl bg-primary px-6 py-3 text-base font-bold text-primary-foreground shadow-md transition-all hover:-translate-y-0.5 hover:shadow-lg active:translate-y-0 disabled:opacity-50 disabled:cursor-not-allowed"
+              >
+                {devLoading ? '⏳ Conectando...' : '🎮 Entrar como ' + devName}
+              </button>
+
+              <div className="flex gap-2">
+                <button
+                  onClick={() => { setDevName('Jugador 1'); }}
+                  className="flex-1 rounded-lg bg-pastel-blue/50 px-3 py-2 text-[10px] font-semibold transition-colors hover:bg-pastel-blue"
+                >
+                  👤 Jugador 1
+                </button>
+                <button
+                  onClick={() => { setDevName('Jugador 2'); }}
+                  className="flex-1 rounded-lg bg-pastel-pink/50 px-3 py-2 text-[10px] font-semibold transition-colors hover:bg-pastel-pink"
+                >
+                  👤 Jugador 2
+                </button>
+              </div>
+            </div>
+          )}
+        </div>
+      </div>
 
       {/* Decorative bottom */}
       <div className="mt-16 flex gap-2">
