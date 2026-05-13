@@ -84,7 +84,6 @@ function LoginScreen() {
 
   const handleDevLogin = async () => {
     setDevLoading(true)
-    setDevError('')
     try {
       const { token, user } = await devLogin(devName)
       saveAuth(token, user)
