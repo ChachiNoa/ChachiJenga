@@ -32,13 +32,25 @@ const errorMap = {
     'Friend request not found': 'Solicitud de amistad no encontrada',
     'You cannot reject a request you sent': 'No puedes rechazar una solicitud que enviaste',
     'Friendship not found': 'Amistad no encontrada',
+    'Invitation rejected': 'Invitación rechazada',
+    'Invitation not found': 'Invitación no encontrada',
+    'Friend request accepted': 'Solicitud de amistad aceptada',
+    'Friend request rejected': 'Solicitud de amistad rechazada',
   }
 };
 
 const successMap = {
   es: {
     'Invitation sent': 'Invitación enviada',
+    'Invitación enviada': 'Invitación enviada',
+    'Joined guild': 'Te has unido al gremio',
+    'Left guild': 'Has salido del gremio',
+    'Guild deleted': 'Gremio eliminado',
+    'Guild created': 'Gremio creado correctamente',
     'Friend request sent': 'Solicitud de amistad enviada',
+    'Friend request accepted': 'Solicitud de amistad aceptada',
+    'Friend request rejected': 'Solicitud de amistad rechazada',
+    'Invitation rejected': 'Invitación rechazada',
     'Profile updated': 'Perfil actualizado',
   }
 }

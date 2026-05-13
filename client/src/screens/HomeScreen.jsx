@@ -26,6 +26,8 @@ function HomeScreen() {
   const [user, setUser] = useState(null)
   const [authToken, setAuthToken] = useState(null)
   const [fullProfile, setFullProfile] = useState(null)
+  const [pendingFriends, setPendingFriends] = useState(0)
+  const [pendingGuilds, setPendingGuilds] = useState(0)
   const { socket, isConnected } = useSocket()
 
   useEffect(() => {
@@ -47,6 +49,33 @@ function HomeScreen() {
     setUser(auth.user)
     setAuthToken(auth.token)
   }, [navigate])
+
+  // Fetch notification counts
+  useEffect(() => {
+    if (!authToken) return
+    const API = import.meta.env.VITE_API_URL || 'http://localhost:3001'
+    
+    const fetchCounts = async () => {
+      try {
+        // Friend requests
+        const fRes = await fetch(`${API}/api/friends/pending`, { headers: { Authorization: `Bearer ${authToken}` } })
+        if (fRes.ok) {
+          const fData = await fRes.json()
+          setPendingFriends(fData.length)
+        }
+        // Guild invitations
+        const gRes = await fetch(`${API}/api/guilds/invitations/pending`, { headers: { Authorization: `Bearer ${authToken}` } })
+        if (gRes.ok) {
+          const gData = await gRes.json()
+          setPendingGuilds(gData.length)
+        }
+      } catch (e) { console.error(e) }
+    }
+
+    fetchCounts()
+    const interval = setInterval(fetchCounts, 30000) // Refresh every 30s
+    return () => clearInterval(interval)
+  }, [authToken, friendsOpen, guildOpen])
 
   useEffect(() => {
     if (!socket) return
@@ -157,16 +186,18 @@ function HomeScreen() {
         </button>
         <button
           onClick={() => setGuildOpen(true)}
-          className="flex flex-col items-center justify-center gap-2 rounded-2xl bg-card p-3 shadow-md transition-all hover:-translate-y-0.5 hover:shadow-lg"
+          className="relative flex flex-col items-center justify-center gap-2 rounded-2xl bg-card p-3 shadow-md transition-all hover:-translate-y-0.5 hover:shadow-lg"
         >
           <Shield className="h-6 w-6 text-pastel-green" />
           <span className="text-xs font-semibold text-card-foreground">Gremio</span>
+          {pendingGuilds > 0 && <span className="absolute top-2 right-2 w-2.5 h-2.5 bg-red-500 rounded-full border-2 border-card animate-pulse" />}
         </button>
       </div>
 
-      <Button variant="outline" className="mb-8 w-full max-w-xs gap-2 rounded-2xl shadow-sm h-12" onClick={() => setFriendsOpen(true)}>
+      <Button variant="outline" className="relative mb-8 w-full max-w-xs gap-2 rounded-2xl shadow-sm h-12" onClick={() => setFriendsOpen(true)}>
         <Users className="h-5 w-5" />
         Amigos
+        {pendingFriends > 0 && <span className="absolute top-2 right-3 w-2.5 h-2.5 bg-red-500 rounded-full border-2 border-white animate-pulse" />}
       </Button>
 
       {/* Quick stats */}

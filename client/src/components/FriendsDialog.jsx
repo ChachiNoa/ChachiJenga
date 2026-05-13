@@ -5,13 +5,13 @@ import { Dialog, DialogContent, DialogHeader, DialogTitle } from '@/components/u
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs'
 import { Button } from '@/components/ui/button'
 import { Input } from '@/components/ui/input'
-import { Search, UserPlus, Check, X, UserMinus, User, Shield } from 'lucide-react'
+import { Search, UserPlus, Check, X, UserMinus, User, Shield, Users } from 'lucide-react'
 import { Avatar, AvatarFallback } from '@/components/ui/avatar'
 
 const API = import.meta.env.VITE_API_URL || 'http://localhost:3001'
 
 // ─── Confirmation Dialog ─────────────────────────────
-function ConfirmDialog({ open, onClose, title, message, confirmLabel, onConfirm }) {
+function ConfirmDialog({ open, onClose, title, message, confirmLabel, variant, onConfirm }) {
   if (!open) return null
   return (
     <Dialog open={open} onOpenChange={(v) => !v && onClose()}>
@@ -20,7 +20,9 @@ function ConfirmDialog({ open, onClose, title, message, confirmLabel, onConfirm 
         <p className="text-sm text-muted-foreground py-2">{message}</p>
         <div className="flex gap-2 pt-2">
           <Button variant="outline" onClick={onClose} className="flex-1">Cancelar</Button>
-          <Button variant="destructive" onClick={() => { onConfirm(); onClose() }} className="flex-1">{confirmLabel || 'Confirmar'}</Button>
+          <Button variant={variant || 'destructive'} onClick={() => { onConfirm(); onClose() }} className="flex-1">
+            {confirmLabel || 'Confirmar'}
+          </Button>
         </div>
       </DialogContent>
     </Dialog>
@@ -39,7 +41,7 @@ export default function FriendsDialog({ open, onOpenChange, auth }) {
 
   // Toast + confirm
   const [toast, setToast] = useState({ message: '', type: 'error' })
-  const [confirm, setConfirm] = useState({ open: false, title: '', message: '', confirmLabel: '', onConfirm: () => {} })
+  const [confirm, setConfirm] = useState({ open: false, title: '', message: '', confirmLabel: '', variant: 'destructive', onConfirm: () => {} })
   const [myGuild, setMyGuild] = useState(null)
   const [myGuildRole, setMyGuildRole] = useState('member')
 
@@ -125,7 +127,11 @@ export default function FriendsDialog({ open, onOpenChange, auth }) {
       const res = await fetch(`${API}/api/friends/${id}/${accept ? 'accept' : 'reject'}`, {
         method: 'POST', headers: { Authorization: `Bearer ${auth.token}` }
       })
-      if (res.ok) { fetchPending(); if (accept) fetchFriends() }
+      if (res.ok) { 
+        fetchPending(); 
+        if (accept) fetchFriends();
+        showToast(accept ? 'Friend request accepted' : 'Friend request rejected', accept ? 'success' : 'error')
+      }
     } catch (e) { console.error(e) }
   }
 
@@ -146,18 +152,39 @@ export default function FriendsDialog({ open, onOpenChange, auth }) {
 
   const inviteToGuild = async (friendId, friendName) => {
     if (!myGuild) { showToast('No estás en ningún gremio'); return }
+    
     try {
-      const res = await fetch(`${API}/api/guilds/${myGuild.id}/invite/${friendId}`, {
-        method: 'POST',
-        headers: { Authorization: `Bearer ${auth.token}`, 'Content-Type': 'application/json' }
-      })
+      // First check if user is already in this guild to avoid unnecessary confirmation
+      const res = await fetch(`${API}/api/profile/${friendId}`)
       const data = await res.json()
-      if (res.ok) {
-        showToast(`Invitación enviada a ${friendName}`)
-      } else {
-        showToast(data.error || 'Error al invitar')
+      
+      if (data.user?.guildId === myGuild.id) {
+        showToast('User is already in this guild')
+        return
       }
-    } catch (e) { showToast('Error de conexión') }
+
+      setConfirm({
+        open: true,
+        title: 'Invitar al Gremio',
+        message: `¿Estás seguro de que quieres invitar a ${friendName} al gremio ${myGuild.name}?`,
+        confirmLabel: 'Invitar',
+        variant: 'default',
+        onConfirm: async () => {
+          try {
+            const resInvite = await fetch(`${API}/api/guilds/${myGuild.id}/invite/${friendId}`, {
+              method: 'POST',
+              headers: { Authorization: `Bearer ${auth.token}`, 'Content-Type': 'application/json' }
+            })
+            const dataInvite = await resInvite.json()
+            if (resInvite.ok) {
+              showToast('Invitation sent', 'success')
+            } else {
+              showToast(dataInvite.error || 'Error al invitar')
+            }
+          } catch (e) { showToast('Error de conexión') }
+        }
+      })
+    } catch (e) { console.error(e) }
   }
 
   // Can invite if: in a guild AND (guild is public OR user is admin/owner)
@@ -249,11 +276,11 @@ export default function FriendsDialog({ open, onOpenChange, auth }) {
                           </div>
                         </div>
                         <div className="flex gap-2">
-                          <Button size="sm" onClick={() => respondRequest(p.friendshipId, true)} className="flex-1">
-                            <Check className="h-4 w-4 mr-1" /> Aceptar
+                          <Button size="icon" onClick={() => respondRequest(p.friendshipId, true)} className="h-9 w-9 shrink-0">
+                            <Check className="h-5 w-5" />
                           </Button>
-                          <Button size="sm" variant="outline" onClick={() => respondRequest(p.friendshipId, false)} className="flex-1">
-                            <X className="h-4 w-4 mr-1" /> Rechazar
+                          <Button size="icon" variant="outline" onClick={() => respondRequest(p.friendshipId, false)} className="h-9 w-9 shrink-0">
+                            <X className="h-5 w-5" />
                           </Button>
                         </div>
                       </div>
@@ -294,8 +321,8 @@ export default function FriendsDialog({ open, onOpenChange, auth }) {
                         <div className="text-xs text-muted-foreground">{searchResult.tag}</div>
                       </div>
                     </div>
-                    <Button onClick={sendRequest}>
-                      <UserPlus className="h-4 w-4 mr-2" /> Añadir
+                    <Button size="icon" onClick={sendRequest} className="h-10 w-10 shrink-0">
+                      <Users className="h-5 w-5" />
                     </Button>
                   </div>
                 )}
@@ -305,7 +332,11 @@ export default function FriendsDialog({ open, onOpenChange, auth }) {
 
           {/* Toast feedback */}
           {toast.message && (
-            <div className={`absolute bottom-6 left-1/2 -translate-x-1/2 px-6 py-3 rounded-2xl text-sm font-bold shadow-xl border-4 border-white/40 animate-in fade-in slide-in-from-bottom-4 z-[100] flex items-center gap-3 ${toast.type === 'error' ? 'bg-error text-red-900 border-red-200' : 'bg-success text-green-900 border-green-200'}`}>
+            <div className={`fixed bottom-6 left-1/2 -translate-x-1/2 px-6 py-3 rounded-2xl text-sm font-bold shadow-2xl border backdrop-blur-md animate-in fade-in slide-in-from-bottom-4 z-[100] flex items-center gap-3 ${
+              toast.type === 'error' 
+                ? 'bg-red-50/90 text-red-900 border-red-200' 
+                : 'bg-green-50/90 text-green-900 border-green-200'
+            }`}>
               <span className="text-xl">{toast.type === 'error' ? '⚠️' : '✅'}</span>
               <span>{toast.message}</span>
             </div>
@@ -320,6 +351,7 @@ export default function FriendsDialog({ open, onOpenChange, auth }) {
         title={confirm.title}
         message={confirm.message}
         confirmLabel={confirm.confirmLabel}
+        variant={confirm.variant}
         onConfirm={confirm.onConfirm}
       />
     </>

@@ -153,8 +153,12 @@ export default function GuildDialog({ open, onOpenChange, auth }) {
         body: JSON.stringify({ name: createName, description: createDesc, isPublic: createPublic })
       })
       const data = await res.json()
-      if (res.ok) { setShowCreate(false); setCreateName(''); setCreateDesc(''); fetchMyGuild(); fetchRanking() }
-      else setCreateError(data.error || 'Error al crear gremio')
+      if (res.ok) { 
+        setShowCreate(false); setCreateName(''); setCreateDesc(''); 
+        fetchMyGuild(); fetchRanking(); 
+        showToast('Guild created', 'success') 
+      }
+      else showToast(data.error || 'Error al crear gremio')
     } catch (e) { setCreateError('Error de conexión') }
   }
 
@@ -162,7 +166,13 @@ export default function GuildDialog({ open, onOpenChange, auth }) {
     try {
       const res = await fetch(`${API}/api/guilds/${guildId}/join`, { method: 'POST', headers: authHeaders() })
       const data = await res.json()
-      if (res.ok) { fetchMyGuild(); fetchRanking(); setActiveTab('my') }
+      if (res.ok) { 
+        fetchMyGuild()
+        fetchRanking()
+        fetchInvitations()
+        setActiveTab('my') 
+        showToast('Joined guild', 'success')
+      }
       else showToast(data.error || 'No se pudo unir')
     } catch (e) { console.error(e) }
   }
@@ -171,7 +181,12 @@ export default function GuildDialog({ open, onOpenChange, auth }) {
     showConfirm('Salir del Gremio', '¿Seguro que quieres salir del gremio?', async () => {
       try {
         const res = await fetch(`${API}/api/guilds/${guild.id}/leave`, { method: 'POST', headers: authHeaders() })
-        if (res.ok) { fetchMyGuild(); fetchRanking() }
+        if (res.ok) { 
+          fetchMyGuild()
+          fetchRanking()
+          fetchInvitations()
+          showToast('Left guild', 'success')
+        }
         else { const d = await res.json(); showToast(d.error || 'Error al salir') }
       } catch (e) { console.error(e) }
     }, 'Salir')
@@ -181,7 +196,12 @@ export default function GuildDialog({ open, onOpenChange, auth }) {
     showConfirm('Eliminar Gremio', '¿Seguro que quieres ELIMINAR el gremio? Se expulsarán todos los miembros y no se puede deshacer.', async () => {
       try {
         const res = await fetch(`${API}/api/guilds/${guild.id}`, { method: 'DELETE', headers: authHeaders() })
-        if (res.ok) { fetchMyGuild(); fetchRanking() }
+        if (res.ok) { 
+          fetchMyGuild()
+          fetchRanking()
+          fetchInvitations()
+          showToast('Guild deleted', 'success')
+        }
       } catch (e) { console.error(e) }
     }, 'Eliminar')
   }
@@ -244,7 +264,7 @@ export default function GuildDialog({ open, onOpenChange, auth }) {
         body: JSON.stringify({ tag: member.tag })
       })
       const data = await res.json()
-      if (res.ok) showToast(`Solicitud enviada a ${member.displayName}`)
+      if (res.ok) showToast(`Solicitud enviada a ${member.displayName}`, 'success')
       else showToast(data.error || 'Error al enviar solicitud')
     } catch (e) { showToast('Error de conexión') }
   }
@@ -256,9 +276,13 @@ export default function GuildDialog({ open, onOpenChange, auth }) {
       })
       if (res.ok) {
         fetchInvitations()
+        fetchMyGuild()
+        fetchRanking()
         if (accept) {
-          fetchMyGuild()
           setActiveTab('my')
+          showToast('Joined guild', 'success')
+        } else {
+          showToast('Invitation rejected', 'success')
         }
       } else {
         const d = await res.json()
@@ -502,11 +526,11 @@ export default function GuildDialog({ open, onOpenChange, auth }) {
               </div>
             </div>
             <div className="flex gap-2">
-              <Button size="sm" onClick={() => respondInvitation(inv.id, true)} className="flex-1">
-                <Check className="h-4 w-4 mr-1" /> Aceptar
+              <Button size="icon" onClick={() => respondInvitation(inv.id, true)} className="h-9 w-9 shrink-0">
+                <Check className="h-5 w-5" />
               </Button>
-              <Button size="sm" variant="outline" onClick={() => respondInvitation(inv.id, false)} className="flex-1">
-                <X className="h-4 w-4 mr-1" /> Rechazar
+              <Button size="icon" variant="outline" onClick={() => respondInvitation(inv.id, false)} className="h-9 w-9 shrink-0">
+                <X className="h-5 w-5" />
               </Button>
             </div>
           </div>
@@ -581,7 +605,11 @@ export default function GuildDialog({ open, onOpenChange, auth }) {
 
           {/* Toast feedback */}
           {toast.message && (
-            <div className={`absolute bottom-6 left-1/2 -translate-x-1/2 px-6 py-3 rounded-2xl text-sm font-bold shadow-xl border-4 border-white/40 animate-in fade-in slide-in-from-bottom-4 z-[100] flex items-center gap-3 ${toast.type === 'error' ? 'bg-error text-red-900 border-red-200' : 'bg-success text-green-900 border-green-200'}`}>
+            <div className={`fixed bottom-6 left-1/2 -translate-x-1/2 px-6 py-3 rounded-2xl text-sm font-bold shadow-2xl border backdrop-blur-md animate-in fade-in slide-in-from-bottom-4 z-[100] flex items-center gap-3 ${
+              toast.type === 'error' 
+                ? 'bg-red-50/90 text-red-900 border-red-200' 
+                : 'bg-green-50/90 text-green-900 border-green-200'
+            }`}>
               <span className="text-xl">{toast.type === 'error' ? '⚠️' : '✅'}</span>
               <span>{toast.message}</span>
             </div>
