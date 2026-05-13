@@ -14,7 +14,7 @@ vi.mock('../drawing/pdollar', () => {
       Recognize = vi.fn((points, templates) => {
         // Dummy logic: if we pass a specific number of points, return fake scores
         if (points.length === 0) return { Name: 'none', Score: 0.0 }
-        if (points.length === 2) return { Name: 'circle', Score: 0.05 } // Low score below threshold
+        if (points.length === 2) return { Name: 'circle', Score: 0.35 } // Low score below threshold
         if (points.length === 3) return { Name: 'triangle', Score: 0.85 }
         if (points.length === 4) return { Name: 'square', Score: 0.75 }
         return { Name: 'circle', Score: 0.65 } // Above threshold
@@ -41,12 +41,12 @@ describe('ShapeRecognizer', () => {
     expect(result).toBeNull()
   })
 
-  it('should ignore results below confidence threshold (10%)', () => {
-    // 2 points returns 'circle' with 0.05 score based on our mock
+  it('should ignore results below confidence threshold (50%)', () => {
+    // 2 points returns 'circle' with 0.35 score based on our mock
     const strokes = [[{x: 0, y: 0}, {x: 1, y: 1}]]
     const result = recognizer.recognize(strokes, ['circle'])
     
-    expect(result).toBeNull() // Score 0.05 is < 0.10 threshold
+    expect(result).toBeNull() // Score 0.35 is < 0.50 threshold
   })
 
   it('should accept results above threshold and matching pending shapes', () => {
@@ -56,7 +56,7 @@ describe('ShapeRecognizer', () => {
     
     expect(result).not.toBeNull()
     expect(result.name).toBe('triangle')
-    expect(result.score).toBeGreaterThanOrEqual(0.70)
+    expect(result.score).toBeGreaterThanOrEqual(0.50)
   })
 
   it('should reject shapes that are not in the pending list even if score is high', () => {

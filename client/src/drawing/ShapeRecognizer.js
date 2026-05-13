@@ -1,7 +1,7 @@
 import { PDollarRecognizer, Point } from './pdollar'
 import { templates } from './shapes'
 
-const THRESHOLD = 0.10
+const THRESHOLD = 0.50
 const MAX_POINTS_PER_STROKE = 40
 
 export class ShapeRecognizer {

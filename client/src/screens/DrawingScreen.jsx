@@ -138,7 +138,7 @@ export default function DrawingScreen() {
       if (s.completed) return false
       // Center of the shape is x + 40, y + 40 (shapeSize is 80)
       const dist = Math.hypot(drawCenterX - (s.x + 40), drawCenterY - (s.y + 40))
-      return dist < 100 // Tolerance radius
+      return dist < 60 // Tolerance radius
     })
 
     const pendingNames = pendingNearShapes.map(s => s.type)
