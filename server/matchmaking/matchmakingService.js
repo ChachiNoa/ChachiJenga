@@ -18,14 +18,18 @@ function setupMatchmaking(io, socket, db) {
   handleGameEvents(io, socket, db);
 
   socket.on('join_queue', (user) => {
+    console.log(`[Queue] Player ${user?.name} (${socket.id}) trying to join.`)
     if (!user || !user.id) {
+       console.log(`[Queue] Rejecting invalid user.`)
        return socket.emit('queue_error', 'Invalid user profile');
     }
     queue.addPlayer(socket.id, user);
+    console.log(`[Queue] Player joined. Queue size: ${queue.getQueueSize()}`)
     socket.emit('queue_joined', { status: 'waiting' });
   });
 
   socket.on('leave_queue', () => {
+    console.log(`[Queue] Player ${socket.id} left queue.`)
     queue.removePlayer(socket.id);
     socket.emit('queue_left');
   });

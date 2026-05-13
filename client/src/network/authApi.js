@@ -68,17 +68,31 @@ export function getToken() {
  * @returns {Promise<{token: string, user: object}>}
  */
 export async function devLogin(name = 'Dev Player') {
-  const response = await fetch(`${API_URL}/auth/dev-login`, {
-    method: 'POST',
-    headers: { 'Content-Type': 'application/json' },
-    body: JSON.stringify({ name }),
-  })
+  const controller = new AbortController()
+  const timeoutId = setTimeout(() => controller.abort(), 5000)
 
-  if (!response.ok) {
-    const error = await response.json().catch(() => ({}))
-    throw new Error(error.error || 'Dev login failed')
+  try {
+    const response = await fetch(`${API_URL}/auth/dev-login`, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ name }),
+      signal: controller.signal
+    })
+    
+    clearTimeout(timeoutId)
+
+    if (!response.ok) {
+      const error = await response.json().catch(() => ({}))
+      throw new Error(error.error || 'Dev login failed')
+    }
+
+    return response.json()
+  } catch (error) {
+    clearTimeout(timeoutId)
+    if (error.name === 'AbortError') {
+      throw new Error('Server connection timed out. Check API_URL in .env')
+    }
+    throw error
   }
-
-  return response.json()
 }
 

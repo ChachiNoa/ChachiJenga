@@ -43,8 +43,10 @@ function createAuthRouter(db) {
   // POST /auth/dev-login — DEV ONLY: create/login as a test user without Google
   // Only available when GOOGLE_CLIENT_ID is not configured
   router.post('/dev-login', (req, res) => {
+    console.log('[API] /auth/dev-login hit. Body:', req.body)
     const googleClientId = process.env.GOOGLE_CLIENT_ID
     if (googleClientId && googleClientId !== 'your-google-client-id-here') {
+      console.log('[API] Dev login disabled in production')
       return res.status(403).json({ error: 'Dev login disabled in production' })
     }
 
@@ -54,9 +56,11 @@ function createAuthRouter(db) {
       const devGoogleId = `dev-${devName.toLowerCase().replace(/\s+/g, '-')}`
       const devEmail = `${devGoogleId}@chachijenga.local`
 
+      console.log('[API] Finding user:', devGoogleId)
       let user = findUserByGoogleId(db, devGoogleId)
 
       if (!user) {
+        console.log('[API] User not found, creating new user...')
         const result = createUser(db, {
           googleId: devGoogleId,
           displayName: devName,
@@ -77,11 +81,14 @@ function createAuthRouter(db) {
           shapes_drawn: 0,
         }
       } else {
+        console.log('[API] User found, updating login timestamp...')
         updateUserLogin(db, user.id)
       }
 
+      console.log('[API] Generating token...')
       const token = generateToken(user)
 
+      console.log('[API] Sending success response!')
       res.json({
         token,
         user: {
