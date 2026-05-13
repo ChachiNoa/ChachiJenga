@@ -31,9 +31,15 @@ function LoginScreen() {
   const [toast, setToast] = useState({ message: '', type: 'error' })
 
   const showToast = (msg, type = 'error') => {
-    const finalMsg = type === 'error' ? getErrorMessage(msg) : getSuccessMessage(msg)
-    setToast({ message: finalMsg, type })
-    setTimeout(() => setToast({ message: '', type: 'error' }), 3000)
+    try {
+      const finalMsg = type === 'error' ? getErrorMessage(msg) : getSuccessMessage(msg)
+      setToast({ message: finalMsg, type })
+      setTimeout(() => setToast({ message: '', type: 'error' }), 3000)
+    } catch (e) {
+      console.error('Toast error:', e)
+      setToast({ message: String(msg), type })
+      setTimeout(() => setToast({ message: '', type: 'error' }), 3000)
+    }
   }
 
   useEffect(() => {
@@ -85,6 +91,7 @@ function LoginScreen() {
       navigate('/home', { replace: true })
     } catch (err) {
       showToast(err.message || 'Failed to connect to server')
+    } finally {
       setDevLoading(false)
     }
   }
