@@ -14,15 +14,27 @@ const { createAuthRouter } = require('./auth/authRouter')
 
 const app = express()
 const server = http.createServer(app)
+const allowedOrigins = [
+  'http://localhost:5173',
+  'https://chachijenga-545c7.web.app',
+  'https://chachijenga-545c7.firebaseapp.com',
+  process.env.CLIENT_URL
+].filter(Boolean)
+
 const io = new Server(server, {
   cors: {
-    origin: process.env.CLIENT_URL || 'http://localhost:5173',
-    methods: ['GET', 'POST'],
+    origin: allowedOrigins,
+    methods: ['GET', 'POST', 'PUT', 'DELETE', 'OPTIONS'],
+    credentials: true,
   },
 })
 
 // Middleware
-app.use(cors())
+app.use(cors({
+  origin: allowedOrigins,
+  methods: ['GET', 'POST', 'PUT', 'DELETE', 'OPTIONS'],
+  credentials: true,
+}))
 app.use(express.json())
 
 // Initialize database
