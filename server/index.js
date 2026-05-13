@@ -6,8 +6,10 @@ const cors = require('cors')
 const { setupDatabase } = require('./db/setup')
 const admin = require('firebase-admin')
 
-// Initialize Firebase Admin
-admin.initializeApp()
+// Initialize Firebase Admin with project ID for token verification
+admin.initializeApp({
+  projectId: process.env.FIREBASE_PROJECT_ID || 'chachijenga-545c7'
+})
 const { createAuthRouter } = require('./auth/authRouter')
 
 const app = express()
