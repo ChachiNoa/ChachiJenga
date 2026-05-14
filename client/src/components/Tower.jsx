@@ -208,24 +208,35 @@ export default function Tower({ layers, onSelectPiece, interactive = true, oppon
     drawTower(ctx, canvas.width, canvas.height)
   }, [blocks, hoveredPiece, opponentHoveredPiece])
 
-  const handlePointerMove = (e) => {
-    if (!interactive) return
+  // Hit-test helper: finds the block at the given canvas coordinates
+  const hitTestAt = (canvasX, canvasY) => {
     const canvas = canvasRef.current
-    const rect = canvas.getBoundingClientRect()
-    const x = e.clientX - rect.left
-    const y = e.clientY - rect.top
-
+    if (!canvas) return null
     const ctx = canvas.getContext('2d')
-    let found = null
     
     // Check backwards (top-most blocks first)
     for (let i = blocks.length - 1; i >= 0; i--) {
       const block = blocks[i]
-      if (block.hitPath && ctx.isPointInPath(block.hitPath, x, y)) {
-        found = { layer: block.layer, position: block.position, selectable: block.selectable }
-        break
+      if (block.hitPath && ctx.isPointInPath(block.hitPath, canvasX, canvasY)) {
+        return { layer: block.layer, position: block.position, selectable: block.selectable }
       }
     }
+    return null
+  }
+
+  const getCanvasCoords = (e) => {
+    const canvas = canvasRef.current
+    const rect = canvas.getBoundingClientRect()
+    return {
+      x: (e.clientX - rect.left) * (canvas.width / rect.width),
+      y: (e.clientY - rect.top) * (canvas.height / rect.height)
+    }
+  }
+
+  const handlePointerMove = (e) => {
+    if (!interactive) return
+    const { x, y } = getCanvasCoords(e)
+    const found = hitTestAt(x, y)
 
     if (found?.layer !== hoveredPiece?.layer || found?.position !== hoveredPiece?.position) {
       setHoveredPiece(found)
@@ -236,22 +247,29 @@ export default function Tower({ layers, onSelectPiece, interactive = true, oppon
     if (interactive) setHoveredPiece(null)
   }
 
-  const handleClick = () => {
-    if (interactive && hoveredPiece && hoveredPiece.selectable) {
-      if (onSelectPiece) {
-        onSelectPiece(hoveredPiece.layer, hoveredPiece.position)
-      }
+  // Use pointerUp for selection — works on both mobile (tap) and desktop (click)
+  // On mobile, pointerMove may not fire before a quick tap, so we hit-test directly
+  const handlePointerUp = (e) => {
+    if (!interactive) return
+    const { x, y } = getCanvasCoords(e)
+    const hit = hitTestAt(x, y)
+
+    if (hit && hit.selectable && onSelectPiece) {
+      onSelectPiece(hit.layer, hit.position)
     }
+    // Clear hover after selection on mobile
+    setHoveredPiece(null)
   }
 
   return (
-    <div className="h-full w-full relative touch-none">
+    <div className="h-full w-full relative" style={{ touchAction: 'none' }}>
       <canvas
         ref={canvasRef}
         className="block h-full w-full outline-none"
+        style={{ touchAction: 'none' }}
         onPointerMove={handlePointerMove}
         onPointerOut={handlePointerLeave}
-        onClick={handleClick}
+        onPointerUp={handlePointerUp}
       />
       {import.meta.env.DEV && (
         <div className="absolute bottom-20 left-4 bg-white/90 p-3 rounded-lg text-sm pointer-events-none z-10 shadow-lg border border-sky-100">
