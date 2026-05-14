@@ -6,10 +6,24 @@ const cors = require('cors')
 const { setupDatabase } = require('./db/setup')
 const admin = require('firebase-admin')
 
-// Initialize Firebase Admin with project ID for token verification
-admin.initializeApp({
+// Initialize Firebase Admin with service account credentials (Railway) or project ID only (dev)
+const firebaseConfig = {
   projectId: process.env.FIREBASE_PROJECT_ID || 'chachijenga-545c7'
-})
+}
+
+if (process.env.FIREBASE_SERVICE_ACCOUNT) {
+  try {
+    const serviceAccount = JSON.parse(process.env.FIREBASE_SERVICE_ACCOUNT)
+    firebaseConfig.credential = admin.credential.cert(serviceAccount)
+    console.log('[Firebase] Initialized with service account credentials')
+  } catch (e) {
+    console.error('[Firebase] Failed to parse FIREBASE_SERVICE_ACCOUNT:', e.message)
+  }
+} else {
+  console.log('[Firebase] No service account found, using project ID only (dev mode)')
+}
+
+admin.initializeApp(firebaseConfig)
 const { createAuthRouter } = require('./auth/authRouter')
 
 const app = express()
