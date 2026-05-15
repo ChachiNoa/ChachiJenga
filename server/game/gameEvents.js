@@ -121,7 +121,7 @@ function handleGameEvents(io, socket) {
           }
           playerToRoom.delete(socket.id);
           disconnectTimeouts.delete(socket.id);
-        }, 30000); // 30s timeout
+        }, 15000); // 15s timeout
         
         disconnectTimeouts.set(socket.id, tid);
       } else {

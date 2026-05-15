@@ -8,7 +8,7 @@ export default function DisconnectDialog() {
   const { t } = useTranslation()
   const { socket } = useSocket()
   const [open, setOpen] = useState(false)
-  const [timeLeft, setTimeLeft] = useState(30)
+  const [timeLeft, setTimeLeft] = useState(15)
 
   useEffect(() => {
     if (!socket) return
@@ -17,7 +17,7 @@ export default function DisconnectDialog() {
 
     const onOpponentDisconnected = () => {
       setOpen(true)
-      setTimeLeft(30)
+      setTimeLeft(15)
       
       timerInterval = setInterval(() => {
         setTimeLeft(prev => {
@@ -35,12 +35,19 @@ export default function DisconnectDialog() {
       if (timerInterval) clearInterval(timerInterval)
     }
 
+    const onGameOver = () => {
+      setOpen(false)
+      if (timerInterval) clearInterval(timerInterval)
+    }
+
     socket.on('opponent_disconnected', onOpponentDisconnected)
     socket.on('opponent_reconnected', onOpponentReconnected)
+    socket.on('game_over', onGameOver)
 
     return () => {
       socket.off('opponent_disconnected', onOpponentDisconnected)
       socket.off('opponent_reconnected', onOpponentReconnected)
+      socket.off('game_over', onGameOver)
       if (timerInterval) clearInterval(timerInterval)
     }
   }, [socket])
