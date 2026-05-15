@@ -230,7 +230,13 @@ export default function FriendsDialog({ open, onOpenChange, auth }) {
                             )}
                           </Avatar>
                           <div>
-                            <div className="font-bold leading-tight">{f.displayName}</div>
+                            <div className="font-bold leading-tight flex items-center gap-2">
+                              {f.displayName}
+                              <span 
+                                className={`w-2.5 h-2.5 rounded-full ${f.online ? 'bg-green-500 shadow-[0_0_5px_rgba(34,197,94,0.5)]' : 'bg-slate-300'}`} 
+                                title={f.online ? 'En línea' : 'Desconectado'}
+                              />
+                            </div>
                             <div className="text-[10px] text-muted-foreground flex gap-2">
                               <span>{f.tag}</span>
                               <span>ELO {f.elo}</span>

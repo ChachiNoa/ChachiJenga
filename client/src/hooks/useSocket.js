@@ -1,5 +1,6 @@
 import { useEffect, useState, useRef } from 'react';
 import { io } from 'socket.io-client';
+import { loadAuth } from '../network/authApi';
 
 const SOCKET_SERVER_URL = import.meta.env.VITE_API_URL || 'http://localhost:3001';
 
@@ -19,7 +20,13 @@ export function useSocket() {
 
     const socket = socketRef.current;
 
-    const onConnect = () => setIsConnected(true);
+    const onConnect = () => {
+      setIsConnected(true);
+      const auth = loadAuth();
+      if (auth && auth.user) {
+        socket.emit('identify', auth.user.id);
+      }
+    };
     const onDisconnect = () => setIsConnected(false);
 
     socket.on('connect', onConnect);
@@ -27,6 +34,9 @@ export function useSocket() {
 
     // Initial check
     setIsConnected(socket.connected);
+    if (socket.connected) {
+      onConnect();
+    }
 
     return () => {
       socket.off('connect', onConnect);

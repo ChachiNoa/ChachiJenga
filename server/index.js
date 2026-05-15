@@ -69,19 +69,36 @@ app.use('/auth', createAuthRouter(db))
 app.use('/api/ranking', createRankingRouter(db))
 app.use('/api/profile', createProfileRouter(db))
 app.use('/api/users', createUsersRouter(db))
-app.use('/api/friends', createFriendsRouter(db))
+app.use('/api/friends', createFriendsRouter(db, isUserOnline))
 app.use('/api/guilds', createGuildRouter(db))
 
 const { setupMatchmaking } = require('./matchmaking/matchmakingService')
+
+const onlineUsers = new Set()
+
+// Export a helper to check if a user is online
+const isUserOnline = (userId) => onlineUsers.has(userId)
 
 // Socket.io connection
 io.on('connection', (socket) => {
   console.log(`Player connected: ${socket.id}`)
 
+  socket.on('identify', (userId) => {
+    if (userId) {
+      socket.userId = userId
+      onlineUsers.add(userId)
+    }
+  })
+
   setupMatchmaking(io, socket, db)
 
   socket.on('disconnect', () => {
     console.log(`Player disconnected: ${socket.id}`)
+    if (socket.userId) {
+      // In a real app, you'd count connections per user to avoid removing if they have multiple tabs
+      // For simplicity, we just remove them here
+      onlineUsers.delete(socket.userId)
+    }
   })
 })
 
@@ -91,4 +108,4 @@ server.listen(PORT, () => {
   console.log(`ChachiJenga server running on port ${PORT}`)
 })
 
-module.exports = { app, server, io, db }
+module.exports = { app, server, io, db, isUserOnline }

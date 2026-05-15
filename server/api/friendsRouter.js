@@ -2,7 +2,7 @@ const express = require('express')
 const { createAuthMiddleware } = require('../auth/authMiddleware')
 const queries = require('../db/queries')
 
-function createFriendsRouter(db) {
+function createFriendsRouter(db, isUserOnline = () => false) {
   const router = express.Router()
   const requireAuth = createAuthMiddleware(db)
 
@@ -10,7 +10,11 @@ function createFriendsRouter(db) {
   router.get('/', requireAuth, (req, res) => {
     try {
       const friends = queries.getFriends(db, req.user.id)
-      res.json(friends)
+      const friendsWithOnline = friends.map(f => ({
+        ...f,
+        online: isUserOnline(f.id)
+      }))
+      res.json(friendsWithOnline)
     } catch (e) {
       console.error('[Friends API - Get]', e)
       res.status(500).json({ error: 'Failed to fetch friends' })
