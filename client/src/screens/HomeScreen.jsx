@@ -10,6 +10,7 @@ import RankingList from '@/components/RankingList'
 import ProfileCard from '@/components/ProfileCard'
 import FriendsDialog from '@/components/FriendsDialog'
 import GuildDialog from '@/components/GuildDialog'
+import { ChallengeReceivedDialog, ChallengeSentIndicator } from '@/components/ChallengeDialog'
 import { useSocket } from '@/hooks/useSocket'
 import { audio } from '@/lib/audio'
 
@@ -28,6 +29,8 @@ function HomeScreen() {
   const [fullProfile, setFullProfile] = useState(null)
   const [pendingFriends, setPendingFriends] = useState(0)
   const [pendingGuilds, setPendingGuilds] = useState(0)
+  const [incomingChallenge, setIncomingChallenge] = useState(null)
+  const [challengeSent, setChallengeSent] = useState(null) // { challengeId, targetName }
   const { socket, isConnected } = useSocket()
 
   useEffect(() => {
@@ -95,10 +98,79 @@ function HomeScreen() {
 
     socket.on('game_started', onGameStarted)
 
+    // Challenge events
+    const onChallengeReceived = (data) => {
+      audio.play('match_found')
+      audio.vibrate([100, 50, 100])
+      setIncomingChallenge(data)
+    }
+    const onChallengeSent = ({ challengeId }) => {
+      setChallengeSent(prev => prev ? { ...prev, challengeId } : prev)
+    }
+    const onChallengeExpired = () => {
+      setIncomingChallenge(null)
+      setChallengeSent(null)
+    }
+    const onChallengeRejected = () => {
+      setChallengeSent(null)
+    }
+    const onChallengeError = (msg) => {
+      setChallengeSent(null)
+      console.error('[Challenge]', msg)
+    }
+
+    socket.on('challenge_received', onChallengeReceived)
+    socket.on('challenge_sent', onChallengeSent)
+    socket.on('challenge_expired', onChallengeExpired)
+    socket.on('challenge_rejected', onChallengeRejected)
+    socket.on('challenge_error', onChallengeError)
+
     return () => {
       socket.off('game_started', onGameStarted)
+      socket.off('challenge_received', onChallengeReceived)
+      socket.off('challenge_sent', onChallengeSent)
+      socket.off('challenge_expired', onChallengeExpired)
+      socket.off('challenge_rejected', onChallengeRejected)
+      socket.off('challenge_error', onChallengeError)
     }
   }, [socket, navigate])
+
+  const handleSendChallenge = (targetUserId, targetName) => {
+    if (!socket || !user) return
+    setChallengeSent({ targetName, challengeId: null })
+    socket.emit('send_challenge', {
+      targetUserId,
+      user: {
+        id: user.id,
+        name: user.displayName,
+        displayName: user.displayName,
+        avatarUrl: fullProfile?.user?.avatarUrl || user.avatarUrl,
+        tag: fullProfile?.user?.tag || user.tag,
+        elo: user.elo || 1000
+      }
+    })
+  }
+
+  const handleAcceptChallenge = () => {
+    if (!socket || !incomingChallenge) return
+    socket.emit('accept_challenge', {
+      challengeId: incomingChallenge.challengeId,
+      user: {
+        id: user.id,
+        name: user.displayName,
+        avatarUrl: fullProfile?.user?.avatarUrl || user.avatarUrl,
+        tag: fullProfile?.user?.tag || user.tag,
+        elo: user.elo || 1000
+      }
+    })
+    setIncomingChallenge(null)
+  }
+
+  const handleRejectChallenge = () => {
+    if (!socket || !incomingChallenge) return
+    socket.emit('reject_challenge', { challengeId: incomingChallenge.challengeId })
+    setIncomingChallenge(null)
+  }
 
   const handleFindMatch = () => {
     setSearching(true)
@@ -257,10 +329,25 @@ function HomeScreen() {
       </Dialog>
 
       {/* Friends Dialog */}
-      <FriendsDialog open={friendsOpen} onOpenChange={setFriendsOpen} auth={{ token: authToken, user }} />
+      <FriendsDialog open={friendsOpen} onOpenChange={setFriendsOpen} auth={{ token: authToken, user }} onChallenge={handleSendChallenge} />
 
       {/* Guild Dialog */}
       <GuildDialog open={guildOpen} onOpenChange={setGuildOpen} auth={{ token: authToken, user }} />
+
+      {/* Challenge received */}
+      <ChallengeReceivedDialog 
+        challenge={incomingChallenge} 
+        onAccept={handleAcceptChallenge} 
+        onReject={handleRejectChallenge} 
+      />
+
+      {/* Challenge sent indicator */}
+      {challengeSent && (
+        <ChallengeSentIndicator 
+          targetName={challengeSent.targetName} 
+          onCancel={() => setChallengeSent(null)} 
+        />
+      )}
     </div>
   )
 }

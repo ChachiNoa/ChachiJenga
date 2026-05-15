@@ -62,6 +62,11 @@ export default function SummaryScreen() {
             {reason === 'DRAW' && t('summary.reasonDraw', 'Límite de turnos')}
             {reason === 'selection_timeout' && t('summary.reasonTimeout', 'Tiempo agotado')}
           </p>
+          {data.isFriendly && (
+            <span className="inline-block mt-2 bg-orange-100 text-orange-600 text-xs font-bold px-3 py-1 rounded-full">
+              ⚔️ Partida Amistosa · Sin cambios de ELO
+            </span>
+          )}
         </div>
 
         <Card className="shadow-lg border-none">
@@ -82,19 +87,23 @@ export default function SummaryScreen() {
               </div>
             )}
 
-            <div className="flex justify-between items-center bg-muted/30 p-3 rounded-xl">
-              <span className="font-semibold text-muted-foreground">{t('summary.eloChange', 'Cambio ELO')}</span>
-              <div className="flex items-center gap-2">
-                <span className={`text-xl font-black ${data.eloChange >= 0 ? 'text-pastel-blue' : 'text-red-500'}`}>
-                  {data.eloChange >= 0 ? '+' : ''}{data.eloChange}
-                </span>
-                {data.eloChange > 0 ? <TrendingUp className="h-5 w-5 text-pastel-blue" /> : <TrendingDown className="h-5 w-5 text-red-500" />}
+            {!data.isFriendly && (
+              <div className="flex justify-between items-center bg-muted/30 p-3 rounded-xl">
+                <span className="font-semibold text-muted-foreground">{t('summary.eloChange', 'Cambio ELO')}</span>
+                <div className="flex items-center gap-2">
+                  <span className={`text-xl font-black ${data.eloChange >= 0 ? 'text-pastel-blue' : 'text-red-500'}`}>
+                    {data.eloChange >= 0 ? '+' : ''}{data.eloChange}
+                  </span>
+                  {data.eloChange > 0 ? <TrendingUp className="h-5 w-5 text-pastel-blue" /> : <TrendingDown className="h-5 w-5 text-red-500" />}
+                </div>
               </div>
-            </div>
+            )}
 
-            <div className="mt-2 text-center text-sm font-medium text-muted-foreground">
-              {t('summary.newElo', 'Nuevo ELO:')} <span className="text-foreground font-bold">{data.newElo}</span>
-            </div>
+            {!data.isFriendly && (
+              <div className="mt-2 text-center text-sm font-medium text-muted-foreground">
+                {t('summary.newElo', 'Nuevo ELO:')} <span className="text-foreground font-bold">{data.newElo}</span>
+              </div>
+            )}
           </CardContent>
         </Card>
 

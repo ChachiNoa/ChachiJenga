@@ -2,12 +2,13 @@ const { TowerModel } = require('./TowerModel');
 const { PointCalculator } = require('../scoring/PointCalculator');
 
 class GameRoom {
-  constructor(roomId, player1, player2, io, db) {
+  constructor(roomId, player1, player2, io, db, options = {}) {
     this.roomId = roomId;
     this.players = [player1, player2];
     this.io = io;
     this.db = db;
     this.tower = new TowerModel();
+    this.isFriendly = options.isFriendly || false;
     
     // Track extracted pieces per player for scoring { difficulty }
     this.extractedPieces = [[], []]; // [player0Pieces, player1Pieces]
@@ -169,8 +170,8 @@ class GameRoom {
     this.status = 'ENDED';
 
     // Default payload if db is not connected
-    let summaryData1 = { result: 'DRAW', eloChange: 0, points: 0, prevElo: 1000, newElo: 1000 };
-    let summaryData2 = { result: 'DRAW', eloChange: 0, points: 0, prevElo: 1000, newElo: 1000 };
+    let summaryData1 = { result: 'DRAW', eloChange: 0, points: 0, prevElo: 1000, newElo: 1000, isFriendly: this.isFriendly };
+    let summaryData2 = { result: 'DRAW', eloChange: 0, points: 0, prevElo: 1000, newElo: 1000, isFriendly: this.isFriendly };
 
     if (this.db) {
       try {
@@ -205,36 +206,43 @@ class GameRoom {
         const pts1 = PointCalculator.calculateMatchScore(pieces1, result1);
         const pts2 = PointCalculator.calculateMatchScore(pieces2, result2);
 
-        const newElo1 = EloCalculator.calculateNewElo(elo1, elo2, gp1, result1);
-        const newElo2 = EloCalculator.calculateNewElo(elo2, elo1, gp2, result2);
+        if (this.isFriendly) {
+          // Friendly match: show results but NO ELO/stats changes
+          summaryData1 = { result: result1, eloChange: 0, points: pts1, prevElo: elo1, newElo: elo1, piecesExtracted: pieces1.length, shapesDrawn: this.shapesDrawn[0], isFriendly: true };
+          summaryData2 = { result: result2, eloChange: 0, points: pts2, prevElo: elo2, newElo: elo2, piecesExtracted: pieces2.length, shapesDrawn: this.shapesDrawn[1], isFriendly: true };
+        } else {
+          // Ranked match: full ELO + stats
+          const newElo1 = EloCalculator.calculateNewElo(elo1, elo2, gp1, result1);
+          const newElo2 = EloCalculator.calculateNewElo(elo2, elo1, gp2, result2);
 
-        const eloChg1 = newElo1 - elo1;
-        const eloChg2 = newElo2 - elo2;
+          const eloChg1 = newElo1 - elo1;
+          const eloChg2 = newElo2 - elo2;
 
-        summaryData1 = { result: result1, eloChange: eloChg1, points: pts1, prevElo: elo1, newElo: newElo1, piecesExtracted: pieces1.length, shapesDrawn: this.shapesDrawn[0] };
-        summaryData2 = { result: result2, eloChange: eloChg2, points: pts2, prevElo: elo2, newElo: newElo2, piecesExtracted: pieces2.length, shapesDrawn: this.shapesDrawn[1] };
+          summaryData1 = { result: result1, eloChange: eloChg1, points: pts1, prevElo: elo1, newElo: newElo1, piecesExtracted: pieces1.length, shapesDrawn: this.shapesDrawn[0], isFriendly: false };
+          summaryData2 = { result: result2, eloChange: eloChg2, points: pts2, prevElo: elo2, newElo: newElo2, piecesExtracted: pieces2.length, shapesDrawn: this.shapesDrawn[1], isFriendly: false };
 
-        const updateUsr = this.db.prepare(`
-          UPDATE users 
-          SET elo = ?, total_points = total_points + ?, games_played = games_played + 1,
-              games_won = games_won + ?, games_lost = games_lost + ?, games_drawn = games_drawn + ?,
-              pieces_extracted = pieces_extracted + ?, shapes_drawn = shapes_drawn + ?
-          WHERE id = ?
-        `);
-        
-        updateUsr.run(newElo1, pts1, result1 === 'VICTORY' ? 1 : 0, result1 === 'DEFEAT' || result1 === 'FORFEIT' ? 1 : 0, result1 === 'DRAW' ? 1 : 0, pieces1.length, this.shapesDrawn[0], p1.id);
-        updateUsr.run(newElo2, pts2, result2 === 'VICTORY' ? 1 : 0, result2 === 'DEFEAT' || result2 === 'FORFEIT' ? 1 : 0, result2 === 'DRAW' ? 1 : 0, pieces2.length, this.shapesDrawn[1], p2.id);
+          const updateUsr = this.db.prepare(`
+            UPDATE users 
+            SET elo = ?, total_points = total_points + ?, games_played = games_played + 1,
+                games_won = games_won + ?, games_lost = games_lost + ?, games_drawn = games_drawn + ?,
+                pieces_extracted = pieces_extracted + ?, shapes_drawn = shapes_drawn + ?
+            WHERE id = ?
+          `);
+          
+          updateUsr.run(newElo1, pts1, result1 === 'VICTORY' ? 1 : 0, result1 === 'DEFEAT' || result1 === 'FORFEIT' ? 1 : 0, result1 === 'DRAW' ? 1 : 0, pieces1.length, this.shapesDrawn[0], p1.id);
+          updateUsr.run(newElo2, pts2, result2 === 'VICTORY' ? 1 : 0, result2 === 'DEFEAT' || result2 === 'FORFEIT' ? 1 : 0, result2 === 'DRAW' ? 1 : 0, pieces2.length, this.shapesDrawn[1], p2.id);
 
-        const insMatch = this.db.prepare(`
-          INSERT INTO matches (player1_id, player2_id, winner_id, result, player1_points, player2_points, player1_elo_change, player2_elo_change)
-          VALUES (?, ?, ?, ?, ?, ?, ?, ?)
-        `);
-        insMatch.run(
-          p1.id, p2.id,
-          result1 === 'VICTORY' ? p1.id : (result2 === 'VICTORY' ? p2.id : null),
-          reason === 'DRAW' ? 'draw' : (reason === 'FORFEIT' ? 'forfeit' : 'win'),
-          pts1, pts2, eloChg1, eloChg2
-        );
+          const insMatch = this.db.prepare(`
+            INSERT INTO matches (player1_id, player2_id, winner_id, result, player1_points, player2_points, player1_elo_change, player2_elo_change)
+            VALUES (?, ?, ?, ?, ?, ?, ?, ?)
+          `);
+          insMatch.run(
+            p1.id, p2.id,
+            result1 === 'VICTORY' ? p1.id : (result2 === 'VICTORY' ? p2.id : null),
+            reason === 'DRAW' ? 'draw' : (reason === 'FORFEIT' ? 'forfeit' : 'win'),
+            pts1, pts2, eloChg1, eloChg2
+          );
+        }
 
       } catch (err) {
         console.error('[GameRoom DB error]', err);

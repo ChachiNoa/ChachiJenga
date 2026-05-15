@@ -5,7 +5,7 @@ import { Dialog, DialogContent, DialogHeader, DialogTitle } from '@/components/u
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs'
 import { Button } from '@/components/ui/button'
 import { Input } from '@/components/ui/input'
-import { Search, UserPlus, Check, X, UserMinus, User, Shield, Users } from 'lucide-react'
+import { Search, UserPlus, Check, X, UserMinus, User, Shield, Users, Swords } from 'lucide-react'
 import { Avatar, AvatarFallback } from '@/components/ui/avatar'
 
 const API = import.meta.env.VITE_API_URL || 'http://localhost:3001'
@@ -29,7 +29,7 @@ function ConfirmDialog({ open, onClose, title, message, confirmLabel, variant, o
   )
 }
 
-export default function FriendsDialog({ open, onOpenChange, auth }) {
+export default function FriendsDialog({ open, onOpenChange, auth, onChallenge }) {
   const { t } = useTranslation()
   const [activeTab, setActiveTab] = useState('friends')
   const [friends, setFriends] = useState([])
@@ -244,6 +244,18 @@ export default function FriendsDialog({ open, onOpenChange, auth }) {
                           </div>
                         </div>
                         <div className="flex gap-1">
+                          <Button 
+                            variant="ghost" 
+                            size="icon" 
+                            onClick={() => {
+                              if (onChallenge) onChallenge(f.userId, f.displayName)
+                              onOpenChange(false)
+                            }} 
+                            className="text-orange-500 hover:text-orange-600 hover:bg-orange-50" 
+                            title={`Desafiar a ${f.displayName}`}
+                          >
+                            <Swords className="h-4 w-4" />
+                          </Button>
                           {canInvite && (
                             <Button variant="ghost" size="icon" onClick={() => inviteToGuild(f.userId, f.displayName)} className="text-primary hover:text-primary/80" title={`Invitar a ${myGuild?.name}`}>
                               <UserPlus className="h-4 w-4" />

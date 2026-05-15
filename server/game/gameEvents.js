@@ -4,6 +4,7 @@ const { GameRoom } = require('./GameRoom');
 const activeRooms = new Map(); // roomId -> GameRoom
 const playerToRoom = new Map(); // socketId -> roomId
 const disconnectTimeouts = new Map(); // socketId -> timeoutId
+const pendingChallenges = new Map(); // challengeId -> { challenger: { socketId, user }, targetUserId, createdAt }
 
 function createRoom(io, player1, player2, db) {
   const roomId = crypto.randomUUID();
@@ -20,7 +21,32 @@ function createRoom(io, player1, player2, db) {
   return roomId;
 }
 
-function handleGameEvents(io, socket) {
+function createFriendlyRoom(io, player1, player2, db) {
+  const roomId = crypto.randomUUID();
+  const room = new GameRoom(roomId, player1, player2, io, db, { isFriendly: true });
+  activeRooms.set(roomId, room);
+  playerToRoom.set(player1.socketId, roomId);
+  playerToRoom.set(player2.socketId, roomId);
+  
+  io.sockets.sockets.get(player1.socketId)?.join(roomId);
+  io.sockets.sockets.get(player2.socketId)?.join(roomId);
+
+  room.startGame();
+  return roomId;
+}
+
+// Helper to find a socket by userId (set during 'identify')
+function findSocketByUserId(io, userId) {
+  for (const [, s] of io.sockets.sockets) {
+    if (s.userId === userId) return s;
+  }
+  return null;
+}
+
+let dbInstance = null;
+
+function handleGameEvents(io, socket, db) {
+  if (!dbInstance && db) dbInstance = db;
   socket.on('select_piece', ({ layer, pos }) => {
     const roomId = playerToRoom.get(socket.id);
     if (!roomId) return;
@@ -113,6 +139,96 @@ function handleGameEvents(io, socket) {
     }
   });
 
+  // ─── Friend Challenge (Friendly Match) ──────────────────
+  socket.on('send_challenge', ({ targetUserId, user }) => {
+    if (!targetUserId || !user) return;
+    
+    // Check if challenger is already in a game
+    if (playerToRoom.has(socket.id)) {
+      return socket.emit('challenge_error', 'Ya estás en una partida');
+    }
+
+    const challengeId = crypto.randomUUID();
+    pendingChallenges.set(challengeId, {
+      challenger: { socketId: socket.id, user },
+      targetUserId: String(targetUserId),
+      createdAt: Date.now()
+    });
+
+    // Find the target user's socket
+    const targetSocket = findSocketByUserId(io, String(targetUserId));
+    if (!targetSocket) {
+      pendingChallenges.delete(challengeId);
+      return socket.emit('challenge_error', 'El jugador no está conectado');
+    }
+
+    // Check if target is already in a game
+    if (playerToRoom.has(targetSocket.id)) {
+      pendingChallenges.delete(challengeId);
+      return socket.emit('challenge_error', 'El jugador está en una partida');
+    }
+
+    targetSocket.emit('challenge_received', {
+      challengeId,
+      challenger: {
+        id: user.id,
+        name: user.name || user.displayName,
+        avatarUrl: user.avatarUrl,
+        tag: user.tag,
+        elo: user.elo
+      }
+    });
+
+    socket.emit('challenge_sent', { challengeId });
+
+    // Auto-expire challenge after 30s
+    setTimeout(() => {
+      if (pendingChallenges.has(challengeId)) {
+        pendingChallenges.delete(challengeId);
+        socket.emit('challenge_expired', { challengeId });
+        targetSocket.emit('challenge_expired', { challengeId });
+      }
+    }, 30000);
+  });
+
+  socket.on('accept_challenge', ({ challengeId, user }) => {
+    const challenge = pendingChallenges.get(challengeId);
+    if (!challenge) {
+      return socket.emit('challenge_error', 'El desafío ya no está disponible');
+    }
+
+    pendingChallenges.delete(challengeId);
+
+    const challengerSocket = io.sockets.sockets.get(challenge.challenger.socketId);
+    if (!challengerSocket) {
+      return socket.emit('challenge_error', 'El retador se ha desconectado');
+    }
+
+    // Create the friendly room
+    const player1 = {
+      socketId: challenge.challenger.socketId,
+      user: challenge.challenger.user
+    };
+    const player2 = {
+      socketId: socket.id,
+      user: user || { id: challenge.targetUserId, name: 'Player' }
+    };
+
+    createFriendlyRoom(io, player1, player2, dbInstance);
+  });
+
+  socket.on('reject_challenge', ({ challengeId }) => {
+    const challenge = pendingChallenges.get(challengeId);
+    if (!challenge) return;
+    
+    pendingChallenges.delete(challengeId);
+    
+    const challengerSocket = io.sockets.sockets.get(challenge.challenger.socketId);
+    if (challengerSocket) {
+      challengerSocket.emit('challenge_rejected', { challengeId });
+    }
+  });
+
   socket.on('disconnect', () => {
     const roomId = playerToRoom.get(socket.id);
     if (roomId) {
@@ -170,4 +286,4 @@ function handleGameEvents(io, socket) {
   });
 }
 
-module.exports = { createRoom, handleGameEvents, activeRooms, playerToRoom };
+module.exports = { createRoom, createFriendlyRoom, handleGameEvents, activeRooms, playerToRoom };
