@@ -21,9 +21,11 @@ export function useSocket() {
     const socket = socketRef.current;
 
     const onConnect = () => {
+      console.log('[Socket] Connected to server')
       setIsConnected(true);
       const auth = loadAuth();
       if (auth && auth.user) {
+        console.log('[Socket] Identifying as user:', auth.user.id)
         socket.emit('identify', auth.user.id);
       }
     };

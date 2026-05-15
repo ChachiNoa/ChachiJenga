@@ -38,6 +38,11 @@ function ProfileCard({ user, onAvatarChange, onNameChange }) {
   const [nameValue, setNameValue] = useState(user?.displayName || '')
   const [copied, setCopied] = useState(false)
 
+  // Sync internal state if prop changes
+  useEffect(() => {
+    setNameValue(user?.displayName || '')
+  }, [user?.displayName])
+
   const handleCopyId = () => {
     if (user?.tag) {
       navigator.clipboard.writeText(user.tag)
@@ -57,6 +62,7 @@ function ProfileCard({ user, onAvatarChange, onNameChange }) {
         body: JSON.stringify({ emoji })
       })
       const data = await res.json()
+      console.log('[ProfileCard] Avatar update response:', data)
       if (data.success) {
         // Persist to localStorage
         const currentAuth = loadAuth()
@@ -88,6 +94,7 @@ function ProfileCard({ user, onAvatarChange, onNameChange }) {
         body: JSON.stringify({ name: trimmed })
       })
       const data = await res.json()
+      console.log('[ProfileCard] Name update response:', data)
       if (data.success) {
         const currentAuth = loadAuth()
         if (currentAuth) {

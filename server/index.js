@@ -86,6 +86,7 @@ io.on('connection', (socket) => {
       const strId = String(userId)
       socket.userId = strId
       onlineUsers.add(strId)
+      console.log(`[Socket] User identified: ${strId} (Total online: ${onlineUsers.size})`)
     }
   })
 
