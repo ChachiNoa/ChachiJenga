@@ -6,6 +6,7 @@ import { Badge } from '@/components/ui/badge'
 import { Gamepad2, Trophy, Puzzle, Pencil, Star, TrendingUp, XCircle, Minus } from 'lucide-react'
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from '@/components/ui/dialog'
 import { Button } from '@/components/ui/button'
+import { loadAuth, saveAuth } from '@/network/authApi'
 
 const EMOJIS = ['😀', '😎', '🤓', '🤠', '🤖', '👾', '👻', '🐶', '🐱', '🦊', '🐼', '🦁', '🐸', '🦄', '🍕', '🌮', '🎸', '🎮', '🚀', '⭐']
 
@@ -29,10 +30,12 @@ function StatItem({ icon: Icon, label, value, color, subtext }) {
   )
 }
 
-function ProfileCard({ user, onAvatarChange }) {
+function ProfileCard({ user, onAvatarChange, onNameChange }) {
   const { t } = useTranslation()
   const [showPicker, setShowPicker] = useState(false)
   const [isUpdating, setIsUpdating] = useState(false)
+  const [editingName, setEditingName] = useState(false)
+  const [nameValue, setNameValue] = useState(user?.displayName || '')
 
   if (!user) return null
 
@@ -45,14 +48,48 @@ function ProfileCard({ user, onAvatarChange }) {
         body: JSON.stringify({ emoji })
       })
       const data = await res.json()
-      if (data.success && onAvatarChange) {
-        onAvatarChange(emoji)
+      if (data.success) {
+        // Persist to localStorage
+        const currentAuth = loadAuth()
+        if (currentAuth) {
+          saveAuth(currentAuth.token, { ...currentAuth.user, avatarUrl: emoji })
+        }
+        if (onAvatarChange) {
+          onAvatarChange(emoji)
+        }
       }
     } catch (e) {
       console.error('Failed to update avatar', e)
     } finally {
       setIsUpdating(false)
       setShowPicker(false)
+    }
+  }
+
+  const handleSaveName = async () => {
+    const trimmed = nameValue.trim().slice(0, 20)
+    if (!trimmed || trimmed === user.displayName) {
+      setEditingName(false)
+      return
+    }
+    try {
+      const res = await fetch(`${import.meta.env.VITE_API_URL || 'http://localhost:3001'}/api/profile/${user.id}/name`, {
+        method: 'PATCH',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ name: trimmed })
+      })
+      const data = await res.json()
+      if (data.success) {
+        const currentAuth = loadAuth()
+        if (currentAuth) {
+          saveAuth(currentAuth.token, { ...currentAuth.user, displayName: data.displayName })
+        }
+        if (onNameChange) onNameChange(data.displayName)
+      }
+    } catch (e) {
+      console.error('Failed to update name', e)
+    } finally {
+      setEditingName(false)
     }
   }
 
@@ -86,7 +123,29 @@ function ProfileCard({ user, onAvatarChange }) {
               <Pencil className="h-5 w-5 text-white drop-shadow-md" />
             </div>
           </div>
-          <CardTitle className="mt-2 text-lg">{user.displayName}</CardTitle>
+          {editingName ? (
+            <div className="mt-2 flex items-center gap-1">
+              <input
+                type="text"
+                value={nameValue}
+                onChange={e => setNameValue(e.target.value.slice(0, 20))}
+                onKeyDown={e => e.key === 'Enter' && handleSaveName()}
+                onBlur={handleSaveName}
+                autoFocus
+                className="text-lg font-semibold text-center border-b-2 border-primary bg-transparent outline-none w-32"
+                maxLength={20}
+              />
+              <span className="text-[10px] text-muted-foreground">{nameValue.length}/20</span>
+            </div>
+          ) : (
+            <CardTitle 
+              className="mt-2 text-lg cursor-pointer hover:text-primary transition-colors group flex items-center gap-1"
+              onClick={() => { setNameValue(user.displayName || ''); setEditingName(true) }}
+            >
+              {user.displayName}
+              <Pencil className="h-3 w-3 opacity-0 group-hover:opacity-50 transition-opacity" />
+            </CardTitle>
+          )}
           {user.tag && <p className="text-sm text-muted-foreground mt-[-2px]">{user.tag}</p>}
           <Badge variant="secondary" className="mt-1">
             ELO: {user.elo || 1000}

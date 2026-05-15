@@ -67,6 +67,29 @@ function createProfileRouter(db) {
     }
   });
 
+  router.patch('/:id/name', express.json(), (req, res) => {
+    try {
+      const { id } = req.params;
+      const { name } = req.body;
+      if (!name || !name.trim()) {
+        return res.status(400).json({ error: 'Name is required' });
+      }
+      const trimmedName = name.trim().slice(0, 20);
+      
+      const update = db.prepare('UPDATE users SET display_name = ? WHERE id = ?');
+      const result = update.run(trimmedName, id);
+      
+      if (result.changes === 0) {
+        return res.status(404).json({ error: 'User not found' });
+      }
+      
+      res.json({ success: true, displayName: trimmedName });
+    } catch (e) {
+      console.error('[Profile API - Name]', e);
+      res.status(500).json({ error: 'Failed to update name' });
+    }
+  });
+
   return router;
 }
 

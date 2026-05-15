@@ -15,16 +15,24 @@ export default function DrawingCanvas({ onStrokeComplete, onStrokePoint, disable
     const canvas = canvasRef.current
     if (!canvas) return
     
-    // Fit parent
-    const parent = canvas.parentElement
-    canvas.width = parent.clientWidth
-    canvas.height = parent.clientHeight
+    const resizeCanvas = () => {
+      const parent = canvas.parentElement
+      if (!parent) return
+      canvas.width = parent.clientWidth
+      canvas.height = parent.clientHeight
 
-    const ctx = canvas.getContext('2d')
-    ctx.lineCap = 'round'
-    ctx.lineJoin = 'round'
-    ctx.lineWidth = 6
-    ctx.strokeStyle = '#4A3B32' // Dark pastel brown
+      const ctx = canvas.getContext('2d')
+      ctx.lineCap = 'round'
+      ctx.lineJoin = 'round'
+      ctx.lineWidth = 6
+      ctx.strokeStyle = '#4A3B32' // Dark pastel brown
+    }
+
+    resizeCanvas()
+
+    const ro = new ResizeObserver(resizeCanvas)
+    ro.observe(canvas.parentElement)
+    return () => ro.disconnect()
   }, [])
 
   useEffect(() => {

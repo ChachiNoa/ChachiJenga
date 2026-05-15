@@ -275,8 +275,8 @@ export default function DrawingScreen() {
         </div>
       )}
 
-      {/* Game Area Wrapper - Square, Responsive, Centered */}
-      <div className="relative flex-1 w-full max-w-[800px] max-h-[800px] aspect-square mx-auto mt-20 mb-4 bg-white/40 rounded-2xl overflow-hidden shadow-inner border border-slate-200 touch-none" ref={containerRef}>
+      {/* Game Area Wrapper - Full screen on mobile, capped on desktop */}
+      <div className="absolute inset-0 top-16 bottom-16 mx-auto w-full max-w-[800px] bg-white/40 overflow-hidden touch-none" ref={containerRef}>
         
         {/* SVG Container (Layer below canvas) */}
         <div className="absolute inset-0 z-10 pointer-events-none">

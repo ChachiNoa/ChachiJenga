@@ -249,7 +249,14 @@ function HomeScreen() {
               if (fullProfile) {
                 setFullProfile({ ...fullProfile, user: { ...fullProfile.user, avatarUrl: emoji } })
               }
-            }} 
+              setUser(prev => ({ ...prev, avatarUrl: emoji }))
+            }}
+            onNameChange={(newName) => {
+              if (fullProfile) {
+                setFullProfile({ ...fullProfile, user: { ...fullProfile.user, displayName: newName } })
+              }
+              setUser(prev => ({ ...prev, displayName: newName }))
+            }}
           />
         </DialogContent>
       </Dialog>

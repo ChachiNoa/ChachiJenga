@@ -4,6 +4,7 @@ import { useTranslation } from 'react-i18next'
 import StrokeViewer from '../components/StrokeViewer'
 import { useSocket } from '../hooks/useSocket'
 import { GAME } from '@/shared/constants'
+import { Button } from '@/components/ui/button'
 
 export default function WatchScreen() {
   const { t } = useTranslation()
@@ -21,6 +22,10 @@ export default function WatchScreen() {
   useEffect(() => {
     if (!socket) return;
 
+    // Request sync on mount so we get the current game state 
+    // even if we missed the initial events
+    socket.emit('request_sync')
+
     const onPhaseUpdate = (data) => {
       setCurrentPhase(data.phase)
       setShapesInfo(data.shapes)
@@ -37,7 +42,7 @@ export default function WatchScreen() {
     }
 
     const onStrokeComplete = ({ strokes }) => {
-      setActiveStrokes(strokes) // Replace or append? The sender sends all strokes inside current shape attempt
+      setActiveStrokes(strokes)
       setCurrentLine([])
     }
 
@@ -49,14 +54,24 @@ export default function WatchScreen() {
         setActiveStrokes([])
         setCurrentLine([])
       } else if (!data.valid) {
-        // Opponent failed, flash red (optional)
-        setActiveStrokes([]) // Start over
+        // Opponent failed, clear strokes
+        setActiveStrokes([])
       }
     }
 
     const onPieceExtracted = () => {
-      // Opponent completed all phases!
-      navigate('/tower', { replace: true }) // Navigate back to tower, the Tower component should re-fetch state or use updated state
+      // Opponent completed all phases - navigate back to tower
+      // Small delay to let the server process the turn change
+      setTimeout(() => {
+        navigate('/tower', { replace: true })
+      }, 300)
+    }
+
+    const onTurnChanged = (data) => {
+      // If it's now my turn, navigate to the tower
+      if (data.turn === socket.id) {
+        navigate('/tower', { replace: true })
+      }
     }
     
     const onGameOver = (data) => {
@@ -68,6 +83,7 @@ export default function WatchScreen() {
     socket.on('opponent_stroke_complete', onStrokeComplete)
     socket.on('opponent_drawing_result', onDrawingResult)
     socket.on('piece_extracted', onPieceExtracted)
+    socket.on('turn_changed', onTurnChanged)
     socket.on('game_over', onGameOver)
 
     return () => {
@@ -76,6 +92,7 @@ export default function WatchScreen() {
       socket.off('opponent_stroke_complete', onStrokeComplete)
       socket.off('opponent_drawing_result', onDrawingResult)
       socket.off('piece_extracted', onPieceExtracted)
+      socket.off('turn_changed', onTurnChanged)
       socket.off('game_over', onGameOver)
     }
   }, [socket, navigate])
@@ -129,8 +146,8 @@ export default function WatchScreen() {
         </div>
       </div>
 
-      {/* Game Area Wrapper - Square, Responsive, Centered */}
-      <div className="relative flex-1 w-full max-w-[800px] max-h-[800px] aspect-square mx-auto mt-20 mb-4 bg-white/40 rounded-2xl overflow-hidden shadow-inner border border-slate-200 pointer-events-none">
+      {/* Game Area Wrapper - Full screen on mobile, capped on desktop */}
+      <div className="absolute inset-0 top-16 bottom-16 mx-auto w-full max-w-[800px] bg-white/40 overflow-hidden pointer-events-none">
         {/* Shapes Container */}
         <div className="absolute inset-0 z-10 pointer-events-none">
           {shapesInfo.map(shape => (
