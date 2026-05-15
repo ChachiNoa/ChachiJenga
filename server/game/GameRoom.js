@@ -168,6 +168,7 @@ class GameRoom {
 
   endGame(reason, loserSocketId) {
     this.status = 'ENDED';
+    this.endReason = reason;
 
     // Default payload if db is not connected
     let summaryData1 = { result: 'DRAW', eloChange: 0, points: 0, prevElo: 1000, newElo: 1000, isFriendly: this.isFriendly };
@@ -248,6 +249,12 @@ class GameRoom {
         console.error('[GameRoom DB error]', err);
       }
     }
+
+    // Store for late sync requests
+    this.finalSummaryData = {
+      [this.players[0].socketId]: summaryData1,
+      [this.players[1].socketId]: summaryData2
+    };
 
     // Fire over network
     this.io.to(this.players[0].socketId).emit('game_over', { reason, summary: summaryData1 });

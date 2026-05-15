@@ -136,6 +136,9 @@ function handleGameEvents(io, socket, db) {
         scores: room.getLiveScores(),
         players: room.players.map(p => ({ id: p.socketId, name: p.user.name, avatarUrl: p.user.avatarUrl }))
       });
+    } else if (room && room.status === 'ENDED') {
+      const summary = room.finalSummaryData ? room.finalSummaryData[socket.id] : null;
+      socket.emit('game_over', { reason: room.endReason, summary });
     }
   });
 

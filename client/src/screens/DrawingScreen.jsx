@@ -76,20 +76,10 @@ export default function DrawingScreen() {
     
     const onGameStarted = (data) => {
       if (data.activeChallenge && data.tower) {
-        // Recover piece info
+        // Recover piece info after a page refresh
         const layer = data.activeChallenge.layer;
         const position = data.activeChallenge.pos;
-        const layers = data.tower.layers;
-        
         pieceInfoRef.current = { layer, position };
-
-        // Re-initialize difficulty if missing
-        if (!difficultyParams) {
-          const piece = layers[layer].pieces[position];
-          const diff = DifficultyManager.calculateOverallDifficulty(piece, layers, layer);
-          const params = DifficultyManager.getDifficultyParams(diff);
-          setDifficultyParams(params);
-        }
       }
     }
 
@@ -99,7 +89,7 @@ export default function DrawingScreen() {
       socket.off('game_over', onGameOver)
       socket.off('game_started', onGameStarted)
     }
-  }, [socket, navigate, difficultyParams])
+  }, [socket, navigate])
 
   useEffect(() => {
     // Initialize Game Logic
