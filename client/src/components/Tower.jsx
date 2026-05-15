@@ -186,9 +186,10 @@ export default function Tower({ layers, onSelectPiece, interactive = true, oppon
       block.hitPath = new Path2D()
       block.hitPath.moveTo(pTopLeft.x + originX, pTopLeft.y + originY)
       block.hitPath.lineTo(pTopRight.x + originX, pTopRight.y + originY)
-      block.hitPath.lineTo(pBottomRight.x + originX, pBottomRight.y + originY) // Approx bounds
+      block.hitPath.lineTo(pBottomRight.x + originX, pBottomRight.y + originY)
       block.hitPath.lineTo(pBottomBottom.x + originX, pBottomBottom.y + originY)
       block.hitPath.lineTo(pBottomLeftBottom.x + originX, pBottomLeftBottom.y + originY)
+      block.hitPath.lineTo(pTopLeftBottom.x + originX, pTopLeftBottom.y + originY) // Added missing vertex
       block.hitPath.lineTo(pTopLeft.x + originX, pTopLeft.y + originY)
 
       ctx.restore()
@@ -233,11 +234,27 @@ export default function Tower({ layers, onSelectPiece, interactive = true, oppon
     }
   }
 
+  // To distinguish taps from swipes/drags
+  const pointerDownPos = useRef(null)
+
+  const handlePointerDown = (e) => {
+    if (!interactive) return
+    const coords = getCanvasCoords(e)
+    pointerDownPos.current = { x: e.clientX, y: e.clientY } // using clientX/Y for distance
+    
+    // Optional: could pre-highlight on touch start for better mobile feel
+    const found = hitTestAt(coords.x, coords.y)
+    if (found?.selectable) {
+      setHoveredPiece(found)
+    }
+  }
+
   const handlePointerMove = (e) => {
     if (!interactive) return
     const { x, y } = getCanvasCoords(e)
     const found = hitTestAt(x, y)
 
+    // On touch devices, dragging might constantly change hovered piece.
     if (found?.layer !== hoveredPiece?.layer || found?.position !== hoveredPiece?.position) {
       setHoveredPiece(found)
     }
@@ -245,12 +262,29 @@ export default function Tower({ layers, onSelectPiece, interactive = true, oppon
 
   const handlePointerLeave = () => {
     if (interactive) setHoveredPiece(null)
+    pointerDownPos.current = null
   }
 
   // Use pointerUp for selection — works on both mobile (tap) and desktop (click)
-  // On mobile, pointerMove may not fire before a quick tap, so we hit-test directly
   const handlePointerUp = (e) => {
     if (!interactive) return
+    
+    // Check if it was a drag rather than a tap
+    if (pointerDownPos.current) {
+      const dx = e.clientX - pointerDownPos.current.x
+      const dy = e.clientY - pointerDownPos.current.y
+      const distance = Math.sqrt(dx * dx + dy * dy)
+      
+      // If moved more than 10 pixels, treat as a scroll/drag, not a tap
+      if (distance > 10) {
+        pointerDownPos.current = null
+        setHoveredPiece(null)
+        return
+      }
+    }
+    
+    pointerDownPos.current = null
+
     const { x, y } = getCanvasCoords(e)
     const hit = hitTestAt(x, y)
 
@@ -267,6 +301,7 @@ export default function Tower({ layers, onSelectPiece, interactive = true, oppon
         ref={canvasRef}
         className="block h-full w-full outline-none"
         style={{ touchAction: 'none' }}
+        onPointerDown={handlePointerDown}
         onPointerMove={handlePointerMove}
         onPointerOut={handlePointerLeave}
         onPointerUp={handlePointerUp}
