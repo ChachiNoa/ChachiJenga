@@ -7,6 +7,7 @@ import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar'
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription, DialogFooter } from '@/components/ui/dialog'
 import { useSocket } from '../hooks/useSocket'
 import { audio } from '../lib/audio'
+import ConfirmForfeitDialog from '../components/ConfirmForfeitDialog'
 
 // Mock initial layers since we don't have socket connection yet
 const createMockLayers = () => {
@@ -31,21 +32,21 @@ function PlayerAvatar({ name, tag, isMyTurn, points, avatarUrl }) {
   return (
     <div className={`flex flex-col items-center gap-1 ${isMyTurn ? 'opacity-100 scale-110' : 'opacity-60 scale-95'} transition-all`}>
       <div className={`relative rounded-full p-1 ${isMyTurn ? 'bg-primary' : 'bg-transparent'}`}>
-        <Avatar className="h-12 w-12 border-2 border-background">
+        <Avatar className="h-16 w-16 sm:h-12 sm:w-12 border-2 border-background">
           {avatarUrl && avatarUrl.length <= 4 ? (
-            <AvatarFallback className="text-2xl bg-primary/10">{avatarUrl}</AvatarFallback>
+            <AvatarFallback className="text-3xl sm:text-2xl bg-primary/10">{avatarUrl}</AvatarFallback>
           ) : avatarUrl ? (
             <AvatarImage src={avatarUrl} />
           ) : (
-            <AvatarFallback>{initials}</AvatarFallback>
+            <AvatarFallback className="text-xl sm:text-base">{initials}</AvatarFallback>
           )}
         </Avatar>
       </div>
-      <div className="flex flex-col items-center leading-none">
-        <span className="text-xs font-bold text-foreground">{name}</span>
-        {tag && <span className="text-[10px] text-muted-foreground">{tag}</span>}
+      <div className="flex flex-col items-center leading-none mt-1 sm:mt-0">
+        <span className="text-sm sm:text-xs font-bold text-foreground">{name}</span>
+        {tag && <span className="text-xs sm:text-[10px] text-muted-foreground">{tag}</span>}
       </div>
-      <span className="text-sm font-black text-primary">{points} pts</span>
+      <span className="text-base sm:text-sm font-black text-primary">{points} pts</span>
     </div>
   )
 }
@@ -66,6 +67,7 @@ function TowerScreen() {
   const [confirmTimer, setConfirmTimer] = useState(3)
   const [opponentHoveredPiece, setOpponentHoveredPiece] = useState(null)
   const [devMode, setDevMode] = useState(false)
+  const [showForfeitDialog, setShowForfeitDialog] = useState(false)
   const [selectionEndTime, setSelectionEndTime] = useState(initialData?.selectionEndTime || null)
   const [timeLeft, setTimeLeft] = useState(15)
   const [isMyTurn, setIsMyTurn] = useState(initialData && socket ? initialData.turn === socket.id : false)
@@ -256,9 +258,7 @@ function TowerScreen() {
   const isDangerTime = timeLeft <= 5 && selectionEndTime
 
   const handleForfeit = () => {
-    if (window.confirm(t('game.confirmForfeit', '¿Estás seguro de que quieres rendirte? Perderás la partida.'))) {
-      if (socket) socket.emit('forfeit')
-    }
+    if (socket) socket.emit('forfeit')
   }
 
   return (
@@ -269,10 +269,11 @@ function TowerScreen() {
         <Button 
           variant="destructive" 
           size="sm" 
-          onClick={handleForfeit}
-          className="shadow-lg font-bold opacity-80 hover:opacity-100"
+          onClick={() => setShowForfeitDialog(true)}
+          className="shadow-lg font-bold opacity-80 hover:opacity-100 p-4 sm:p-2"
         >
-          🏳️ Rendirse
+          <span className="text-xl sm:text-base mr-1">🏳️</span> 
+          <span className="text-base sm:text-sm">Rendirse</span>
         </Button>
       </div>
       
@@ -348,6 +349,12 @@ function TowerScreen() {
           </DialogFooter>
         </DialogContent>
       </Dialog>
+      
+      <ConfirmForfeitDialog 
+        open={showForfeitDialog} 
+        onOpenChange={setShowForfeitDialog} 
+        onConfirm={handleForfeit} 
+      />
     </div>
   )
 }

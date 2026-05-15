@@ -9,6 +9,7 @@ import { useSocket } from '../hooks/useSocket'
 import { GAME } from '@/shared/constants'
 import { audio } from '../lib/audio'
 import { Button } from '@/components/ui/button'
+import ConfirmForfeitDialog from '../components/ConfirmForfeitDialog'
 
 // Pseudo-random bounding box generator for SVGs
 function generateShapePositions(shapes) {
@@ -55,6 +56,7 @@ export default function DrawingScreen() {
   const [shapesInfo, setShapesInfo] = useState([])
   const [flashError, setFlashError] = useState(false)
   const [showCollapse, setShowCollapse] = useState(false)
+  const [showForfeitDialog, setShowForfeitDialog] = useState(false)
 
   // Keep references to our game logic
   const pmRef = useRef(null)
@@ -214,17 +216,14 @@ export default function DrawingScreen() {
 
   // Format time (ms to SS.s)
   const seconds = (timeRemaining / 1000).toFixed(1)
-  const isDangerTime = timeRemaining <= 10000
+
+  const handleForfeit = () => {
+    if (socket) socket.emit('forfeit')
+  }
 
   // Calculate completed text
   const totalShapes = shapesInfo.length
   const completedShapes = shapesInfo.filter(s => s.completed).length
-
-  const handleForfeit = () => {
-    if (window.confirm(t('game.confirmForfeit', '¿Estás seguro de que quieres rendirte? Perderás la partida.'))) {
-      if (socket) socket.emit('forfeit')
-    }
-  }
 
   return (
     <div 
@@ -236,10 +235,11 @@ export default function DrawingScreen() {
         <Button 
           variant="destructive" 
           size="sm" 
-          onClick={handleForfeit}
-          className="shadow-lg font-bold opacity-80 hover:opacity-100"
+          onClick={() => setShowForfeitDialog(true)}
+          className="shadow-lg font-bold opacity-80 hover:opacity-100 p-4 sm:p-2"
         >
-          🏳️ Rendirse
+          <span className="text-xl sm:text-base mr-1">🏳️</span> 
+          <span className="text-base sm:text-sm">Rendirse</span>
         </Button>
       </div>
 
@@ -247,18 +247,18 @@ export default function DrawingScreen() {
       <div className="absolute left-0 right-0 top-0 z-30 flex items-center justify-between p-4 bg-background/50 backdrop-blur-md shadow-sm pointer-events-none">
         
         {/* Phase Indicator */}
-        <div className="text-xl font-bold bg-white/80 px-4 py-2 rounded-xl shadow-sm text-pastel-purple">
-          {t('drawing.phase')} {currentPhase}/3
+        <div className="text-2xl sm:text-xl font-bold bg-white/80 px-4 py-2 rounded-xl shadow-sm text-pastel-purple">
+          {t('drawing.phase', 'Fase')} {currentPhase}/3
         </div>
 
         {/* Timer */}
-        <div className={`text-4xl font-black ${isDangerTime ? 'text-red-500 animate-timer-danger' : 'text-foreground'}`}>
+        <div className={`text-3xl sm:text-2xl font-black ${timeRemaining <= 5000 ? 'text-red-500 animate-pulse' : 'text-slate-700'}`}>
           {seconds}s
         </div>
 
         {/* Progress Tracker */}
-        <div className="text-xl font-bold bg-white/80 px-4 py-2 rounded-xl shadow-sm text-pastel-blue">
-          {completedShapes}/{totalShapes}
+        <div className="text-2xl sm:text-xl font-bold bg-white/80 px-4 py-2 rounded-xl shadow-sm text-pastel-blue">
+          {completedShapes}/{totalShapes || 3}
         </div>
       </div>
 
@@ -312,6 +312,12 @@ export default function DrawingScreen() {
           </div>
         </div>
       )}
+      
+      <ConfirmForfeitDialog 
+        open={showForfeitDialog} 
+        onOpenChange={setShowForfeitDialog} 
+        onConfirm={handleForfeit} 
+      />
     </div>
   )
 }

@@ -5,6 +5,7 @@ import StrokeViewer from '../components/StrokeViewer'
 import { useSocket } from '../hooks/useSocket'
 import { GAME } from '@/shared/constants'
 import { Button } from '@/components/ui/button'
+import ConfirmForfeitDialog from '../components/ConfirmForfeitDialog'
 
 export default function WatchScreen() {
   const { t } = useTranslation()
@@ -15,6 +16,7 @@ export default function WatchScreen() {
   const [shapesInfo, setShapesInfo] = useState([])
   const [activeStrokes, setActiveStrokes] = useState([])
   const [currentLine, setCurrentLine] = useState([])
+  const [showForfeitDialog, setShowForfeitDialog] = useState(false)
   
   // Basic mock timer since we only watch
   const [timeRemaining, setTimeRemaining] = useState(GAME.TIMER_SECONDS * 1000)
@@ -110,9 +112,7 @@ export default function WatchScreen() {
   const completedShapes = shapesInfo.filter(s => s.completed).length
 
   const handleForfeit = () => {
-    if (window.confirm(t('game.confirmForfeit', '¿Estás seguro de que quieres rendirte? Perderás la partida.'))) {
-      if (socket) socket.emit('forfeit')
-    }
+    if (socket) socket.emit('forfeit')
   }
 
   return (
@@ -123,25 +123,27 @@ export default function WatchScreen() {
         <Button 
           variant="destructive" 
           size="sm" 
-          onClick={handleForfeit}
-          className="shadow-lg font-bold opacity-80 hover:opacity-100"
+          onClick={() => setShowForfeitDialog(true)}
+          className="shadow-lg font-bold opacity-80 hover:opacity-100 p-4 sm:p-2"
         >
-          🏳️ Rendirse
+          <span className="text-xl sm:text-base mr-1">🏳️</span> 
+          <span className="text-base sm:text-sm">Rendirse</span>
         </Button>
       </div>
 
       {/* Top HUD */}
       <div className="absolute left-0 right-0 top-0 z-30 flex items-center justify-between p-4 bg-background/50 backdrop-blur-md shadow-sm pointer-events-none">
         
-        <div className="text-xl font-bold bg-white/80 px-4 py-2 rounded-xl shadow-sm text-pastel-purple">
+        <div className="text-2xl sm:text-xl font-bold bg-white/80 px-4 py-2 rounded-xl shadow-sm text-pastel-purple">
           {t('drawing.phase', 'Fase')} {currentPhase}/3
         </div>
 
-        <div className="text-xl font-black text-muted-foreground/80">
-          👀 {t('drawing.watching', 'Observando')}
+        <div className="text-2xl sm:text-xl font-black text-muted-foreground/80 flex items-center gap-2">
+          <span className="text-3xl sm:text-2xl">👀</span>
+          <span className="text-lg sm:text-xl">{t('drawing.watching', 'Observando')}</span>
         </div>
 
-        <div className="text-xl font-bold bg-white/80 px-4 py-2 rounded-xl shadow-sm text-pastel-blue">
+        <div className="text-2xl sm:text-xl font-bold bg-white/80 px-4 py-2 rounded-xl shadow-sm text-pastel-blue">
           {completedShapes}/{totalShapes || 3}
         </div>
       </div>
@@ -168,6 +170,12 @@ export default function WatchScreen() {
 
         <StrokeViewer strokes={activeStrokes} currentLine={currentLine} />
       </div>
+
+      <ConfirmForfeitDialog 
+        open={showForfeitDialog} 
+        onOpenChange={setShowForfeitDialog} 
+        onConfirm={handleForfeit} 
+      />
     </div>
   )
 }
