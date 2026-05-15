@@ -53,8 +53,8 @@ function createProfileRouter(db) {
         return res.status(400).json({ error: 'Emoji is required' });
       }
       
-      const update = db.prepare('UPDATE users SET avatar_url = ? WHERE id = ?');
-      const result = update.run(emoji, id);
+      const update = db.prepare('UPDATE users SET avatar_url = ? WHERE id = ? OR google_id = ?');
+      const result = update.run(emoji, id, id);
       
       if (result.changes === 0) {
         return res.status(404).json({ error: 'User not found' });
@@ -76,8 +76,8 @@ function createProfileRouter(db) {
       }
       const trimmedName = name.trim().slice(0, 20);
       
-      const update = db.prepare('UPDATE users SET display_name = ? WHERE id = ?');
-      const result = update.run(trimmedName, id);
+      const update = db.prepare('UPDATE users SET display_name = ? WHERE id = ? OR google_id = ?');
+      const result = update.run(trimmedName, id, id);
       
       if (result.changes === 0) {
         return res.status(404).json({ error: 'User not found' });
