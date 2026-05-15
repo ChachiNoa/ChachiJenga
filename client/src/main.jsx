@@ -23,7 +23,7 @@ if ('serviceWorker' in navigator) {
     navigator.serviceWorker.getRegistrations().then(registrations => {
       for (let registration of registrations) {
         registration.unregister()
-        console.log('Unregistered SW in dev mode')
+        console.log('Unregistered SW in development')
       }
     })
   }

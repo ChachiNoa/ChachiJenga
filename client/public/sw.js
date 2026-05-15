@@ -1,4 +1,4 @@
-const CACHE_NAME = 'chachijenga-v2';
+const CACHE_NAME = 'chachijenga-v3';
 const STATIC_ASSETS = [
   '/',
   '/index.html',
@@ -37,6 +37,20 @@ self.addEventListener('fetch', (event) => {
 
   // Don't cache socket.io or API requests
   if (url.pathname.startsWith('/socket.io') || url.pathname.startsWith('/api') || url.pathname.startsWith('/auth')) {
+    return;
+  }
+
+  // Special handling for index.html and root: Network-first
+  if (url.pathname === '/' || url.pathname === '/index.html') {
+    event.respondWith(
+      fetch(request).then((response) => {
+        const responseClone = response.clone();
+        caches.open(CACHE_NAME).then((cache) => {
+          cache.put(request, responseClone);
+        });
+        return response;
+      }).catch(() => caches.match(request))
+    );
     return;
   }
 

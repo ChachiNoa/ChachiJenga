@@ -12,6 +12,9 @@ import { saveGameRoute, getActiveGameRoute } from './hooks/useGameSession.js'
 import { loadAuth } from './network/authApi.js'
 
 /**
+ * ChachiJenga App - v1.0.4
+ */
+/**
  * Tracks the current route and saves game routes to sessionStorage.
  * On mount, if there's a saved game route and we're on /login or /home,
  * redirect back to the game.
