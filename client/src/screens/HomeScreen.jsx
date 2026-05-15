@@ -23,8 +23,8 @@ function HomeScreen() {
   const [profileOpen, setProfileOpen] = useState(false)
   const [guildOpen, setGuildOpen] = useState(false)
   const [friendsOpen, setFriendsOpen] = useState(false)
-  const [user, setUser] = useState(null)
-  const [authToken, setAuthToken] = useState(null)
+  const [user, setUser] = useState(() => loadAuth()?.user || null)
+  const [authToken, setAuthToken] = useState(() => loadAuth()?.token || null)
   const [fullProfile, setFullProfile] = useState(null)
   const [pendingFriends, setPendingFriends] = useState(0)
   const [pendingGuilds, setPendingGuilds] = useState(0)
@@ -51,15 +51,10 @@ function HomeScreen() {
   }, [user, fullProfile])
 
   useEffect(() => {
-    const auth = loadAuth()
-    if (!auth?.token) {
+    if (!authToken) {
       navigate('/login', { replace: true })
-      return
     }
-    // Capture auth at mount time so it doesn't change if another tab logs in
-    setUser(auth.user)
-    setAuthToken(auth.token)
-  }, [navigate])
+  }, [authToken, navigate])
 
   // Fetch notification counts
   useEffect(() => {

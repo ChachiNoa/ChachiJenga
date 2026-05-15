@@ -66,7 +66,7 @@ const { createFriendsRouter } = require('./api/friendsRouter')
 const { createGuildRouter } = require('./api/guildRouter')
 
 const onlineUsers = new Set()
-const isUserOnline = (userId) => onlineUsers.has(userId)
+const isUserOnline = (userId) => onlineUsers.has(String(userId))
 
 app.use('/auth', createAuthRouter(db))
 app.use('/api/ranking', createRankingRouter(db))
@@ -83,8 +83,9 @@ io.on('connection', (socket) => {
 
   socket.on('identify', (userId) => {
     if (userId) {
-      socket.userId = userId
-      onlineUsers.add(userId)
+      const strId = String(userId)
+      socket.userId = strId
+      onlineUsers.add(strId)
     }
   })
 

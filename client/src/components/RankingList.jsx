@@ -63,20 +63,22 @@ function RankingList() {
                 <TableCell>
                   <div className="flex items-center gap-2">
                     <Avatar className="h-7 w-7">
-                      {player.avatarUrl ? (
+                      {player.avatarUrl && player.avatarUrl.length <= 4 ? (
+                        <AvatarFallback className="text-sm bg-primary/10">{player.avatarUrl}</AvatarFallback>
+                      ) : player.avatarUrl ? (
                         <AvatarImage src={player.avatarUrl} alt={player.displayName} />
                       ) : (
                         <AvatarFallback className="text-xs">{getInitials(player.displayName)}</AvatarFallback>
                       )}
                     </Avatar>
-                    <span className="text-sm font-medium">{player.display_name}</span>
+                    <span className="text-sm font-medium">{player.displayName}</span>
                   </div>
                 </TableCell>
                 <TableCell className="text-right">
                   <Badge variant="secondary">{player.elo}</Badge>
                 </TableCell>
                 <TableCell className="text-right text-sm text-muted-foreground">
-                  {player.pieces_extracted}
+                  {player.piecesExtracted}
                 </TableCell>
               </TableRow>
             ))}

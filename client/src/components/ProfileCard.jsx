@@ -3,7 +3,7 @@ import { useTranslation } from 'react-i18next'
 import { Card, CardHeader, CardTitle, CardContent } from '@/components/ui/card'
 import { Avatar, AvatarImage, AvatarFallback } from '@/components/ui/avatar'
 import { Badge } from '@/components/ui/badge'
-import { Gamepad2, Trophy, Puzzle, Pencil, Star, TrendingUp, XCircle, Minus } from 'lucide-react'
+import { Gamepad2, Trophy, Puzzle, Pencil, Star, TrendingUp, XCircle, Minus, Copy, Check } from 'lucide-react'
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from '@/components/ui/dialog'
 import { Button } from '@/components/ui/button'
 import { loadAuth, saveAuth } from '@/network/authApi'
@@ -36,6 +36,15 @@ function ProfileCard({ user, onAvatarChange, onNameChange }) {
   const [isUpdating, setIsUpdating] = useState(false)
   const [editingName, setEditingName] = useState(false)
   const [nameValue, setNameValue] = useState(user?.displayName || '')
+  const [copied, setCopied] = useState(false)
+
+  const handleCopyId = () => {
+    if (user?.id) {
+      navigator.clipboard.writeText(user.id.toString())
+      setCopied(true)
+      setTimeout(() => setCopied(false), 2000)
+    }
+  }
 
   if (!user) return null
 
@@ -139,17 +148,28 @@ function ProfileCard({ user, onAvatarChange, onNameChange }) {
             </div>
           ) : (
             <CardTitle 
-              className="mt-2 text-lg cursor-pointer hover:text-primary transition-colors group flex items-center gap-1"
+              className="mt-2 text-lg cursor-pointer hover:text-primary transition-colors group flex items-center gap-2 bg-muted/30 px-3 py-1 rounded-md"
               onClick={() => { setNameValue(user.displayName || ''); setEditingName(true) }}
             >
               {user.displayName}
-              <Pencil className="h-3 w-3 opacity-0 group-hover:opacity-50 transition-opacity" />
+              <Pencil className="h-4 w-4 text-primary" />
             </CardTitle>
           )}
-          {user.tag && <p className="text-sm text-muted-foreground mt-[-2px]">{user.tag}</p>}
-          <Badge variant="secondary" className="mt-1">
-            ELO: {user.elo || 1000}
-          </Badge>
+          {user.tag && <p className="text-sm text-muted-foreground mt-1">{user.tag}</p>}
+          <div className="flex items-center gap-2 mt-2">
+            <Badge variant="secondary" className="text-sm px-3 py-1">
+              ELO: {user.elo || 1000}
+            </Badge>
+            <Button 
+              variant="outline" 
+              size="sm" 
+              className="h-7 text-xs flex items-center gap-1 shadow-sm"
+              onClick={handleCopyId}
+            >
+              {copied ? <Check className="h-3 w-3 text-green-500" /> : <Copy className="h-3 w-3" />}
+              {copied ? '¡Copiado!' : `ID: #${user.id}`}
+            </Button>
+          </div>
         </CardHeader>
         <CardContent className="space-y-4">
           {/* Main Stats Grid */}

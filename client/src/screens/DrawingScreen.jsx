@@ -109,6 +109,16 @@ export default function DrawingScreen() {
     }
   }, [currentPhase, socket])
 
+  // Listen for sync requests from watcher
+  useEffect(() => {
+    if (!socket) return
+    const onPhaseSyncReq = () => {
+      socket.emit('phase_update', { phase: currentPhase, totalPhases: 3, shapes: shapesInfo })
+    }
+    socket.on('request_phase_sync', onPhaseSyncReq)
+    return () => socket.off('request_phase_sync', onPhaseSyncReq)
+  }, [socket, currentPhase, shapesInfo])
+
   const handleStrokePoint = (pt) => {
     if (socket) {
       socket.emit('stroke_point', pt)

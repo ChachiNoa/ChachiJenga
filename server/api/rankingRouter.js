@@ -6,7 +6,7 @@ function createRankingRouter(db) {
   router.get('/', (req, res) => {
     try {
       const topPlayers = db.prepare(`
-        SELECT id, display_name as displayName, elo, games_won as gamesWon, pieces_extracted as piecesExtracted
+        SELECT id, display_name as displayName, avatar_url as avatarUrl, elo, games_won as gamesWon, pieces_extracted as piecesExtracted
         FROM users
         ORDER BY elo DESC, games_won DESC
         LIMIT 100

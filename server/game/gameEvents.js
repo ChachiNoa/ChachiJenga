@@ -91,6 +91,12 @@ function handleGameEvents(io, socket) {
     socket.to(roomId).emit('opponent_phase_update', data);
   });
   
+  socket.on('request_phase_sync', () => {
+    const roomId = playerToRoom.get(socket.id);
+    if (!roomId) return;
+    socket.to(roomId).emit('request_phase_sync');
+  });
+  
   socket.on('request_sync', () => {
     const roomId = playerToRoom.get(socket.id);
     if (!roomId) return;
@@ -111,19 +117,25 @@ function handleGameEvents(io, socket) {
     if (roomId) {
       const room = activeRooms.get(roomId);
       if (room) {
-        // Warn opponent
-        socket.to(roomId).emit('opponent_disconnected');
-        
-        const tid = setTimeout(() => {
-          // Verify room still exists and wasn't finished
-          if (activeRooms.has(roomId)) {
-             room.handleForfeit(socket.id);
-          }
+        if (room.status !== 'ENDED') {
+          // Warn opponent
+          socket.to(roomId).emit('opponent_disconnected');
+          
+          const tid = setTimeout(() => {
+            // Verify room still exists and wasn't finished
+            if (activeRooms.has(roomId)) {
+               const r = activeRooms.get(roomId);
+               if (r && r.status !== 'ENDED') r.handleForfeit(socket.id);
+            }
+            playerToRoom.delete(socket.id);
+            disconnectTimeouts.delete(socket.id);
+          }, 15000); // 15s timeout
+          
+          disconnectTimeouts.set(socket.id, tid);
+        } else {
+          // If ended, just clean up
           playerToRoom.delete(socket.id);
-          disconnectTimeouts.delete(socket.id);
-        }, 15000); // 15s timeout
-        
-        disconnectTimeouts.set(socket.id, tid);
+        }
       } else {
         playerToRoom.delete(socket.id);
       }

@@ -27,6 +27,7 @@ export default function WatchScreen() {
     // Request sync on mount so we get the current game state 
     // even if we missed the initial events
     socket.emit('request_sync')
+    socket.emit('request_phase_sync')
 
     const onPhaseUpdate = (data) => {
       setCurrentPhase(data.phase)
