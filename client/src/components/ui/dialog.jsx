@@ -1,7 +1,9 @@
 import { cn } from '@/lib/utils'
-import { forwardRef, useState, useEffect, useCallback } from 'react'
+import { forwardRef, useState, useEffect, useCallback, createContext, useContext } from 'react'
 import { createPortal } from 'react-dom'
 import { X } from 'lucide-react'
+
+const DialogContext = createContext({ onOpenChange: () => {} })
 
 const Dialog = ({ open, onOpenChange, children }) => {
   const handleKeyDown = useCallback(
@@ -25,39 +27,46 @@ const Dialog = ({ open, onOpenChange, children }) => {
   if (!open) return null
 
   return createPortal(
-    <div className="fixed inset-0 z-50 flex items-center justify-center">
-      {/* Overlay */}
-      <div
-        className="fixed inset-0 bg-black/40 backdrop-blur-sm"
-        onClick={() => onOpenChange?.(false)}
-      />
-      {/* Content */}
-      <div className="relative z-50">{children}</div>
-    </div>,
+    <DialogContext.Provider value={{ onOpenChange }}>
+      <div className="fixed inset-0 z-50 flex items-center justify-center">
+        {/* Overlay */}
+        <div
+          className="fixed inset-0 bg-black/40 backdrop-blur-sm"
+          onClick={() => onOpenChange?.(false)}
+        />
+        {/* Content */}
+        <div className="relative z-50">{children}</div>
+      </div>
+    </DialogContext.Provider>,
     document.body
   )
 }
 
-const DialogContent = forwardRef(({ className, children, onClose, ...props }, ref) => (
-  <div
-    ref={ref}
-    className={cn(
-      'w-full max-w-md rounded-2xl border border-border bg-card p-6 shadow-xl animate-in fade-in zoom-in-95',
-      className
-    )}
-    {...props}
-  >
-    {onClose && (
-      <button
-        onClick={onClose}
-        className="absolute right-4 top-4 rounded-full p-1 text-muted-foreground hover:bg-accent hover:text-foreground"
-      >
-        <X className="h-4 w-4" />
-      </button>
-    )}
-    {children}
-  </div>
-))
+const DialogContent = forwardRef(({ className, children, onClose, hideClose = false, ...props }, ref) => {
+  const { onOpenChange } = useContext(DialogContext)
+  const handleClose = onClose || (() => onOpenChange?.(false))
+
+  return (
+    <div
+      ref={ref}
+      className={cn(
+        'w-full max-w-md rounded-2xl border border-border bg-card p-6 shadow-xl animate-in fade-in zoom-in-95',
+        className
+      )}
+      {...props}
+    >
+      {!hideClose && (
+        <button
+          onClick={handleClose}
+          className="absolute right-4 top-4 rounded-full p-1 text-muted-foreground hover:bg-accent hover:text-foreground z-10 bg-background/50 backdrop-blur-sm"
+        >
+          <X className="h-5 w-5" />
+        </button>
+      )}
+      {children}
+    </div>
+  )
+})
 DialogContent.displayName = 'DialogContent'
 
 const DialogHeader = forwardRef(({ className, ...props }, ref) => (

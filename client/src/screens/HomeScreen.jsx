@@ -4,7 +4,7 @@ import { useState, useEffect } from 'react'
 import { Trophy, User, Settings, Gamepad2, Loader2, X, Shield, Users } from 'lucide-react'
 import { Button } from '@/components/ui/button'
 import { Dialog, DialogContent } from '@/components/ui/dialog'
-import { loadAuth, clearAuth } from '@/network/authApi'
+import { loadAuth, clearAuth, saveAuth } from '@/network/authApi'
 import SettingsDialog from '@/components/SettingsDialog'
 import RankingList from '@/components/RankingList'
 import ProfileCard from '@/components/ProfileCard'
@@ -31,13 +31,24 @@ function HomeScreen() {
   const { socket, isConnected } = useSocket()
 
   useEffect(() => {
-    if (user && profileOpen && !fullProfile) {
+    if (user && !fullProfile) {
       fetch(`${import.meta.env.VITE_API_URL || 'http://localhost:3001'}/api/profile/${user.id}`)
         .then(r => r.json())
-        .then(data => data.user && setFullProfile(data))
+        .then(data => {
+          if (data && data.user) {
+            setFullProfile(data)
+            // Update local storage so basic info is fresh immediately on next load
+            const currentAuth = loadAuth()
+            if (currentAuth) {
+              const updatedUser = { ...currentAuth.user, ...data.user }
+              saveAuth(currentAuth.token, updatedUser)
+              setUser(updatedUser)
+            }
+          }
+        })
         .catch(console.error)
     }
-  }, [user, profileOpen, fullProfile])
+  }, [user, fullProfile])
 
   useEffect(() => {
     const auth = loadAuth()
