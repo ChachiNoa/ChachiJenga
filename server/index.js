@@ -65,6 +65,9 @@ const { createUsersRouter } = require('./api/usersRouter')
 const { createFriendsRouter } = require('./api/friendsRouter')
 const { createGuildRouter } = require('./api/guildRouter')
 
+const onlineUsers = new Set()
+const isUserOnline = (userId) => onlineUsers.has(userId)
+
 app.use('/auth', createAuthRouter(db))
 app.use('/api/ranking', createRankingRouter(db))
 app.use('/api/profile', createProfileRouter(db))
@@ -73,11 +76,6 @@ app.use('/api/friends', createFriendsRouter(db, isUserOnline))
 app.use('/api/guilds', createGuildRouter(db))
 
 const { setupMatchmaking } = require('./matchmaking/matchmakingService')
-
-const onlineUsers = new Set()
-
-// Export a helper to check if a user is online
-const isUserOnline = (userId) => onlineUsers.has(userId)
 
 // Socket.io connection
 io.on('connection', (socket) => {
