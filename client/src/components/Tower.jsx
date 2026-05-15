@@ -10,7 +10,8 @@ const PROTECTED_TOP = GAME.PROTECTED_TOP_LAYERS;
 const BLOCK_W = 3
 const BLOCK_D = 1
 const BLOCK_H = 1
-const UNIT_WIDTH = 25 // pixel scale
+
+// UNIT_WIDTH is now calculated dynamically in drawTower based on canvas size
 
 export default function Tower({ layers, onSelectPiece, interactive = true, opponentHoveredPiece = null }) {
   const canvasRef = useRef(null)
@@ -73,35 +74,43 @@ export default function Tower({ layers, onSelectPiece, interactive = true, oppon
     return list
   }, [layers, interactive])
 
-  // Isometric projection function
-  const toIso = (x, y, z) => {
+  // Isometric projection function - unitWidth is passed in to scale dynamically
+  const toIso = (x, y, z, unitWidth) => {
     const angle = Math.PI / 6 // 30 degrees
-    const isoX = (x - z) * Math.cos(angle) * UNIT_WIDTH
-    const isoY = ((x + z) * Math.sin(angle) - y) * UNIT_WIDTH
+    const isoX = (x - z) * Math.cos(angle) * unitWidth
+    const isoY = ((x + z) * Math.sin(angle) - y) * unitWidth
     return { x: isoX, y: isoY }
   }
 
   const drawTower = (ctx, width, height) => {
     ctx.clearRect(0, 0, width, height)
 
+    // Dynamic scale: tower height is TOWER_LAYERS * BLOCK_H in world units.
+    // We want the tower to fill ~80% of the canvas height.
+    // The iso Y range for the full tower is approximately TOWER_LAYERS * sin(30°) * unitWidth
+    // plus the x+z contribution. Let's compute unitWidth so it fits.
+    const towerWorldHeight = TOWER_LAYERS * BLOCK_H
+    const maxIsoSpread = towerWorldHeight + 6 // 6 = max(x+z) for base spread
+    const unitWidth = Math.min(width / 12, (height * 0.78) / maxIsoSpread)
+
     // Center tower in canvas
     const originX = width / 2
     // Bottom of the tower should be near the bottom of canvas
-    const originY = height - 50 
+    const originY = height - Math.max(30, height * 0.06)
 
     blocks.forEach((block) => {
       const isHovered = hoveredPiece?.layer === block.layer && hoveredPiece?.position === block.position
 
       // Calculate path for block faces
-      const pTopLeft = toIso(block.x, block.y + block.height, block.z)
-      const pTopRight = toIso(block.x + block.width, block.y + block.height, block.z)
-      const pTopBottom = toIso(block.x + block.width, block.y + block.height, block.z + block.depth)
-      const pTopLeftBottom = toIso(block.x, block.y + block.height, block.z + block.depth)
+      const pTopLeft = toIso(block.x, block.y + block.height, block.z, unitWidth)
+      const pTopRight = toIso(block.x + block.width, block.y + block.height, block.z, unitWidth)
+      const pTopBottom = toIso(block.x + block.width, block.y + block.height, block.z + block.depth, unitWidth)
+      const pTopLeftBottom = toIso(block.x, block.y + block.height, block.z + block.depth, unitWidth)
 
-      const pBottomLeft = toIso(block.x, block.y, block.z)
-      const pBottomRight = toIso(block.x + block.width, block.y, block.z)
-      const pBottomBottom = toIso(block.x + block.width, block.y, block.z + block.depth)
-      const pBottomLeftBottom = toIso(block.x, block.y, block.z + block.depth)
+      const pBottomLeft = toIso(block.x, block.y, block.z, unitWidth)
+      const pBottomRight = toIso(block.x + block.width, block.y, block.z, unitWidth)
+      const pBottomBottom = toIso(block.x + block.width, block.y, block.z + block.depth, unitWidth)
+      const pBottomLeftBottom = toIso(block.x, block.y, block.z + block.depth, unitWidth)
 
       ctx.save()
       ctx.translate(originX, originY)
@@ -200,13 +209,20 @@ export default function Tower({ layers, onSelectPiece, interactive = true, oppon
     const canvas = canvasRef.current
     if (!canvas) return
     
-    // Fit parent
-    const parent = canvas.parentElement
-    canvas.width = parent.clientWidth
-    canvas.height = parent.clientHeight
+    const render = () => {
+      const parent = canvas.parentElement
+      if (!parent) return
+      canvas.width = parent.clientWidth
+      canvas.height = parent.clientHeight
+      const ctx = canvas.getContext('2d')
+      drawTower(ctx, canvas.width, canvas.height)
+    }
 
-    const ctx = canvas.getContext('2d')
-    drawTower(ctx, canvas.width, canvas.height)
+    render()
+
+    const ro = new ResizeObserver(render)
+    ro.observe(canvas.parentElement)
+    return () => ro.disconnect()
   }, [blocks, hoveredPiece, opponentHoveredPiece])
 
   // Hit-test helper: finds the block at the given canvas coordinates

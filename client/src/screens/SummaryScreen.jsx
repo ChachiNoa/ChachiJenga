@@ -6,6 +6,7 @@ import { Card, CardContent } from '@/components/ui/card'
 import { Trophy, TrendingUp, TrendingDown, Target, Loader2, Home, RotateCcw } from 'lucide-react'
 import { useSocket } from '../hooks/useSocket'
 import { audio } from '../lib/audio'
+import { clearGameRoute } from '../hooks/useGameSession'
 
 export default function SummaryScreen() {
   const { t } = useTranslation()
@@ -17,6 +18,9 @@ export default function SummaryScreen() {
   const [reason, setReason] = useState(location.state?.reason || '')
 
   useEffect(() => {
+    // Game is over, clear the saved game route
+    clearGameRoute()
+    
     // If user refreshes or visits directly
     if (!data) {
       navigate('/home', { replace: true })
