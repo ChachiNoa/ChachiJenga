@@ -163,12 +163,14 @@ function ProfileCard({ user, onAvatarChange, onNameChange }) {
             </CardTitle>
           )}
           {user.tag && (
-            <div className="flex items-center gap-1 mt-1 justify-center">
-              <span className="bg-yellow-400 text-black font-bold px-2 py-0.5 rounded text-sm">
-                {user.tag}
-              </span>
-              <button onClick={handleCopyId} className="p-1 hover:bg-muted rounded transition-colors" title="Copiar ID">
-                {copied ? <Check className="h-4 w-4 text-green-600" /> : <Copy className="h-4 w-4 text-foreground" />}
+            <div className="flex items-center mt-1 justify-center">
+              <button 
+                onClick={handleCopyId} 
+                className="flex items-center gap-1.5 px-2 py-1 rounded-md transition-colors hover:bg-muted text-muted-foreground hover:text-foreground font-medium text-sm"
+                title="Copiar ID"
+              >
+                <span>{user.tag}</span>
+                {copied ? <Check className="h-3.5 w-3.5 text-green-600" /> : <Copy className="h-3.5 w-3.5" />}
               </button>
             </div>
           )}

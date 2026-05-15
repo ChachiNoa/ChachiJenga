@@ -116,6 +116,7 @@ function HomeScreen() {
     }
     const onChallengeError = (msg) => {
       setChallengeSent(null)
+      alert(msg)
       console.error('[Challenge]', msg)
     }
 
