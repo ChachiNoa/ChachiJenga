@@ -106,6 +106,7 @@ function handleGameEvents(io, socket) {
         tower: room.tower.toJSON(),
         turn: room.players[room.currentTurnIndex].socketId,
         selectionEndTime: room.selectionEndTime,
+        activeChallenge: room.activeChallenge,
         scores: room.getLiveScores(),
         players: room.players.map(p => ({ id: p.socketId, name: p.user.name, avatarUrl: p.user.avatarUrl }))
       });

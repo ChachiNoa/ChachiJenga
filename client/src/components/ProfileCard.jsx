@@ -39,8 +39,8 @@ function ProfileCard({ user, onAvatarChange, onNameChange }) {
   const [copied, setCopied] = useState(false)
 
   const handleCopyId = () => {
-    if (user?.id) {
-      navigator.clipboard.writeText(user.id.toString())
+    if (user?.tag) {
+      navigator.clipboard.writeText(user.tag)
       setCopied(true)
       setTimeout(() => setCopied(false), 2000)
     }
@@ -155,20 +155,20 @@ function ProfileCard({ user, onAvatarChange, onNameChange }) {
               <Pencil className="h-4 w-4 text-primary" />
             </CardTitle>
           )}
-          {user.tag && <p className="text-sm text-muted-foreground mt-1">{user.tag}</p>}
-          <div className="flex items-center gap-2 mt-2">
-            <Badge variant="secondary" className="text-sm px-3 py-1">
+          {user.tag && (
+            <div className="flex items-center gap-1 mt-1 justify-center">
+              <span className="bg-yellow-400 text-black font-bold px-2 py-0.5 rounded text-sm">
+                {user.tag}
+              </span>
+              <button onClick={handleCopyId} className="p-1 hover:bg-muted rounded transition-colors" title="Copiar ID">
+                {copied ? <Check className="h-4 w-4 text-green-600" /> : <Copy className="h-4 w-4 text-foreground" />}
+              </button>
+            </div>
+          )}
+          <div className="flex justify-center mt-2">
+            <Badge variant="secondary" className="text-sm px-3 py-1 bg-purple-100 text-purple-700 hover:bg-purple-200 border-none">
               ELO: {user.elo || 1000}
             </Badge>
-            <Button 
-              variant="outline" 
-              size="sm" 
-              className="h-7 text-xs flex items-center gap-1 shadow-sm"
-              onClick={handleCopyId}
-            >
-              {copied ? <Check className="h-3 w-3 text-green-500" /> : <Copy className="h-3 w-3" />}
-              {copied ? '¡Copiado!' : `ID: #${user.id}`}
-            </Button>
           </div>
         </CardHeader>
         <CardContent className="space-y-4">

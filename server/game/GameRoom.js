@@ -67,6 +67,8 @@ class GameRoom {
       this.selectionTimer = null;
     }
 
+    this.activeChallenge = { layer, pos, player: socketId };
+
     // Piece is valid, notify both players challenge started
     this.io.to(this.roomId).emit('challenge_started', {
       layer,
@@ -138,6 +140,8 @@ class GameRoom {
       clearTimeout(this.challengeTimer);
       this.challengeTimer = null;
     }
+
+    this.activeChallenge = null;
 
     const result = this.tower.extractPiece(layer, pos);
     if (!result.success) return result;

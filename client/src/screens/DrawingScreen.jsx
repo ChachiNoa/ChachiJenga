@@ -50,6 +50,7 @@ export default function DrawingScreen() {
   
   // Extract info passed from TowerScreen
   const pieceInfo = location.state || { layer: 0, position: 1, layers: null } // Fallback
+  const pieceInfoRef = useRef({ layer: pieceInfo.layer, position: pieceInfo.position })
 
   const [timeRemaining, setTimeRemaining] = useState(GAME.TIMER_SECONDS * 1000)
   const [currentPhase, setCurrentPhase] = useState(1)
@@ -65,12 +66,40 @@ export default function DrawingScreen() {
 
   useEffect(() => {
     if (!socket) return
+
+    // Ensure we sync game state if we refreshed
+    socket.emit('request_sync')
+
     const onGameOver = (data) => {
       navigate('/summary', { state: { summary: data?.summary, reason: data?.reason } })
     }
+    
+    const onGameStarted = (data) => {
+      if (data.activeChallenge && data.tower) {
+        // Recover piece info
+        const layer = data.activeChallenge.layer;
+        const position = data.activeChallenge.pos;
+        const layers = data.tower.layers;
+        
+        pieceInfoRef.current = { layer, position };
+
+        // Re-initialize difficulty if missing
+        if (!difficultyParams) {
+          const piece = layers[layer].pieces[position];
+          const diff = DifficultyManager.calculateOverallDifficulty(piece, layers, layer);
+          const params = DifficultyManager.getDifficultyParams(diff);
+          setDifficultyParams(params);
+        }
+      }
+    }
+
+    socket.on('game_started', onGameStarted)
     socket.on('game_over', onGameOver)
-    return () => socket.off('game_over', onGameOver)
-  }, [socket, navigate])
+    return () => {
+      socket.off('game_over', onGameOver)
+      socket.off('game_started', onGameStarted)
+    }
+  }, [socket, navigate, difficultyParams])
 
   useEffect(() => {
     // Initialize Game Logic
@@ -176,7 +205,7 @@ export default function DrawingScreen() {
         
         if (pieceExtracted) {
           if (socket) {
-            socket.emit('piece_extracted', { layer: pieceInfo.layer, pos: pieceInfo.position })
+            socket.emit('piece_extracted', { layer: pieceInfoRef.current.layer, pos: pieceInfoRef.current.position })
           }
           // The server will emit 'piece_extracted' or 'turn_changed' to both
           // Navigate back to tower
@@ -213,7 +242,7 @@ export default function DrawingScreen() {
         
         if (isLast) {
           if (res.pieceExtracted) {
-            if (socket) socket.emit('piece_extracted', { layer: pieceInfo.layer, pos: pieceInfo.position })
+            if (socket) socket.emit('piece_extracted', { layer: pieceInfoRef.current.layer, pos: pieceInfoRef.current.position })
             navigate('/tower', { replace: true })
           } else if (res.phaseCompleted) {
             setCurrentPhase(pmRef.current.getCurrentPhase())
