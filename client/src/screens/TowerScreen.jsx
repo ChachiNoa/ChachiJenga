@@ -255,8 +255,26 @@ function TowerScreen() {
 
   const isDangerTime = timeLeft <= 5 && selectionEndTime
 
+  const handleForfeit = () => {
+    if (window.confirm(t('game.confirmForfeit', '¿Estás seguro de que quieres rendirte? Perderás la partida.'))) {
+      if (socket) socket.emit('forfeit')
+    }
+  }
+
   return (
     <div className="flex h-svh w-full flex-col bg-gradient-to-b from-sky-100 to-amber-50 overflow-hidden animate-page-enter">
+      
+      {/* Forfeit Button */}
+      <div className="absolute bottom-4 left-4 z-20">
+        <Button 
+          variant="destructive" 
+          size="sm" 
+          onClick={handleForfeit}
+          className="shadow-lg font-bold opacity-80 hover:opacity-100"
+        >
+          🏳️ Rendirse
+        </Button>
+      </div>
       
       {/* Top HUD */}
       <div className="absolute left-0 right-0 top-0 z-10 flex items-start justify-between p-4">

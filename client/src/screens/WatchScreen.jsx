@@ -92,8 +92,27 @@ export default function WatchScreen() {
   const totalShapes = shapesInfo.length
   const completedShapes = shapesInfo.filter(s => s.completed).length
 
+  const handleForfeit = () => {
+    if (window.confirm(t('game.confirmForfeit', '¿Estás seguro de que quieres rendirte? Perderás la partida.'))) {
+      if (socket) socket.emit('forfeit')
+    }
+  }
+
   return (
     <div className="relative h-svh w-full overflow-hidden bg-sky-50 transition-colors duration-150">
+      
+      {/* Forfeit Button */}
+      <div className="absolute bottom-4 left-4 z-30">
+        <Button 
+          variant="destructive" 
+          size="sm" 
+          onClick={handleForfeit}
+          className="shadow-lg font-bold opacity-80 hover:opacity-100"
+        >
+          🏳️ Rendirse
+        </Button>
+      </div>
+
       {/* Top HUD */}
       <div className="absolute left-0 right-0 top-0 z-30 flex items-center justify-between p-4 bg-background/50 backdrop-blur-md shadow-sm pointer-events-none">
         
