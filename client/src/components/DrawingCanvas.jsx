@@ -64,9 +64,14 @@ export default function DrawingCanvas({ onStrokeComplete, onStrokePoint, disable
     const clientX = e.touches ? e.touches[0].clientX : e.clientX
     const clientY = e.touches ? e.touches[0].clientY : e.clientY
     
+    const x = clientX - rect.left
+    const y = clientY - rect.top
+    
     return {
-      x: clientX - rect.left,
-      y: clientY - rect.top
+      x,
+      y,
+      nx: x / rect.width,
+      ny: y / rect.height
     }
   }
 

@@ -110,25 +110,28 @@ export default function WatchScreen() {
         </div>
       </div>
 
-      {/* Shapes Container */}
-      <div className="absolute inset-0 z-10 pointer-events-none">
-        {shapesInfo.map(shape => (
-          <img
-            src={`/assets/shapes/${shape.type}.svg`}
-            alt={shape.type}
-            key={shape.id}
-            className={`absolute transition-all duration-500 ${shape.completed ? 'scale-150 opacity-0' : 'scale-100 opacity-20 filter grayscale'}`}
-            style={{ 
-              left: shape.x, 
-              top: shape.y,
-              width: 80,
-              height: 80
-            }}
-          />
-        ))}
-      </div>
+      {/* Game Area Wrapper - Square, Responsive, Centered */}
+      <div className="relative flex-1 w-full max-w-[800px] max-h-[800px] aspect-square mx-auto mt-20 mb-4 bg-white/40 rounded-2xl overflow-hidden shadow-inner border border-slate-200 pointer-events-none">
+        {/* Shapes Container */}
+        <div className="absolute inset-0 z-10 pointer-events-none">
+          {shapesInfo.map(shape => (
+            <img
+              src={`/assets/shapes/${shape.type}.svg`}
+              alt={shape.type}
+              key={shape.id}
+              className={`absolute transition-all duration-500 ${shape.completed ? 'scale-150 opacity-0' : 'scale-100 opacity-20 filter grayscale'}`}
+              style={{ 
+                left: `${shape.px}%`, 
+                top: `${shape.py}%`,
+                width: '15%',
+                height: '15%'
+              }}
+            />
+          ))}
+        </div>
 
-      <StrokeViewer strokes={activeStrokes} currentLine={currentLine} />
+        <StrokeViewer strokes={activeStrokes} currentLine={currentLine} />
+      </div>
     </div>
   )
 }

@@ -11,31 +11,31 @@ import { audio } from '../lib/audio'
 import { Button } from '@/components/ui/button'
 
 // Pseudo-random bounding box generator for SVGs
-function generateShapePositions(shapes, screenWidth, screenHeight) {
+function generateShapePositions(shapes) {
   const positions = []
-  const shapeSize = 80
-  const margin = 20
+  const shapeSizePercent = 15 // Assuming shape is about 15% of the container size
+  const marginPercent = 5
 
   shapes.forEach(shape => {
     let placed = false
     let attempts = 0
-    let x, y
+    let px, py
 
     while (!placed && attempts < 50) {
-      x = Math.random() * (screenWidth - shapeSize - margin * 2) + margin
-      // Keep away from top HUD (100px)
-      y = Math.random() * (screenHeight - shapeSize - 100 - margin) + 100
+      px = Math.random() * (100 - shapeSizePercent - marginPercent * 2) + marginPercent
+      // Keep away from top HUD (approx top 15%)
+      py = Math.random() * (100 - shapeSizePercent - 15 - marginPercent) + 15
 
       // Check overlap
       const overlap = positions.some(p => {
-        return Math.hypot(p.x - x, p.y - y) < shapeSize + 10
+        return Math.hypot(p.px - px, p.py - py) < shapeSizePercent + 2 // 2% buffer
       })
 
       if (!overlap) placed = true
       attempts++
     }
 
-    positions.push({ ...shape, x, y })
+    positions.push({ ...shape, px, py })
   })
 
   return positions
@@ -99,9 +99,7 @@ export default function DrawingScreen() {
     if (!pmRef.current || !containerRef.current) return
     
     const phaseShapes = pmRef.current.getCurrentPhaseShapes()
-    const rect = containerRef.current.getBoundingClientRect()
-    
-    const layout = generateShapePositions(phaseShapes, rect.width || window.innerWidth, rect.height || window.innerHeight)
+    const layout = generateShapePositions(phaseShapes)
     setShapesInfo(layout)
 
     if (socket) {
@@ -122,23 +120,26 @@ export default function DrawingScreen() {
       socket.emit('stroke_complete', { strokes })
     }
 
-    // Calculate drawn center
+    // Calculate drawn center using normalized coordinates (nx, ny)
     let minX = Infinity, maxX = -Infinity, minY = Infinity, maxY = -Infinity
     strokes.forEach(stroke => stroke.forEach(pt => {
-      if (pt.x < minX) minX = pt.x
-      if (pt.x > maxX) maxX = pt.x
-      if (pt.y < minY) minY = pt.y
-      if (pt.y > maxY) maxY = pt.y
+      // Fallback to absolute if normalized not available
+      const x = pt.nx !== undefined ? pt.nx * 100 : pt.x
+      const y = pt.ny !== undefined ? pt.ny * 100 : pt.y
+      if (x < minX) minX = x
+      if (x > maxX) maxX = x
+      if (y < minY) minY = y
+      if (y > maxY) maxY = y
     }))
-    const drawCenterX = (minX + maxX) / 2
-    const drawCenterY = (minY + maxY) / 2
+    const drawCenterNx = (minX + maxX) / 2
+    const drawCenterNy = (minY + maxY) / 2
 
     // Which shapes are we looking for? (Filter only shapes that are near the drawing center)
     const pendingNearShapes = shapesInfo.filter(s => {
       if (s.completed) return false
-      // Center of the shape is x + 40, y + 40 (shapeSize is 80)
-      const dist = Math.hypot(drawCenterX - (s.x + 40), drawCenterY - (s.y + 40))
-      return dist < 60 // Tolerance radius
+      // Center of the shape is px + 7.5, py + 7.5 (since size is 15%)
+      const dist = Math.hypot(drawCenterNx - (s.px + 7.5), drawCenterNy - (s.py + 7.5))
+      return dist < 15 // Tolerance radius in percentage
     })
 
     const pendingNames = pendingNearShapes.map(s => s.type)
@@ -256,28 +257,32 @@ export default function DrawingScreen() {
         </div>
       )}
 
-      {/* SVG Container (Layer below canvas) */}
-      <div className="absolute inset-0 z-10 pointer-events-none">
-        {shapesInfo.map(shape => (
-          <img
-            src={`/assets/shapes/${shape.type}.svg`}
-            alt={shape.type}
-            key={shape.id}
-            className={`absolute transition-all duration-500 ${shape.completed ? 'scale-150 opacity-0' : 'scale-100 opacity-20'}`}
-            style={{ 
-              left: shape.x, 
-              top: shape.y,
-              width: 80,
-              height: 80
-            }}
-          />
-        ))}
-      </div>
+      {/* Game Area Wrapper - Square, Responsive, Centered */}
+      <div className="relative flex-1 w-full max-w-[800px] max-h-[800px] aspect-square mx-auto mt-20 mb-4 bg-white/40 rounded-2xl overflow-hidden shadow-inner border border-slate-200 touch-none" ref={containerRef}>
+        
+        {/* SVG Container (Layer below canvas) */}
+        <div className="absolute inset-0 z-10 pointer-events-none">
+          {shapesInfo.map(shape => (
+            <img
+              src={`/assets/shapes/${shape.type}.svg`}
+              alt={shape.type}
+              key={shape.id}
+              className={`absolute transition-all duration-500 ${shape.completed ? 'scale-150 opacity-0' : 'scale-100 opacity-20'}`}
+              style={{ 
+                left: `${shape.px}%`, 
+                top: `${shape.py}%`,
+                width: '15%',
+                height: '15%'
+              }}
+            />
+          ))}
+        </div>
 
-      {/* Canvas */}
-      {!showCollapse && (
-        <DrawingCanvas onStrokeComplete={handleStrokeComplete} onStrokePoint={handleStrokePoint} disabled={showCollapse} />
-      )}
+        {/* Canvas */}
+        {!showCollapse && (
+          <DrawingCanvas onStrokeComplete={handleStrokeComplete} onStrokePoint={handleStrokePoint} disabled={showCollapse} />
+        )}
+      </div>
 
       {/* Collapse Overlay */}
       {showCollapse && (
