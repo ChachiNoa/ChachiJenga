@@ -132,60 +132,6 @@ function LoginScreen() {
           {t('login.signInWithGoogle')}
         </button>
 
-        {/* Separator */}
-        <div className="flex items-center gap-4 py-2">
-          <div className="h-px flex-1 bg-foreground/10" />
-          <span className="text-xs font-bold text-foreground/30 uppercase tracking-widest">{t('common.or') || 'O'}</span>
-          <div className="h-px flex-1 bg-foreground/10" />
-        </div>
-
-        {/* DEV MODE login panel (Toggleable) */}
-        <div className="flex flex-col gap-3">
-          <button 
-            onClick={() => setShowDevOptions(!showDevOptions)}
-            className="text-xs font-bold text-foreground/40 hover:text-amber-600 transition-colors uppercase tracking-wider flex items-center justify-center gap-2"
-          >
-            {showDevOptions ? '🙈 Ocultar opciones dev' : '⚡ Mostrar opciones dev (Temporal)'}
-          </button>
-
-          {showDevOptions && (
-            <div className="rounded-2xl bg-white/90 p-6 shadow-lg backdrop-blur-sm flex flex-col gap-4 animate-in fade-in zoom-in-95 duration-200">
-              <p className="text-xs text-muted-foreground">
-                Crea una cuenta de prueba rápidamente para testear sin Google.
-              </p>
-              <input
-                type="text"
-                value={devName}
-                onChange={(e) => setDevName(e.target.value)}
-                placeholder="Nombre del jugador..."
-                className="w-full rounded-lg border border-border bg-background px-4 py-2.5 text-sm font-medium focus:outline-none focus:ring-2 focus:ring-primary"
-                onKeyDown={(e) => e.key === 'Enter' && handleDevLogin()}
-              />
-              <button
-                onClick={handleDevLogin}
-                disabled={devLoading || !devName.trim()}
-                className="w-full rounded-xl bg-primary px-6 py-3 text-base font-bold text-primary-foreground shadow-md transition-all hover:-translate-y-0.5 hover:shadow-lg active:translate-y-0 disabled:opacity-50 disabled:cursor-not-allowed"
-              >
-                {devLoading ? '⏳ Conectando...' : '🎮 Entrar como ' + devName}
-              </button>
-
-              <div className="flex gap-2">
-                <button
-                  onClick={() => { setDevName('Jugador 1'); }}
-                  className="flex-1 rounded-lg bg-pastel-blue/50 px-3 py-2 text-[10px] font-semibold transition-colors hover:bg-pastel-blue"
-                >
-                  👤 Jugador 1
-                </button>
-                <button
-                  onClick={() => { setDevName('Jugador 2'); }}
-                  className="flex-1 rounded-lg bg-pastel-pink/50 px-3 py-2 text-[10px] font-semibold transition-colors hover:bg-pastel-pink"
-                >
-                  👤 Jugador 2
-                </button>
-              </div>
-            </div>
-          )}
-        </div>
       </div>
 
       {/* Decorative bottom */}
