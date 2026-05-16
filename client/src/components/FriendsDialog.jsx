@@ -6,7 +6,7 @@ import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs'
 import { Button } from '@/components/ui/button'
 import { Input } from '@/components/ui/input'
 import { Search, UserPlus, Check, X, UserMinus, User, Shield, Users, Swords, Info } from 'lucide-react'
-import { Avatar, AvatarImage, AvatarFallback } from '@/components/ui/avatar'
+import { Avatar, AvatarFallback } from '@/components/ui/avatar'
 
 const API = import.meta.env.VITE_API_URL || 'http://localhost:3001'
 
@@ -244,8 +244,6 @@ export default function FriendsDialog({ open, onOpenChange, auth, onChallenge })
                           <Avatar className="h-10 w-10">
                             {f.avatarUrl && f.avatarUrl.length <= 4 ? (
                               <AvatarFallback className="text-xl bg-primary/10">{f.avatarUrl}</AvatarFallback>
-                            ) : f.avatarUrl ? (
-                              <AvatarImage src={f.avatarUrl} alt={f.displayName} />
                             ) : (
                               <AvatarFallback>{f.displayName?.[0]}</AvatarFallback>
                             )}
@@ -305,8 +303,6 @@ export default function FriendsDialog({ open, onOpenChange, auth, onChallenge })
                           <Avatar className="h-10 w-10">
                             {p.avatarUrl && p.avatarUrl.length <= 4 ? (
                               <AvatarFallback className="text-xl bg-primary/10">{p.avatarUrl}</AvatarFallback>
-                            ) : p.avatarUrl ? (
-                              <AvatarImage src={p.avatarUrl} alt={p.displayName} />
                             ) : (
                               <AvatarFallback>{p.displayName?.[0]}</AvatarFallback>
                             )}
@@ -353,8 +349,6 @@ export default function FriendsDialog({ open, onOpenChange, auth, onChallenge })
                       <Avatar className="h-12 w-12">
                         {searchResult.avatarUrl && searchResult.avatarUrl.length <= 4 ? (
                           <AvatarFallback className="text-2xl bg-primary/10">{searchResult.avatarUrl}</AvatarFallback>
-                        ) : searchResult.avatarUrl ? (
-                          <AvatarImage src={searchResult.avatarUrl} alt={searchResult.displayName} />
                         ) : (
                           <AvatarFallback>{searchResult.displayName?.[0]}</AvatarFallback>
                         )}
