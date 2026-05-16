@@ -8,6 +8,9 @@ import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription, Di
 import { useSocket } from '../hooks/useSocket'
 import { audio } from '../lib/audio'
 import ConfirmForfeitDialog from '../components/ConfirmForfeitDialog'
+import { loadAuth } from '@/network/authApi'
+
+const ADMIN_EMAIL = 'chachigames.studio@gmail.com'
 
 // Mock initial layers since we don't have socket connection yet
 const createMockLayers = () => {
@@ -66,11 +69,16 @@ function TowerScreen() {
   const [confirmOpen, setConfirmOpen] = useState(false)
   const [confirmTimer, setConfirmTimer] = useState(3)
   const [opponentHoveredPiece, setOpponentHoveredPiece] = useState(null)
-  const [devMode, setDevMode] = useState(false)
   const [showForfeitDialog, setShowForfeitDialog] = useState(false)
   const [selectionEndTime, setSelectionEndTime] = useState(initialData?.selectionEndTime || null)
   const [timeLeft, setTimeLeft] = useState(15)
   const [isMyTurn, setIsMyTurn] = useState(initialData && socket ? initialData.turn === socket.id : false)
+
+  // Admin-only dev tools
+  const isAdmin = loadAuth()?.user?.email === ADMIN_EMAIL
+  const [showAdminPanel, setShowAdminPanel] = useState(false)
+  const [showDifficulty, setShowDifficulty] = useState(false)
+  const [instantDelete, setInstantDelete] = useState(false)
   
   // Real or Mock game state for UI demonstration
   const [gameState, setGameState] = useState({
@@ -245,8 +253,8 @@ function TowerScreen() {
     if (socket) {
       socket.emit('select_piece', { layer: selectedPiece.layer, pos: selectedPiece.position })
       
-      if (devMode) {
-        socket.emit('drawing_result', { valid: true, shapeId: 'dev_mock' })
+      if (instantDelete && isAdmin) {
+        socket.emit('drawing_result', { valid: true, shapeId: 'admin_skip' })
         socket.emit('piece_extracted', { layer: selectedPiece.layer, pos: selectedPiece.position })
         return
       }
@@ -316,18 +324,36 @@ function TowerScreen() {
           onSelectPiece={handleSelectPiece} 
           interactive={isMyTurn && !confirmOpen}
           opponentHoveredPiece={opponentHoveredPiece}
+          showDifficulty={showDifficulty}
         />
         
-        <div className="absolute bottom-6 right-4 z-10">
-          <Button 
-            variant={devMode ? "default" : "outline"} 
-            size="sm" 
-            onClick={() => setDevMode(!devMode)}
-            className="shadow-md"
-          >
-            Modo Dev: {devMode ? 'ON' : 'OFF'}
-          </Button>
-        </div>
+        {/* Admin-only floating panel */}
+        {isAdmin && (
+          <>
+            <button
+              onClick={() => setShowAdminPanel(v => !v)}
+              className="absolute bottom-6 right-4 z-20 h-10 w-10 rounded-full bg-purple-600 text-white shadow-lg flex items-center justify-center text-lg hover:bg-purple-700 transition-colors"
+              title="Panel Admin"
+            >
+              ⚙️
+            </button>
+            {showAdminPanel && (
+              <div className="absolute bottom-[4.5rem] right-4 z-20 bg-white/95 backdrop-blur-md rounded-2xl shadow-2xl border border-purple-200 p-4 w-56 space-y-3 animate-in fade-in slide-in-from-bottom-2">
+                <div className="text-xs font-black text-purple-700 uppercase tracking-wider border-b border-purple-100 pb-2">🛠 Admin Panel</div>
+                
+                <label className="flex items-center justify-between cursor-pointer">
+                  <span className="text-xs font-semibold text-foreground">Colores dificultad</span>
+                  <input type="checkbox" checked={showDifficulty} onChange={e => setShowDifficulty(e.target.checked)} className="accent-purple-600 h-4 w-4" />
+                </label>
+                
+                <label className="flex items-center justify-between cursor-pointer">
+                  <span className="text-xs font-semibold text-foreground">Borrado directo</span>
+                  <input type="checkbox" checked={instantDelete} onChange={e => setInstantDelete(e.target.checked)} className="accent-purple-600 h-4 w-4" />
+                </label>
+              </div>
+            )}
+          </>
+        )}
       </div>
 
       {/* Confirmation Dialog */}

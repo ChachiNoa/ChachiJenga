@@ -76,9 +76,8 @@ function getUserStatus(userId) {
   const strId = String(userId)
   if (!onlineUsers.has(strId)) return 'offline'
   // Check if any connected socket with this userId is in a game room
-  const { io: ioRef } = module.exports
-  if (ioRef) {
-    for (const [, s] of ioRef.sockets.sockets) {
+  if (io) {
+    for (const [, s] of io.sockets.sockets) {
       if (s.userId === strId && playerToRoom.has(s.id)) {
         return 'in_game'
       }

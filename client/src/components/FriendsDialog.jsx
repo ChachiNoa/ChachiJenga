@@ -276,7 +276,6 @@ export default function FriendsDialog({ open, onOpenChange, auth, onChallenge })
                             <div className="text-[10px] text-muted-foreground flex gap-2">
                               <span>{f.tag}</span>
                               <span>ELO {f.elo}</span>
-                              {f.status === 'in_game' && <span className="text-amber-600 font-semibold">🎮 En partida</span>}
                             </div>
                           </div>
                         </div>

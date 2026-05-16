@@ -13,7 +13,7 @@ const BLOCK_H = 1
 
 // UNIT_WIDTH is now calculated dynamically in drawTower based on canvas size
 
-export default function Tower({ layers, onSelectPiece, interactive = true, opponentHoveredPiece = null }) {
+export default function Tower({ layers, onSelectPiece, interactive = true, opponentHoveredPiece = null, showDifficulty = false }) {
   const canvasRef = useRef(null)
   const [hoveredPiece, setHoveredPiece] = useState(null)
 
@@ -127,7 +127,7 @@ export default function Tower({ layers, onSelectPiece, interactive = true, oppon
         topColor = '#FFA8A8' // Pastel red/pink for opponent hover
         leftColor = '#E68A8A'
         rightColor = '#CC7070'
-      } else if (import.meta.env.DEV) {
+      } else if (showDifficulty) {
         if (block.difficulty === GAME.DIFFICULTY.EASY) {
           topColor = '#A8DDFD'
           leftColor = '#8AC3E6'
@@ -223,7 +223,7 @@ export default function Tower({ layers, onSelectPiece, interactive = true, oppon
     const ro = new ResizeObserver(render)
     ro.observe(canvas.parentElement)
     return () => ro.disconnect()
-  }, [blocks, hoveredPiece, opponentHoveredPiece])
+  }, [blocks, hoveredPiece, opponentHoveredPiece, showDifficulty])
 
   // Hit-test helper: finds the block at the given canvas coordinates
   const hitTestAt = (canvasX, canvasY) => {
@@ -322,9 +322,9 @@ export default function Tower({ layers, onSelectPiece, interactive = true, oppon
         onPointerOut={handlePointerLeave}
         onPointerUp={handlePointerUp}
       />
-      {import.meta.env.DEV && (
+      {showDifficulty && (
         <div className="absolute bottom-20 left-4 bg-white/90 p-3 rounded-lg text-sm pointer-events-none z-10 shadow-lg border border-sky-100">
-          <div className="font-black mb-2 text-primary">DEV: Dificultad</div>
+          <div className="font-black mb-2 text-primary">Dificultad</div>
           <div className="flex items-center gap-2 mb-1"><div className="w-4 h-4 bg-[#A8DDFD] border border-[#72AAD0] rounded-sm"></div> Fácil</div>
           <div className="flex items-center gap-2 mb-1"><div className="w-4 h-4 bg-[#FDFD96] border border-[#CFCF61] rounded-sm"></div> Medio</div>
           <div className="flex items-center gap-2"><div className="w-4 h-4 bg-[#FFB347] border border-[#CC8220] rounded-sm"></div> Difícil</div>
