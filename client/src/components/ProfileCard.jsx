@@ -8,7 +8,7 @@ import { Dialog, DialogContent, DialogHeader, DialogTitle } from '@/components/u
 import { Button } from '@/components/ui/button'
 import { loadAuth, saveAuth } from '@/network/authApi'
 
-const EMOJIS = ['😀', '😎', '🤓', '🤠', '🤖', '👾', '👻', '🐶', '🐱', '🦊', '🐼', '🦁', '🐸', '🦄', '🍕', '🌮', '🎸', '🎮', '🚀', '⭐']
+
 
 function getInitials(name) {
   return name
@@ -32,8 +32,6 @@ function StatItem({ icon: Icon, label, value, color, subtext }) {
 
 function ProfileCard({ user, onAvatarChange, onNameChange }) {
   const { t } = useTranslation()
-  const [showPicker, setShowPicker] = useState(false)
-  const [isUpdating, setIsUpdating] = useState(false)
   const [editingName, setEditingName] = useState(false)
   const [nameValue, setNameValue] = useState(user?.displayName || '')
   const [copied, setCopied] = useState(false)
@@ -53,33 +51,7 @@ function ProfileCard({ user, onAvatarChange, onNameChange }) {
 
   if (!user) return null
 
-  const handleSelectEmoji = async (emoji) => {
-    setIsUpdating(true)
-    try {
-      const res = await fetch(`${import.meta.env.VITE_API_URL || 'http://localhost:3001'}/api/profile/${user.id}/avatar`, {
-        method: 'PATCH',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ emoji })
-      })
-      const data = await res.json()
-      console.log('[ProfileCard] Avatar update response:', data)
-      if (data.success) {
-        // Persist to localStorage
-        const currentAuth = loadAuth()
-        if (currentAuth) {
-          saveAuth(currentAuth.token, { ...currentAuth.user, avatarUrl: emoji })
-        }
-        if (onAvatarChange) {
-          onAvatarChange(emoji)
-        }
-      }
-    } catch (e) {
-      console.error('Failed to update avatar', e)
-    } finally {
-      setIsUpdating(false)
-      setShowPicker(false)
-    }
-  }
+
 
   const handleSaveName = async () => {
     const trimmed = nameValue.trim().slice(0, 20)
@@ -125,8 +97,8 @@ function ProfileCard({ user, onAvatarChange, onNameChange }) {
       <h2 className="mb-4 text-xl font-bold text-foreground">{t('profile.title')}</h2>
       <Card>
         <CardHeader className="items-center pb-2">
-          <div className="relative group cursor-pointer" onClick={() => setShowPicker(true)}>
-            <Avatar className="h-16 w-16 transition-all group-hover:scale-105 group-hover:ring-2 group-hover:ring-primary/50">
+          <div>
+            <Avatar className="h-16 w-16">
               {user.avatarUrl && user.avatarUrl.length <= 4 ? (
                 <AvatarFallback className="text-4xl bg-primary/10">{user.avatarUrl}</AvatarFallback>
               ) : user.avatarUrl ? (
@@ -135,9 +107,6 @@ function ProfileCard({ user, onAvatarChange, onNameChange }) {
                 <AvatarFallback className="text-xl">{getInitials(user.displayName || '?')}</AvatarFallback>
               )}
             </Avatar>
-            <div className="absolute inset-0 bg-black/40 rounded-full opacity-0 group-hover:opacity-100 flex items-center justify-center transition-opacity">
-              <Pencil className="h-5 w-5 text-white drop-shadow-md" />
-            </div>
           </div>
           {editingName ? (
             <div className="mt-2 flex items-center gap-1">
@@ -244,26 +213,7 @@ function ProfileCard({ user, onAvatarChange, onNameChange }) {
         </CardContent>
       </Card>
 
-      <Dialog open={showPicker} onOpenChange={setShowPicker}>
-        <DialogContent className="sm:max-w-xs">
-          <DialogHeader>
-            <DialogTitle className="text-center">{t('profile.chooseAvatar', 'Elige un icono')}</DialogTitle>
-          </DialogHeader>
-          <div className="grid grid-cols-4 gap-3 p-4">
-            {EMOJIS.map(emoji => (
-              <Button
-                key={emoji}
-                variant="outline"
-                className="h-12 w-12 text-2xl"
-                disabled={isUpdating}
-                onClick={() => handleSelectEmoji(emoji)}
-              >
-                {emoji}
-              </Button>
-            ))}
-          </div>
-        </DialogContent>
-      </Dialog>
+
     </div>
   )
 }

@@ -6,7 +6,7 @@ import { getErrorMessage, getSuccessMessage } from '../lib/errorTranslations'
 import { Button } from '@/components/ui/button'
 import { Input } from '@/components/ui/input'
 import { Badge } from '@/components/ui/badge'
-import { Avatar, AvatarFallback } from '@/components/ui/avatar'
+import { Avatar, AvatarImage, AvatarFallback } from '@/components/ui/avatar'
 import { Shield, Crown, Plus, LogOut, Trash2, Pencil, Globe, Lock, Users, Trophy, UserPlus, UserMinus, UsersRound, ShieldCheck, ShieldOff, ArrowRightLeft, Info, Check, X } from 'lucide-react'
 
 const API = import.meta.env.VITE_API_URL || 'http://localhost:3001'
@@ -440,11 +440,10 @@ export default function GuildDialog({ open, onOpenChange, auth }) {
               <div className="flex items-center gap-3">
                 <span className="text-xs font-bold text-muted-foreground w-5 text-right">{i + 1}</span>
                 <Avatar className="h-8 w-8">
-                  {m.avatarUrl && m.avatarUrl.length <= 4 ? (
-                    <AvatarFallback className="text-lg bg-primary/10">{m.avatarUrl}</AvatarFallback>
-                  ) : (
-                    <AvatarFallback className="text-xs">{m.displayName?.[0]}</AvatarFallback>
-                  )}
+                  {m.avatarUrl ? (
+                    <AvatarImage src={m.avatarUrl} alt={m.displayName} />
+                  ) : null}
+                  <AvatarFallback className="text-xs">{m.displayName?.[0]}</AvatarFallback>
                 </Avatar>
                 <div className="leading-tight">
                   <div className="text-sm font-bold flex items-center gap-1">

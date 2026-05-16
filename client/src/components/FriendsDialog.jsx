@@ -6,7 +6,7 @@ import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs'
 import { Button } from '@/components/ui/button'
 import { Input } from '@/components/ui/input'
 import { Search, UserPlus, Check, X, UserMinus, User, Shield, Users, Swords, Info } from 'lucide-react'
-import { Avatar, AvatarFallback } from '@/components/ui/avatar'
+import { Avatar, AvatarImage, AvatarFallback } from '@/components/ui/avatar'
 
 const API = import.meta.env.VITE_API_URL || 'http://localhost:3001'
 
@@ -242,11 +242,10 @@ export default function FriendsDialog({ open, onOpenChange, auth, onChallenge })
                       <div key={f.friendshipId} className="flex items-center justify-between p-3 rounded-xl bg-card border shadow-sm">
                         <div className="flex items-center gap-3">
                           <Avatar className="h-10 w-10">
-                            {f.avatarUrl && f.avatarUrl.length <= 4 ? (
-                              <AvatarFallback className="text-xl bg-primary/10">{f.avatarUrl}</AvatarFallback>
-                            ) : (
-                              <AvatarFallback>{f.displayName?.[0]}</AvatarFallback>
-                            )}
+                            {f.avatarUrl ? (
+                              <AvatarImage src={f.avatarUrl} alt={f.displayName} />
+                            ) : null}
+                            <AvatarFallback>{f.displayName?.[0]}</AvatarFallback>
                           </Avatar>
                           <div>
                             <div className="font-bold leading-tight flex items-center gap-2">
@@ -301,11 +300,10 @@ export default function FriendsDialog({ open, onOpenChange, auth, onChallenge })
                       <div key={p.friendshipId} className="flex flex-col sm:flex-row sm:items-center justify-between p-3 rounded-xl bg-card border shadow-sm gap-3">
                         <div className="flex items-center gap-3">
                           <Avatar className="h-10 w-10">
-                            {p.avatarUrl && p.avatarUrl.length <= 4 ? (
-                              <AvatarFallback className="text-xl bg-primary/10">{p.avatarUrl}</AvatarFallback>
-                            ) : (
-                              <AvatarFallback>{p.displayName?.[0]}</AvatarFallback>
-                            )}
+                            {p.avatarUrl ? (
+                              <AvatarImage src={p.avatarUrl} alt={p.displayName} />
+                            ) : null}
+                            <AvatarFallback>{p.displayName?.[0]}</AvatarFallback>
                           </Avatar>
                           <div>
                             <div className="font-bold leading-tight">{p.displayName}</div>
@@ -347,11 +345,10 @@ export default function FriendsDialog({ open, onOpenChange, auth, onChallenge })
                   <div className="flex items-center justify-between p-4 rounded-xl bg-card border shadow-sm mt-4">
                     <div className="flex items-center gap-3">
                       <Avatar className="h-12 w-12">
-                        {searchResult.avatarUrl && searchResult.avatarUrl.length <= 4 ? (
-                          <AvatarFallback className="text-2xl bg-primary/10">{searchResult.avatarUrl}</AvatarFallback>
-                        ) : (
-                          <AvatarFallback>{searchResult.displayName?.[0]}</AvatarFallback>
-                        )}
+                        {searchResult.avatarUrl ? (
+                          <AvatarImage src={searchResult.avatarUrl} alt={searchResult.displayName} />
+                        ) : null}
+                        <AvatarFallback>{searchResult.displayName?.[0]}</AvatarFallback>
                       </Avatar>
                       <div>
                         <div className="font-bold">{searchResult.displayName}</div>
