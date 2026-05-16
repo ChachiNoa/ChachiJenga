@@ -234,7 +234,8 @@ function TowerScreen() {
     audio.play('select')
     audio.vibrate([30])
     setSelectedPiece({ layer, position })
-    setConfirmOpen(true)
+    // Delay opening to prevent mobile tap from also closing the dialog overlay
+    setTimeout(() => setConfirmOpen(true), 120)
     if (socket) {
       socket.emit('piece_hovered', { layer, pos: position })
     }

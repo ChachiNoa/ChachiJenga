@@ -147,7 +147,7 @@ function ProfileCard({ user, onAvatarChange, onNameChange }) {
             <Badge variant="secondary" className="text-sm px-3 py-1 bg-purple-100 text-purple-700 hover:bg-purple-200 border-none">
               ELO: {user.elo || 1000}
             </Badge>
-            {user.email === 'chachigames.studio@gmail.com' && (
+            {loadAuth()?.user?.email === 'chachigames.studio@gmail.com' && (
               <Badge className="text-sm px-3 py-1 bg-amber-100 text-amber-700 hover:bg-amber-200 border-none">
                 ⭐ Admin
               </Badge>
