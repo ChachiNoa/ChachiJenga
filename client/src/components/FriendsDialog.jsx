@@ -5,7 +5,7 @@ import { Dialog, DialogContent, DialogHeader, DialogTitle } from '@/components/u
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs'
 import { Button } from '@/components/ui/button'
 import { Input } from '@/components/ui/input'
-import { Search, UserPlus, Check, X, UserMinus, User, Shield, Users, Swords } from 'lucide-react'
+import { Search, UserPlus, Check, X, UserMinus, User, Shield, Users, Swords, Info } from 'lucide-react'
 import { Avatar, AvatarFallback } from '@/components/ui/avatar'
 
 const API = import.meta.env.VITE_API_URL || 'http://localhost:3001'
@@ -38,6 +38,7 @@ export default function FriendsDialog({ open, onOpenChange, auth, onChallenge })
   const [searchResult, setSearchResult] = useState(null)
   const [searchError, setSearchError] = useState('')
   const [isLoading, setIsLoading] = useState(false)
+  const [showInfo, setShowInfo] = useState(false)
 
   // Toast + confirm
   const [toast, setToast] = useState({ message: '', type: 'error' })
@@ -190,13 +191,31 @@ export default function FriendsDialog({ open, onOpenChange, auth, onChallenge })
   // Can invite if: in a guild AND (guild is public OR user is admin/owner)
   const canInvite = myGuild && (myGuild.isPublic || myGuildRole === 'admin' || myGuild.ownerId === auth?.user?.id)
 
+  const renderInfoPanel = () => (
+    <div className="mx-6 mb-3 p-4 rounded-xl border bg-card/50 text-xs space-y-3 animate-in fade-in slide-in-from-top-2">
+      <div>
+        <p className="font-semibold text-muted-foreground uppercase tracking-wider mb-1.5">Acciones de amigos</p>
+        <div className="flex items-center gap-2"><Swords className="h-3.5 w-3.5 text-orange-500 shrink-0" /><span>Desafiar a jugar una partida amistosa</span></div>
+        <div className="flex items-center gap-2 mt-1"><UserPlus className="h-3.5 w-3.5 text-primary shrink-0" /><span>Invitar a tu gremio actual</span></div>
+        <div className="flex items-center gap-2 mt-1"><UserMinus className="h-3.5 w-3.5 text-red-500 shrink-0" /><span>Eliminar amigo</span></div>
+      </div>
+    </div>
+  )
+
   return (
     <>
       <Dialog open={open} onOpenChange={onOpenChange}>
         <DialogContent className="sm:max-w-md max-h-[85vh] overflow-hidden flex flex-col p-0">
           <DialogHeader className="px-6 py-4 pb-2">
-            <DialogTitle className="text-2xl">Amigos</DialogTitle>
+            <div className="flex items-center justify-between">
+              <DialogTitle className="text-2xl">Amigos</DialogTitle>
+              <Button variant="ghost" size="icon" className="h-8 w-8 mr-6" onClick={() => setShowInfo(v => !v)} title="Info de botones">
+                <Info className={`h-4 w-4 ${showInfo ? 'text-primary' : 'text-muted-foreground'}`} />
+              </Button>
+            </div>
           </DialogHeader>
+
+          {showInfo && renderInfoPanel()}
 
           <Tabs value={activeTab} onValueChange={setActiveTab} className="flex-1 flex flex-col min-h-0">
             <div className="px-6">

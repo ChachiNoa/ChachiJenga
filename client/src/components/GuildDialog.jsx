@@ -571,7 +571,7 @@ export default function GuildDialog({ open, onOpenChange, auth }) {
                 <Shield className="h-6 w-6 text-primary" /> Gremio
               </DialogTitle>
               {guild && (
-                <Button variant="ghost" size="icon" className="h-8 w-8" onClick={() => setShowInfo(v => !v)} title="Info de iconos">
+                <Button variant="ghost" size="icon" className="h-8 w-8 mr-6" onClick={() => setShowInfo(v => !v)} title="Info de iconos">
                   <Info className={`h-4 w-4 ${showInfo ? 'text-primary' : 'text-muted-foreground'}`} />
                 </Button>
               )}
