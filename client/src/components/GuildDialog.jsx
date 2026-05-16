@@ -7,7 +7,8 @@ import { Button } from '@/components/ui/button'
 import { Input } from '@/components/ui/input'
 import { Badge } from '@/components/ui/badge'
 import { Avatar, AvatarImage, AvatarFallback } from '@/components/ui/avatar'
-import { Shield, Crown, Plus, LogOut, Trash2, Pencil, Globe, Lock, Users, Trophy, UserPlus, UserMinus, UsersRound, ShieldCheck, ShieldOff, ArrowRightLeft, Info, Check, X } from 'lucide-react'
+import { Shield, Crown, Plus, LogOut, Trash2, Pencil, Globe, Lock, Users, Trophy, UserPlus, UserMinus, UsersRound, ShieldCheck, ShieldOff, ArrowRightLeft, Info, Check, X, Eye } from 'lucide-react'
+import UserProfilePopup from './UserProfilePopup'
 
 const API = import.meta.env.VITE_API_URL || 'http://localhost:3001'
 
@@ -43,6 +44,7 @@ export default function GuildDialog({ open, onOpenChange, auth }) {
   const [friendIds, setFriendIds] = useState(new Set()) // IDs of current friends
   const [showInfo, setShowInfo] = useState(false)
   const [invitations, setInvitations] = useState([])
+  const [profileUserId, setProfileUserId] = useState(null)
 
   // Create form
   const [showCreate, setShowCreate] = useState(false)
@@ -439,7 +441,7 @@ export default function GuildDialog({ open, onOpenChange, auth }) {
             <div key={m.id} className="flex items-center justify-between p-2.5 rounded-lg bg-card border shadow-sm">
               <div className="flex items-center gap-3">
                 <span className="text-xs font-bold text-muted-foreground w-5 text-right">{i + 1}</span>
-                <Avatar className="h-8 w-8">
+                <Avatar className="h-8 w-8 cursor-pointer hover:ring-2 hover:ring-primary/50 transition-all" onClick={() => setProfileUserId(m.id)}>
                   {m.avatarUrl ? (
                     <AvatarImage src={m.avatarUrl} alt={m.displayName} />
                   ) : null}
@@ -542,7 +544,8 @@ export default function GuildDialog({ open, onOpenChange, auth }) {
     <div className="mx-6 mb-3 p-4 rounded-xl border bg-card/50 text-xs space-y-3 animate-in fade-in slide-in-from-top-2">
       <div>
         <p className="font-semibold text-muted-foreground uppercase tracking-wider mb-1.5">Todos los miembros</p>
-        <div className="flex items-center gap-2"><UsersRound className="h-3.5 w-3.5 text-blue-500 shrink-0" /><span>Enviar solicitud de amistad</span></div>
+        <div className="flex items-center gap-2"><Eye className="h-3.5 w-3.5 text-blue-500 shrink-0" /><span>Ver perfil completo (pulsa en la foto)</span></div>
+        <div className="flex items-center gap-2 mt-1"><UsersRound className="h-3.5 w-3.5 text-green-500 shrink-0" /><span>Enviar solicitud de amistad</span></div>
       </div>
       <hr />
       <div>
@@ -625,6 +628,13 @@ export default function GuildDialog({ open, onOpenChange, auth }) {
         confirmLabel={confirm.confirmLabel}
         variant={confirm.variant}
         onConfirm={confirm.onConfirm}
+      />
+
+      {/* User Profile Popup */}
+      <UserProfilePopup
+        open={!!profileUserId}
+        onOpenChange={(v) => !v && setProfileUserId(null)}
+        userId={profileUserId}
       />
     </>
   )

@@ -3,6 +3,7 @@ import { useTranslation } from 'react-i18next'
 import { Table, TableHeader, TableBody, TableRow, TableHead, TableCell } from '@/components/ui/table'
 import { Avatar, AvatarImage, AvatarFallback } from '@/components/ui/avatar'
 import { Badge } from '@/components/ui/badge'
+import UserProfilePopup from './UserProfilePopup'
 
 function getInitials(name) {
   if (!name) return '?'
@@ -25,6 +26,7 @@ function RankingList() {
   const { t } = useTranslation()
   const [ranking, setRanking] = useState([])
   const [loading, setLoading] = useState(true)
+  const [profileUserId, setProfileUserId] = useState(null)
 
   useEffect(() => {
     fetch(`${import.meta.env.VITE_API_URL || 'http://localhost:3001'}/api/ranking`)
@@ -42,47 +44,60 @@ function RankingList() {
   if (loading) return <div className="text-center p-4">Loading...</div>
 
   return (
-    <div className="w-full">
-      <h2 className="mb-4 text-xl font-bold text-foreground">{t('ranking.title', 'Ranking Mundial')}</h2>
-      <div className="rounded-2xl border border-border bg-card shadow-md overflow-hidden max-h-[60vh] overflow-y-auto">
-        <Table>
-          <TableHeader>
-            <TableRow>
-              <TableHead className="w-12 text-center">{t('ranking.position', 'Pos')}</TableHead>
-              <TableHead>{t('ranking.player', 'Jugador')}</TableHead>
-              <TableHead className="text-right">{t('ranking.elo', 'ELO')}</TableHead>
-              <TableHead className="text-right">{t('ranking.pieces', 'Piezas')}</TableHead>
-            </TableRow>
-          </TableHeader>
-          <TableBody>
-            {ranking.map((player) => (
-              <TableRow key={player.id}>
-                <TableCell className="text-center font-bold">
-                  {getMedalEmoji(player.rank)}
-                </TableCell>
-                <TableCell>
-                  <div className="flex items-center gap-2">
-                    <Avatar className="h-7 w-7">
-                      {player.avatarUrl ? (
-                        <AvatarImage src={player.avatarUrl} alt={player.displayName} />
-                      ) : null}
-                      <AvatarFallback className="text-xs">{getInitials(player.displayName)}</AvatarFallback>
-                    </Avatar>
-                    <span className="text-sm font-medium">{player.displayName}</span>
-                  </div>
-                </TableCell>
-                <TableCell className="text-right">
-                  <Badge variant="secondary">{player.elo}</Badge>
-                </TableCell>
-                <TableCell className="text-right text-sm text-muted-foreground">
-                  {player.piecesExtracted}
-                </TableCell>
+    <>
+      <div className="w-full">
+        <h2 className="mb-4 text-xl font-bold text-foreground">{t('ranking.title', 'Ranking Mundial')}</h2>
+        <div className="rounded-2xl border border-border bg-card shadow-md overflow-hidden max-h-[60vh] overflow-y-auto">
+          <Table>
+            <TableHeader>
+              <TableRow>
+                <TableHead className="w-12 text-center">{t('ranking.position', 'Pos')}</TableHead>
+                <TableHead>{t('ranking.player', 'Jugador')}</TableHead>
+                <TableHead className="text-right">{t('ranking.elo', 'ELO')}</TableHead>
+                <TableHead className="text-right">{t('ranking.pieces', 'Piezas')}</TableHead>
               </TableRow>
-            ))}
-          </TableBody>
-        </Table>
+            </TableHeader>
+            <TableBody>
+              {ranking.map((player) => (
+                <TableRow key={player.id}>
+                  <TableCell className="text-center font-bold">
+                    {getMedalEmoji(player.rank)}
+                  </TableCell>
+                  <TableCell>
+                    <div className="flex items-center gap-2">
+                      <Avatar 
+                        className="h-7 w-7 cursor-pointer hover:ring-2 hover:ring-primary/50 transition-all" 
+                        onClick={() => setProfileUserId(player.id)}
+                      >
+                        {player.avatarUrl ? (
+                          <AvatarImage src={player.avatarUrl} alt={player.displayName} />
+                        ) : null}
+                        <AvatarFallback className="text-xs">{getInitials(player.displayName)}</AvatarFallback>
+                      </Avatar>
+                      <span className="text-sm font-medium">{player.displayName}</span>
+                    </div>
+                  </TableCell>
+                  <TableCell className="text-right">
+                    <Badge variant="secondary">{player.elo}</Badge>
+                  </TableCell>
+                  <TableCell className="text-right text-sm text-muted-foreground">
+                    {player.piecesExtracted}
+                  </TableCell>
+                </TableRow>
+              ))}
+            </TableBody>
+          </Table>
+        </div>
       </div>
-    </div>
+
+      {/* User Profile Popup */}
+      <UserProfilePopup
+        open={!!profileUserId}
+        onOpenChange={(v) => !v && setProfileUserId(null)}
+        userId={profileUserId}
+        showFriendButton={true}
+      />
+    </>
   )
 }
 

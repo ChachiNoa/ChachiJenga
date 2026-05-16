@@ -5,8 +5,9 @@ import { Dialog, DialogContent, DialogHeader, DialogTitle } from '@/components/u
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs'
 import { Button } from '@/components/ui/button'
 import { Input } from '@/components/ui/input'
-import { Search, UserPlus, Check, X, UserMinus, User, Shield, Users, Swords, Info, Gamepad2 } from 'lucide-react'
+import { Search, UserPlus, Check, X, UserMinus, User, Shield, Users, Swords, Info, Gamepad2, Eye } from 'lucide-react'
 import { Avatar, AvatarImage, AvatarFallback } from '@/components/ui/avatar'
+import UserProfilePopup from './UserProfilePopup'
 
 const API = import.meta.env.VITE_API_URL || 'http://localhost:3001'
 
@@ -39,6 +40,7 @@ export default function FriendsDialog({ open, onOpenChange, auth, onChallenge })
   const [searchError, setSearchError] = useState('')
   const [isLoading, setIsLoading] = useState(false)
   const [showInfo, setShowInfo] = useState(false)
+  const [profileUserId, setProfileUserId] = useState(null)
 
   // Toast + confirm
   const [toast, setToast] = useState({ message: '', type: 'error' })
@@ -196,6 +198,7 @@ export default function FriendsDialog({ open, onOpenChange, auth, onChallenge })
       <div>
         <p className="font-semibold text-muted-foreground uppercase tracking-wider mb-1.5">Acciones de amigos</p>
         <div className="flex items-center gap-2"><Swords className="h-3.5 w-3.5 text-orange-500 shrink-0" /><span>Desafiar a jugar una partida amistosa</span></div>
+        <div className="flex items-center gap-2 mt-1"><Eye className="h-3.5 w-3.5 text-blue-500 shrink-0" /><span>Ver perfil completo (pulsa en la foto)</span></div>
         <div className="flex items-center gap-2 mt-1"><UserPlus className="h-3.5 w-3.5 text-primary shrink-0" /><span>Invitar a tu gremio actual</span></div>
         <div className="flex items-center gap-2 mt-1"><UserMinus className="h-3.5 w-3.5 text-red-500 shrink-0" /><span>Eliminar amigo</span></div>
       </div>
@@ -247,7 +250,7 @@ export default function FriendsDialog({ open, onOpenChange, auth, onChallenge })
                     {friends.map(f => (
                       <div key={f.friendshipId} className="flex items-center justify-between p-3 rounded-xl bg-card border shadow-sm">
                         <div className="flex items-center gap-3">
-                          <Avatar className="h-10 w-10">
+                          <Avatar className="h-10 w-10 cursor-pointer hover:ring-2 hover:ring-primary/50 transition-all" onClick={() => setProfileUserId(f.userId)}>
                             {f.avatarUrl ? (
                               <AvatarImage src={f.avatarUrl} alt={f.displayName} />
                             ) : null}
@@ -315,24 +318,24 @@ export default function FriendsDialog({ open, onOpenChange, auth, onChallenge })
                 ) : (
                   <div className="space-y-3">
                     {pending.map(p => (
-                      <div key={p.friendshipId} className="flex flex-col sm:flex-row sm:items-center justify-between p-3 rounded-xl bg-card border shadow-sm gap-3">
-                        <div className="flex items-center gap-3">
-                          <Avatar className="h-10 w-10">
+                      <div key={p.friendshipId} className="flex items-center justify-between p-3 rounded-xl bg-card border shadow-sm gap-2">
+                        <div className="flex items-center gap-3 min-w-0">
+                          <Avatar className="h-10 w-10 shrink-0 cursor-pointer hover:ring-2 hover:ring-primary/50 transition-all" onClick={() => setProfileUserId(p.userId || p.requesterId)}>
                             {p.avatarUrl ? (
                               <AvatarImage src={p.avatarUrl} alt={p.displayName} />
                             ) : null}
                             <AvatarFallback>{p.displayName?.[0]}</AvatarFallback>
                           </Avatar>
-                          <div>
-                            <div className="font-bold leading-tight">{p.displayName}</div>
+                          <div className="min-w-0">
+                            <div className="font-bold leading-tight truncate">{p.displayName}</div>
                             <div className="text-[10px] text-muted-foreground">{p.tag}</div>
                           </div>
                         </div>
-                        <div className="flex gap-2">
-                          <Button size="icon" onClick={() => respondRequest(p.friendshipId, true)} className="h-9 w-9 shrink-0">
+                        <div className="flex gap-1 shrink-0">
+                          <Button size="icon" onClick={() => respondRequest(p.friendshipId, true)} className="h-9 w-9">
                             <Check className="h-5 w-5" />
                           </Button>
-                          <Button size="icon" variant="outline" onClick={() => respondRequest(p.friendshipId, false)} className="h-9 w-9 shrink-0">
+                          <Button size="icon" variant="outline" onClick={() => respondRequest(p.friendshipId, false)} className="h-9 w-9">
                             <X className="h-5 w-5" />
                           </Button>
                         </div>
@@ -362,7 +365,7 @@ export default function FriendsDialog({ open, onOpenChange, auth, onChallenge })
                 {searchResult && (
                   <div className="flex items-center justify-between p-4 rounded-xl bg-card border shadow-sm mt-4">
                     <div className="flex items-center gap-3">
-                      <Avatar className="h-12 w-12">
+                      <Avatar className="h-12 w-12 cursor-pointer hover:ring-2 hover:ring-primary/50 transition-all" onClick={() => setProfileUserId(searchResult.id)}>
                         {searchResult.avatarUrl ? (
                           <AvatarImage src={searchResult.avatarUrl} alt={searchResult.displayName} />
                         ) : null}
@@ -405,6 +408,13 @@ export default function FriendsDialog({ open, onOpenChange, auth, onChallenge })
         confirmLabel={confirm.confirmLabel}
         variant={confirm.variant}
         onConfirm={confirm.onConfirm}
+      />
+
+      {/* User Profile Popup */}
+      <UserProfilePopup
+        open={!!profileUserId}
+        onOpenChange={(v) => !v && setProfileUserId(null)}
+        userId={profileUserId}
       />
     </>
   )

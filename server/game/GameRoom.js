@@ -9,6 +9,7 @@ class GameRoom {
     this.db = db;
     this.tower = new TowerModel();
     this.isFriendly = options.isFriendly || false;
+    this.onEnd = options.onEnd;
     
     // Track extracted pieces per player for scoring { difficulty }
     this.extractedPieces = [[], []]; // [player0Pieces, player1Pieces]
@@ -170,9 +171,23 @@ class GameRoom {
     this.status = 'ENDED';
     this.endReason = reason;
 
+    // Build opponent info for each player
+    const opponentFor0 = {
+      id: this.players[1].user.id,
+      name: this.players[1].user.name || this.players[1].user.displayName,
+      avatarUrl: this.players[1].user.avatarUrl,
+      tag: this.players[1].user.tag
+    };
+    const opponentFor1 = {
+      id: this.players[0].user.id,
+      name: this.players[0].user.name || this.players[0].user.displayName,
+      avatarUrl: this.players[0].user.avatarUrl,
+      tag: this.players[0].user.tag
+    };
+
     // Default payload if db is not connected
-    let summaryData1 = { result: 'DRAW', eloChange: 0, points: 0, prevElo: 1000, newElo: 1000, isFriendly: this.isFriendly };
-    let summaryData2 = { result: 'DRAW', eloChange: 0, points: 0, prevElo: 1000, newElo: 1000, isFriendly: this.isFriendly };
+    let summaryData1 = { result: 'DRAW', eloChange: 0, points: 0, prevElo: 1000, newElo: 1000, isFriendly: this.isFriendly, opponent: opponentFor0 };
+    let summaryData2 = { result: 'DRAW', eloChange: 0, points: 0, prevElo: 1000, newElo: 1000, isFriendly: this.isFriendly, opponent: opponentFor1 };
 
     if (this.db) {
       try {
@@ -209,8 +224,8 @@ class GameRoom {
 
         if (this.isFriendly) {
           // Friendly match: show results but NO ELO/stats changes
-          summaryData1 = { result: result1, eloChange: 0, points: pts1, prevElo: elo1, newElo: elo1, piecesExtracted: pieces1.length, shapesDrawn: this.shapesDrawn[0], isFriendly: true };
-          summaryData2 = { result: result2, eloChange: 0, points: pts2, prevElo: elo2, newElo: elo2, piecesExtracted: pieces2.length, shapesDrawn: this.shapesDrawn[1], isFriendly: true };
+          summaryData1 = { result: result1, eloChange: 0, points: pts1, prevElo: elo1, newElo: elo1, piecesExtracted: pieces1.length, shapesDrawn: this.shapesDrawn[0], isFriendly: true, opponent: opponentFor0 };
+          summaryData2 = { result: result2, eloChange: 0, points: pts2, prevElo: elo2, newElo: elo2, piecesExtracted: pieces2.length, shapesDrawn: this.shapesDrawn[1], isFriendly: true, opponent: opponentFor1 };
         } else {
           // Ranked match: full ELO + stats
           const newElo1 = EloCalculator.calculateNewElo(elo1, elo2, gp1, result1);
@@ -219,8 +234,8 @@ class GameRoom {
           const eloChg1 = newElo1 - elo1;
           const eloChg2 = newElo2 - elo2;
 
-          summaryData1 = { result: result1, eloChange: eloChg1, points: pts1, prevElo: elo1, newElo: newElo1, piecesExtracted: pieces1.length, shapesDrawn: this.shapesDrawn[0], isFriendly: false };
-          summaryData2 = { result: result2, eloChange: eloChg2, points: pts2, prevElo: elo2, newElo: newElo2, piecesExtracted: pieces2.length, shapesDrawn: this.shapesDrawn[1], isFriendly: false };
+          summaryData1 = { result: result1, eloChange: eloChg1, points: pts1, prevElo: elo1, newElo: newElo1, piecesExtracted: pieces1.length, shapesDrawn: this.shapesDrawn[0], isFriendly: false, opponent: opponentFor0 };
+          summaryData2 = { result: result2, eloChange: eloChg2, points: pts2, prevElo: elo2, newElo: newElo2, piecesExtracted: pieces2.length, shapesDrawn: this.shapesDrawn[1], isFriendly: false, opponent: opponentFor1 };
 
           const updateUsr = this.db.prepare(`
             UPDATE users 
@@ -259,6 +274,10 @@ class GameRoom {
     // Fire over network
     this.io.to(this.players[0].socketId).emit('game_over', { reason, summary: summaryData1 });
     this.io.to(this.players[1].socketId).emit('game_over', { reason, summary: summaryData2 });
+
+    if (typeof this.onEnd === 'function') {
+      this.onEnd();
+    }
   }
 
   handleForfeit(socketId) {

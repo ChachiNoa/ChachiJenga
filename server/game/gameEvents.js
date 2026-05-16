@@ -8,7 +8,9 @@ const pendingChallenges = new Map(); // challengeId -> { challenger: { socketId,
 
 function createRoom(io, player1, player2, db) {
   const roomId = crypto.randomUUID();
-  const room = new GameRoom(roomId, player1, player2, io, db);
+  const room = new GameRoom(roomId, player1, player2, io, db, {
+    onEnd: () => scheduleCleanup(roomId, [player1.socketId, player2.socketId])
+  });
   activeRooms.set(roomId, room);
   playerToRoom.set(player1.socketId, roomId);
   playerToRoom.set(player2.socketId, roomId);
@@ -23,7 +25,10 @@ function createRoom(io, player1, player2, db) {
 
 function createFriendlyRoom(io, player1, player2, db) {
   const roomId = crypto.randomUUID();
-  const room = new GameRoom(roomId, player1, player2, io, db, { isFriendly: true });
+  const room = new GameRoom(roomId, player1, player2, io, db, { 
+    isFriendly: true,
+    onEnd: () => scheduleCleanup(roomId, [player1.socketId, player2.socketId])
+  });
   activeRooms.set(roomId, room);
   playerToRoom.set(player1.socketId, roomId);
   playerToRoom.set(player2.socketId, roomId);
@@ -33,6 +38,20 @@ function createFriendlyRoom(io, player1, player2, db) {
 
   room.startGame();
   return roomId;
+}
+
+function scheduleCleanup(roomId, socketIds) {
+  // Give players 2 minutes to view the summary screen and potentially sync/reconnect
+  setTimeout(() => {
+    activeRooms.delete(roomId);
+    socketIds.forEach(sid => {
+      // Only delete if they are still mapped to THIS room
+      if (playerToRoom.get(sid) === roomId) {
+        playerToRoom.delete(sid);
+      }
+    });
+    console.log(`[GameEvents] Cleaned up room ${roomId}`);
+  }, 120000); 
 }
 
 // Helper to find a socket by userId (set during 'identify')

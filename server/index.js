@@ -70,16 +70,20 @@ const isUserOnline = (userId) => onlineUsers.has(String(userId))
 
 // We need playerToRoom from gameEvents to check if a user is in a game
 // This will be available after require below
-const { playerToRoom } = require('./game/gameEvents')
+const { playerToRoom, activeRooms } = require('./game/gameEvents')
 
 function getUserStatus(userId) {
   const strId = String(userId)
   if (!onlineUsers.has(strId)) return 'offline'
-  // Check if any connected socket with this userId is in a game room
+  // Check if any connected socket with this userId is in an ACTIVE game room
   if (io) {
     for (const [, s] of io.sockets.sockets) {
       if (s.userId === strId && playerToRoom.has(s.id)) {
-        return 'in_game'
+        const roomId = playerToRoom.get(s.id)
+        const room = activeRooms.get(roomId)
+        if (room && room.status === 'IN_PROGRESS') {
+          return 'in_game'
+        }
       }
     }
   }
