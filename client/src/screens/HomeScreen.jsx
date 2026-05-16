@@ -1,7 +1,7 @@
 import { useTranslation } from 'react-i18next'
 import { useLocation, useNavigate } from 'react-router-dom'
 import { useState, useEffect } from 'react'
-import { Trophy, User, Settings, Gamepad2, Loader2, X, Shield, Users } from 'lucide-react'
+import { Trophy, User, Settings, Gamepad2, Loader2, X, Shield, Users, AlertCircle } from 'lucide-react'
 import { Button } from '@/components/ui/button'
 import { Dialog, DialogContent } from '@/components/ui/dialog'
 import { loadAuth, clearAuth, saveAuth } from '@/network/authApi'
@@ -31,6 +31,8 @@ function HomeScreen() {
   const [pendingGuilds, setPendingGuilds] = useState(0)
   const [incomingChallenge, setIncomingChallenge] = useState(null)
   const [challengeSent, setChallengeSent] = useState(null) // { challengeId, targetName }
+  const [alertOpen, setAlertOpen] = useState(false)
+  const [alertContent, setAlertContent] = useState({ title: '', message: '' })
   const { socket, isConnected } = useSocket()
 
   useEffect(() => {
@@ -116,7 +118,11 @@ function HomeScreen() {
     }
     const onChallengeError = (msg) => {
       setChallengeSent(null)
-      alert(msg)
+      setAlertContent({ 
+        title: t('common.oops', '¡Ups!'), 
+        message: msg 
+      })
+      setAlertOpen(true)
       console.error('[Challenge]', msg)
     }
 
@@ -349,6 +355,22 @@ function HomeScreen() {
           onCancel={() => setChallengeSent(null)} 
         />
       )}
+
+      {/* Beautiful Alert Dialog */}
+      <Dialog open={alertOpen} onOpenChange={setAlertOpen}>
+        <DialogContent className="sm:max-w-xs p-6 flex flex-col items-center text-center gap-4">
+          <div className="h-16 w-16 bg-red-100 rounded-full flex items-center justify-center text-red-500 animate-bounce">
+             <AlertCircle className="h-10 w-10" />
+          </div>
+          <div>
+            <h3 className="text-xl font-bold text-foreground">{alertContent.title}</h3>
+            <p className="text-muted-foreground text-sm mt-2">{alertContent.message}</p>
+          </div>
+          <Button onClick={() => setAlertOpen(false)} className="w-full bg-pastel-blue hover:bg-pastel-blue/80 text-white font-bold h-12 rounded-xl shadow-md">
+            Entendido
+          </Button>
+        </DialogContent>
+      </Dialog>
     </div>
   )
 }
