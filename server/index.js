@@ -68,11 +68,30 @@ const { createGuildRouter } = require('./api/guildRouter')
 const onlineUsers = new Set()
 const isUserOnline = (userId) => onlineUsers.has(String(userId))
 
+// We need playerToRoom from gameEvents to check if a user is in a game
+// This will be available after require below
+const { playerToRoom } = require('./game/gameEvents')
+
+function getUserStatus(userId) {
+  const strId = String(userId)
+  if (!onlineUsers.has(strId)) return 'offline'
+  // Check if any connected socket with this userId is in a game room
+  const { io: ioRef } = module.exports
+  if (ioRef) {
+    for (const [, s] of ioRef.sockets.sockets) {
+      if (s.userId === strId && playerToRoom.has(s.id)) {
+        return 'in_game'
+      }
+    }
+  }
+  return 'online'
+}
+
 app.use('/auth', createAuthRouter(db))
 app.use('/api/ranking', createRankingRouter(db))
 app.use('/api/profile', createProfileRouter(db))
 app.use('/api/users', createUsersRouter(db))
-app.use('/api/friends', createFriendsRouter(db, isUserOnline))
+app.use('/api/friends', createFriendsRouter(db, isUserOnline, getUserStatus))
 app.use('/api/guilds', createGuildRouter(db))
 
 const { setupMatchmaking } = require('./matchmaking/matchmakingService')

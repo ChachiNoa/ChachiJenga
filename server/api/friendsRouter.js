@@ -2,7 +2,7 @@ const express = require('express')
 const { createAuthMiddleware } = require('../auth/authMiddleware')
 const queries = require('../db/queries')
 
-function createFriendsRouter(db, isUserOnline = () => false) {
+function createFriendsRouter(db, isUserOnline = () => false, getUserStatus = () => 'offline') {
   const router = express.Router()
   const requireAuth = createAuthMiddleware(db)
 
@@ -12,7 +12,8 @@ function createFriendsRouter(db, isUserOnline = () => false) {
       const friends = queries.getFriends(db, req.user.id)
       const friendsWithOnline = friends.map(f => ({
         ...f,
-        online: isUserOnline(f.id)
+        online: isUserOnline(f.userId),
+        status: getUserStatus(f.userId)
       }))
       res.json(friendsWithOnline)
     } catch (e) {

@@ -5,7 +5,7 @@ import { Dialog, DialogContent, DialogHeader, DialogTitle } from '@/components/u
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs'
 import { Button } from '@/components/ui/button'
 import { Input } from '@/components/ui/input'
-import { Search, UserPlus, Check, X, UserMinus, User, Shield, Users, Swords, Info } from 'lucide-react'
+import { Search, UserPlus, Check, X, UserMinus, User, Shield, Users, Swords, Info, Gamepad2 } from 'lucide-react'
 import { Avatar, AvatarImage, AvatarFallback } from '@/components/ui/avatar'
 
 const API = import.meta.env.VITE_API_URL || 'http://localhost:3001'
@@ -199,6 +199,12 @@ export default function FriendsDialog({ open, onOpenChange, auth, onChallenge })
         <div className="flex items-center gap-2 mt-1"><UserPlus className="h-3.5 w-3.5 text-primary shrink-0" /><span>Invitar a tu gremio actual</span></div>
         <div className="flex items-center gap-2 mt-1"><UserMinus className="h-3.5 w-3.5 text-red-500 shrink-0" /><span>Eliminar amigo</span></div>
       </div>
+      <div>
+        <p className="font-semibold text-muted-foreground uppercase tracking-wider mb-1.5">Estado del jugador</p>
+        <div className="flex items-center gap-2"><span className="w-2.5 h-2.5 rounded-full bg-green-500 shrink-0" /><span>En línea — puede recibir retos</span></div>
+        <div className="flex items-center gap-2 mt-1"><span className="w-2.5 h-2.5 rounded-full bg-amber-500 shrink-0" /><span>En partida — no puede aceptar retos ahora</span></div>
+        <div className="flex items-center gap-2 mt-1"><span className="w-2.5 h-2.5 rounded-full bg-slate-300 shrink-0" /><span>Desconectado</span></div>
+      </div>
     </div>
   )
 
@@ -250,14 +256,27 @@ export default function FriendsDialog({ open, onOpenChange, auth, onChallenge })
                           <div>
                             <div className="font-bold leading-tight flex items-center gap-2">
                               {f.displayName}
-                              <span 
-                                className={`w-2.5 h-2.5 rounded-full ${f.online ? 'bg-green-500 shadow-[0_0_5px_rgba(34,197,94,0.5)]' : 'bg-slate-300'}`} 
-                                title={f.online ? 'En línea' : 'Desconectado'}
-                              />
+                              {f.status === 'in_game' ? (
+                                <span 
+                                  className="w-2.5 h-2.5 rounded-full bg-amber-500 shadow-[0_0_5px_rgba(245,158,11,0.5)] animate-pulse" 
+                                  title="En partida"
+                                />
+                              ) : f.status === 'online' ? (
+                                <span 
+                                  className="w-2.5 h-2.5 rounded-full bg-green-500 shadow-[0_0_5px_rgba(34,197,94,0.5)]" 
+                                  title="En línea"
+                                />
+                              ) : (
+                                <span 
+                                  className="w-2.5 h-2.5 rounded-full bg-slate-300" 
+                                  title="Desconectado"
+                                />
+                              )}
                             </div>
                             <div className="text-[10px] text-muted-foreground flex gap-2">
                               <span>{f.tag}</span>
                               <span>ELO {f.elo}</span>
+                              {f.status === 'in_game' && <span className="text-amber-600 font-semibold">🎮 En partida</span>}
                             </div>
                           </div>
                         </div>
