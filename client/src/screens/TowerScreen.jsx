@@ -78,7 +78,6 @@ function TowerScreen() {
   const isAdmin = loadAuth()?.user?.email === ADMIN_EMAIL
   const [showAdminPanel, setShowAdminPanel] = useState(false)
   const [showDifficulty, setShowDifficulty] = useState(false)
-  const [instantDelete, setInstantDelete] = useState(false)
   
   // Real or Mock game state for UI demonstration
   const [gameState, setGameState] = useState({
@@ -252,12 +251,6 @@ function TowerScreen() {
     setConfirmOpen(false)
     if (socket) {
       socket.emit('select_piece', { layer: selectedPiece.layer, pos: selectedPiece.position })
-      
-      if (instantDelete && isAdmin) {
-        socket.emit('drawing_result', { valid: true, shapeId: 'admin_skip' })
-        socket.emit('piece_extracted', { layer: selectedPiece.layer, pos: selectedPiece.position })
-        return
-      }
     }
     // Navigate to drawing screen, passing the selected piece and current tower state
     navigate('/drawing', { state: { layer: selectedPiece.layer, position: selectedPiece.position, layers } })
@@ -344,11 +337,6 @@ function TowerScreen() {
                 <label className="flex items-center justify-between cursor-pointer">
                   <span className="text-xs font-semibold text-foreground">Colores dificultad</span>
                   <input type="checkbox" checked={showDifficulty} onChange={e => setShowDifficulty(e.target.checked)} className="accent-purple-600 h-4 w-4" />
-                </label>
-                
-                <label className="flex items-center justify-between cursor-pointer">
-                  <span className="text-xs font-semibold text-foreground">Borrado directo</span>
-                  <input type="checkbox" checked={instantDelete} onChange={e => setInstantDelete(e.target.checked)} className="accent-purple-600 h-4 w-4" />
                 </label>
               </div>
             )}

@@ -143,10 +143,15 @@ function ProfileCard({ user, onAvatarChange, onNameChange }) {
               </button>
             </div>
           )}
-          <div className="flex justify-center mt-2">
+          <div className="flex justify-center mt-2 gap-2">
             <Badge variant="secondary" className="text-sm px-3 py-1 bg-purple-100 text-purple-700 hover:bg-purple-200 border-none">
               ELO: {user.elo || 1000}
             </Badge>
+            {user.email === 'chachigames.studio@gmail.com' && (
+              <Badge className="text-sm px-3 py-1 bg-amber-100 text-amber-700 hover:bg-amber-200 border-none">
+                ⭐ Admin
+              </Badge>
+            )}
           </div>
         </CardHeader>
         <CardContent className="space-y-4">

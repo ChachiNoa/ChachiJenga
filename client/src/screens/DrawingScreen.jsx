@@ -10,6 +10,9 @@ import { GAME } from '@/shared/constants'
 import { audio } from '../lib/audio'
 import { Button } from '@/components/ui/button'
 import ConfirmForfeitDialog from '../components/ConfirmForfeitDialog'
+import { loadAuth } from '@/network/authApi'
+
+const ADMIN_EMAIL = 'chachigames.studio@gmail.com'
 
 // Pseudo-random bounding box generator for SVGs
 function generateShapePositions(shapes) {
@@ -291,7 +294,7 @@ export default function DrawingScreen() {
         </div>
       </div>
 
-      {import.meta.env.DEV && (
+      {loadAuth()?.user?.email === ADMIN_EMAIL && (
         <div className="absolute left-4 top-24 z-30">
           <Button 
             variant="default"
@@ -299,7 +302,7 @@ export default function DrawingScreen() {
             onClick={handleDevSkipPhase}
             className="bg-purple-500 hover:bg-purple-600 shadow-xl font-bold text-white"
           >
-            🛠️ DEV: Saltar Fase
+            🛠️ Saltar Fase
           </Button>
         </div>
       )}

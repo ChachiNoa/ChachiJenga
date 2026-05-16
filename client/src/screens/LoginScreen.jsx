@@ -142,6 +142,7 @@ function LoginScreen() {
         <div className="h-2 w-8 rounded-full bg-pastel-yellow opacity-60" />
         <div className="h-2 w-8 rounded-full bg-pastel-purple opacity-60" />
       </div>
+      <p className="mt-4 text-xs text-foreground/25 font-medium tracking-wide">by ChachiGames</p>
 
       {/* Toast feedback */}
       {toast.message && (

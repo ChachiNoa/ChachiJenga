@@ -98,6 +98,8 @@ function SettingsDialog({ open, onOpenChange, onLogout }) {
             <LogOut className="h-4 w-4" />
             {t('settings.logout')}
           </Button>
+
+          <p className="text-center text-xs text-foreground/25 font-medium tracking-wide pt-2">by ChachiGames</p>
         </div>
       </DialogContent>
     </Dialog>
