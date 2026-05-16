@@ -442,6 +442,8 @@ export default function GuildDialog({ open, onOpenChange, auth }) {
                 <Avatar className="h-8 w-8">
                   {m.avatarUrl && m.avatarUrl.length <= 4 ? (
                     <AvatarFallback className="text-lg bg-primary/10">{m.avatarUrl}</AvatarFallback>
+                  ) : m.avatarUrl ? (
+                    <AvatarImage src={m.avatarUrl} alt={m.displayName} />
                   ) : (
                     <AvatarFallback className="text-xs">{m.displayName?.[0]}</AvatarFallback>
                   )}
