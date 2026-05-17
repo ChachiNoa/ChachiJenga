@@ -45,9 +45,8 @@ export default function BrandSplashScreen({ onComplete }) {
         onLoad={() => setImgLoaded(true)}
         onError={() => setImgLoaded(true)}
         style={{
-          width: '55%',
-          maxWidth: '280px',
-          height: 'auto',
+          width: '100%',
+          height: '100svh',
           objectFit: 'contain',
           opacity: phase === 'visible' ? 1 : phase === 'fading' ? 0 : 0,
           transition: phase === 'visible'
