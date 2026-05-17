@@ -8,10 +8,10 @@ export default function BrandSplashScreen({ onComplete }) {
     // Only start the countdown when the image is fully downloaded and ready
     if (!imgLoaded && !imgError) return
 
-    // Total animation duration is 3.8s
+    // Total animation duration increased to 5.5s
     const timer = setTimeout(() => {
       if (onComplete) onComplete()
-    }, 3800)
+    }, 5500)
 
     return () => clearTimeout(timer)
   }, [imgLoaded, imgError, onComplete])
@@ -31,17 +31,19 @@ export default function BrandSplashScreen({ onComplete }) {
         }
         
         .splash-gradient-bg.animate-splash {
-          animation: fadeTransition 3.8s cubic-bezier(0.4, 0, 0.2, 1) forwards;
+          animation: fadeTransition 5.5s cubic-bezier(0.4, 0, 0.2, 1) forwards;
         }
 
         .splash-image {
           width: 100%;
+          max-width: 80%;
           height: 100svh;
-          object-fit: cover;
+          max-height: 80svh;
+          object-fit: contain;
         }
         
         .splash-image.animate-splash {
-          animation: logoScale 3.8s cubic-bezier(0.34, 1.56, 0.64, 1) forwards;
+          animation: logoScale 5.5s cubic-bezier(0.34, 1.56, 0.64, 1) forwards;
         }
 
         @keyframes fadeTransition {
@@ -52,10 +54,10 @@ export default function BrandSplashScreen({ onComplete }) {
         }
 
         @keyframes logoScale {
-          0% { transform: scale(1.05); }
-          15% { transform: scale(1); }
-          85% { transform: scale(1); }
-          100% { transform: scale(0.95); opacity: 0; }
+          0% { transform: scale(0.60); }
+          15% { transform: scale(0.55); }
+          85% { transform: scale(0.55); }
+          100% { transform: scale(0.50); opacity: 0; }
         }
       `}</style>
 
