@@ -45,7 +45,7 @@ export default function BrandSplashScreen({ onComplete }) {
         onLoad={() => setImgLoaded(true)}
         onError={() => setImgLoaded(true)}
         style={{
-          width: '150%',
+          width: '115%',
           height: '100svh',
           objectFit: 'cover',
           objectPosition: 'center',
