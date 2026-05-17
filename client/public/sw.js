@@ -1,4 +1,4 @@
-const CACHE_NAME = 'chachijenga-v7';
+const CACHE_NAME = 'chachijenga-v8';
 const STATIC_ASSETS = [
   '/',
   '/index.html',

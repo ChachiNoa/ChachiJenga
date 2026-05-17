@@ -31,7 +31,7 @@ export default function BrandSplashScreen({ onComplete }) {
       position: 'fixed',
       inset: 0,
       zIndex: 99999,
-      backgroundColor: '#0b5294',
+      backgroundColor: '#1f64a5',
       display: 'flex',
       alignItems: 'center',
       justifyContent: 'center',
