@@ -1,5 +1,5 @@
 import { BrowserRouter, Routes, Route, Navigate, useLocation, useNavigate } from 'react-router-dom'
-import { useEffect } from 'react'
+import { useEffect, useState } from 'react'
 import LoginScreen from './screens/LoginScreen.jsx'
 import HomeScreen from './screens/HomeScreen.jsx'
 import TowerScreen from './screens/TowerScreen.jsx'
@@ -8,6 +8,7 @@ import WatchScreen from './screens/WatchScreen.jsx'
 import SummaryScreen from './screens/SummaryScreen.jsx'
 
 import DisconnectDialog from './components/DisconnectDialog.jsx'
+import BrandSplashScreen from './components/BrandSplashScreen.jsx'
 import { saveGameRoute, getActiveGameRoute } from './hooks/useGameSession.js'
 import { loadAuth } from './network/authApi.js'
 
@@ -44,6 +45,12 @@ function RouteTracker() {
 }
 
 function App() {
+  const [showSplash, setShowSplash] = useState(true)
+
+  if (showSplash) {
+    return <BrandSplashScreen onComplete={() => setShowSplash(false)} />
+  }
+
   return (
     <BrowserRouter>
       <RouteTracker />
