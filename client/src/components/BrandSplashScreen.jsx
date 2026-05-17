@@ -60,11 +60,11 @@ export default function BrandSplashScreen({ onComplete }) {
       `}</style>
 
       {/* Main splash with radial blue gradient and black fade effect */}
-      <div className={\`splash-gradient-bg \${imgLoaded || imgError ? 'animate-splash' : ''}\`}>
+      <div className={"splash-gradient-bg " + (imgLoaded || imgError ? "animate-splash" : "")}>
         <img
           src="/assets/chachigames_splash.jpg"
           alt="ChachiGames Splash"
-          className={\`splash-image \${imgLoaded || imgError ? 'animate-splash' : ''}\`}
+          className={"splash-image " + (imgLoaded || imgError ? "animate-splash" : "")}
           onLoad={() => setImgLoaded(true)}
           onError={() => {
             setImgError(true)
