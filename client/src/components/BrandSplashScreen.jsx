@@ -54,9 +54,9 @@ export default function BrandSplashScreen({ onComplete }) {
         }
 
         @keyframes logoScale {
-          0% { transform: scale(0.60); }
-          15% { transform: scale(0.55); }
-          85% { transform: scale(0.55); }
+          0% { transform: scale(0.60); opacity: 0; }
+          15% { transform: scale(0.55); opacity: 1; }
+          85% { transform: scale(0.55); opacity: 1; }
           100% { transform: scale(0.50); opacity: 0; }
         }
       `}</style>
