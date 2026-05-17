@@ -39,15 +39,35 @@ export default function BrandSplashScreen({ onComplete }) {
       userSelect: 'none',
       touchAction: 'none',
     }}>
+      {/* Background layer: uses the exact same JPG to bypass Android Chrome's color profile mismatch.
+          By blurring and scaling it, it creates a perfectly matched background gradient. */}
+      <div style={{
+        position: 'absolute',
+        inset: -50,
+        backgroundImage: 'url(/assets/chachigames_splash.jpg)',
+        backgroundSize: 'cover',
+        backgroundPosition: 'center',
+        filter: 'blur(40px)',
+        opacity: phase === 'visible' ? 1 : phase === 'fading' ? 0 : 0,
+        transition: phase === 'visible'
+          ? 'opacity 0.4s ease-in'
+          : phase === 'fading'
+            ? 'opacity 0.5s ease-out'
+            : 'none',
+      }} />
+
+      {/* Foreground image layer */}
       <img
         src="/assets/chachigames_splash.jpg"
         alt="ChachiGames"
         onLoad={() => setImgLoaded(true)}
         onError={() => setImgLoaded(true)}
         style={{
+          position: 'relative',
           width: '100%',
           height: '100svh',
           objectFit: 'contain',
+          zIndex: 10,
           opacity: phase === 'visible' ? 1 : phase === 'fading' ? 0 : 0,
           transition: phase === 'visible'
             ? 'opacity 0.4s ease-in'
