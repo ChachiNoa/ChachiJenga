@@ -52,7 +52,7 @@ app.use(cors({
 app.use(express.json())
 
 // Initialize database
-const db = setupDatabase()
+const db = setupDatabase(process.env.DATABASE_PATH)
 
 // Routes
 app.get('/api/health', (req, res) => {

@@ -1,0 +1,14 @@
+[
+  {
+    "relation": [
+      "delegate_permission/common.handle_all_urls"
+    ],
+    "target": {
+      "namespace": "android_app",
+      "package_name": "com.chachijenga.app",
+      "sha256_cert_fingerprints": [
+        "BE:AF:F8:F4:8A:A5:37:F9:1D:F8:95:7B:B3:A6:30:CE:41:7F:A0:EB:D2:7A:7E:0C:C1:54:46:18:F4:0F:3A:68"
+      ]
+    }
+  }
+]
