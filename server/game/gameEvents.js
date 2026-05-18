@@ -6,6 +6,13 @@ const playerToRoom = new Map(); // socketId -> roomId
 const disconnectTimeouts = new Map(); // socketId -> timeoutId
 const pendingChallenges = new Map(); // challengeId -> { challenger: { socketId, user }, targetUserId, createdAt }
 
+function isPlayerInActiveGame(socketId) {
+  if (!playerToRoom.has(socketId)) return false;
+  const roomId = playerToRoom.get(socketId);
+  const room = activeRooms.get(roomId);
+  return room && room.status === 'IN_PROGRESS';
+}
+
 function createRoom(io, player1, player2, db) {
   const roomId = crypto.randomUUID();
   const room = new GameRoom(roomId, player1, player2, io, db, {
@@ -166,7 +173,7 @@ function handleGameEvents(io, socket, db) {
     if (!targetUserId || !user) return;
     
     // Check if challenger is already in a game
-    if (playerToRoom.has(socket.id)) {
+    if (isPlayerInActiveGame(socket.id)) {
       return socket.emit('challenge_error', 'Ya estás en una partida');
     }
 
@@ -185,7 +192,7 @@ function handleGameEvents(io, socket, db) {
     }
 
     // Check if target is already in a game
-    if (playerToRoom.has(targetSocket.id)) {
+    if (isPlayerInActiveGame(targetSocket.id)) {
       pendingChallenges.delete(challengeId);
       return socket.emit('challenge_error', 'El jugador está en una partida');
     }
