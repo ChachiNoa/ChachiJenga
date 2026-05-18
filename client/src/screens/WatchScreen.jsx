@@ -59,6 +59,7 @@ export default function WatchScreen() {
       } else if (!data.valid) {
         // Opponent failed, clear strokes
         setActiveStrokes([])
+        setCurrentLine([]) // FIX: also clear the current line so it doesn't stay stuck
       }
     }
 

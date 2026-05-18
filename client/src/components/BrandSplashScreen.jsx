@@ -27,7 +27,11 @@ export default function BrandSplashScreen({ onComplete }) {
   }, [imgLoaded, onComplete])
 
   return (
-    <div style={{
+    <div 
+      onClick={() => {
+        if (onComplete) onComplete()
+      }}
+      style={{
       position: 'fixed',
       inset: 0,
       zIndex: 99999,
@@ -38,6 +42,7 @@ export default function BrandSplashScreen({ onComplete }) {
       overflow: 'hidden',
       userSelect: 'none',
       touchAction: 'none',
+      cursor: 'pointer'
     }}>
       <img
         src="/assets/chachigames_splash.jpg"
