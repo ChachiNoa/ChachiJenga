@@ -214,8 +214,17 @@ export default function GuildDialog({ open, onOpenChange, auth }) {
         method: 'PATCH', headers: authHeaders(),
         body: JSON.stringify({ name: editName, description: editDesc, isPublic: editPublic })
       })
-      if (res.ok) { setEditing(false); fetchMyGuild(); fetchRanking() }
-    } catch (e) { console.error(e) }
+      const data = await res.json().catch(() => ({}))
+      if (res.ok) { 
+        setEditing(false); fetchMyGuild(); fetchRanking()
+        showToast('Gremio actualizado correctamente', 'success')
+      } else {
+        showToast(data.error || 'Error al actualizar el gremio')
+      }
+    } catch (e) { 
+      showToast('Error de conexión al actualizar')
+      console.error(e) 
+    }
   }
 
   const startEdit = () => {
