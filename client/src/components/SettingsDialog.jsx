@@ -99,6 +99,16 @@ function SettingsDialog({ open, onOpenChange, onLogout }) {
             {t('settings.logout')}
           </Button>
 
+          <div className="flex justify-center gap-4 text-[11px] text-muted-foreground/60 mt-3">
+            <a href="https://chachijenga-545c7.web.app/privacy.html" target="_blank" rel="noopener noreferrer" className="hover:underline">
+              Política de Privacidad
+            </a>
+            <span>·</span>
+            <a href="https://chachijenga-545c7.web.app/delete-account.html" target="_blank" rel="noopener noreferrer" className="hover:underline text-red-500/80">
+              Eliminar Cuenta
+            </a>
+          </div>
+
           <p className="text-center text-xs text-foreground/25 font-medium tracking-wide pt-2">by ChachiGames</p>
         </div>
       </DialogContent>
