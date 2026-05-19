@@ -224,8 +224,8 @@ class GameRoom {
 
         if (this.isFriendly) {
           // Friendly match: show results but NO ELO/stats changes
-          summaryData1 = { result: result1, eloChange: 0, points: pts1, prevElo: elo1, newElo: elo1, piecesExtracted: pieces1.length, shapesDrawn: this.shapesDrawn[0], isFriendly: true, opponent: opponentFor0 };
-          summaryData2 = { result: result2, eloChange: 0, points: pts2, prevElo: elo2, newElo: elo2, piecesExtracted: pieces2.length, shapesDrawn: this.shapesDrawn[1], isFriendly: true, opponent: opponentFor1 };
+          summaryData1 = { result: result1, eloChange: 0, points: 0, prevElo: elo1, newElo: elo1, piecesExtracted: pieces1.length, shapesDrawn: this.shapesDrawn[0], isFriendly: true, opponent: opponentFor0 };
+          summaryData2 = { result: result2, eloChange: 0, points: 0, prevElo: elo2, newElo: elo2, piecesExtracted: pieces2.length, shapesDrawn: this.shapesDrawn[1], isFriendly: true, opponent: opponentFor1 };
         } else {
           // Ranked match: full ELO + stats
           const newElo1 = EloCalculator.calculateNewElo(elo1, elo2, gp1, result1);
